@@ -1,4 +1,4 @@
-package dbal
+package schema
 
 // Schema The database Schema interface
 type Schema interface {
@@ -12,5 +12,5 @@ type Schema interface {
 	String()
 }
 
-// Blueprint the dbal driver
+// Blueprint the dbal schema driver
 type Blueprint struct{ Schema }

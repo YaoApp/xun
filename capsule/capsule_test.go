@@ -6,5 +6,9 @@ import (
 
 func TestNew(t *testing.T) {
 	db := New()
-	db.Schema()
+	schema := db.Schema()
+	schema.Drop()
+
+	query := db.Table()
+	query.Where()
 }

@@ -3,13 +3,13 @@ package sqlite
 import (
 	"fmt"
 
-	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/dbal/schema"
 )
 
 // New create new mysql blueprint instance
-func New() dbal.Schema {
+func New() schema.Schema {
 	return &Blueprint{
-		Blueprint: dbal.Blueprint{},
+		Blueprint: schema.NewBlueprint(),
 	}
 }
 

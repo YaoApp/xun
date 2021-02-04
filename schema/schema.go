@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/schema/driver/mysql"
 	"github.com/yaoapp/xun/schema/driver/oracle"
 	"github.com/yaoapp/xun/schema/driver/sqlite"
@@ -9,26 +8,26 @@ import (
 )
 
 // New create the schema instance()
-func New() dbal.Schema {
+func New() Schema {
 	return mysql.New()
 }
 
 // NewMySQL create the MySQL schema instance()
-func NewMySQL() dbal.Schema {
+func NewMySQL() Schema {
 	return mysql.New()
 }
 
 // NewSQLite create the SQLite schema instance()
-func NewSQLite() dbal.Schema {
+func NewSQLite() Schema {
 	return sqlite.New()
 }
 
 // NewSQLServer create the SQL Server schema instance()
-func NewSQLServer() dbal.Schema {
+func NewSQLServer() Schema {
 	return sqlserver.New()
 }
 
 // NewOracle create the Oracle schema instance()
-func NewOracle() dbal.Schema {
+func NewOracle() Schema {
 	return oracle.New()
 }

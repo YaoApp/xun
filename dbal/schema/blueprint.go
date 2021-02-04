@@ -1,10 +1,18 @@
-package dbal
+package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
-// New create new mysql blueprint instance
+// New create new schema buider interface
 func New() Schema {
-	return &Blueprint{}
+	blueprint := NewBlueprint()
+	return &blueprint
+}
+
+// NewBlueprint create new schema buider blueprint
+func NewBlueprint() Blueprint {
+	return Blueprint{}
 }
 
 // Create Indicate that the table needs to be created.

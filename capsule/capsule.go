@@ -1,5 +1,10 @@
 package capsule
 
+import (
+	"github.com/yaoapp/xun/query"
+	"github.com/yaoapp/xun/schema"
+)
+
 // New Create a database manager instance.
 func New() *Manager {
 	return &Manager{
@@ -16,9 +21,11 @@ func (manager *Manager) GetConnection() {
 }
 
 // Schema Get a schema builder instance.
-func (manager *Manager) Schema() {
+func (manager *Manager) Schema() schema.Schema {
+	return schema.New()
 }
 
-// Query Get a fluent query builder instance.
-func (manager *Manager) Query() {
+// Table Get a fluent query builder instance.
+func (manager *Manager) Table() query.Query {
+	return query.Table()
 }
