@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
+	dbal_query "github.com/yaoapp/xun/dbal/query"
 	dbal_schema "github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/query"
 	"github.com/yaoapp/xun/schema"
@@ -118,22 +119,22 @@ func (manager *Manager) Schema() schema.Schema {
 		})
 }
 
-// Table Get a fluent query builder instance.
-func Table() query.Query {
+// Query Get a fluent query builder instance.
+func Query() query.Query {
 	if Global == nil {
 		err := errors.New("the global capsule not set")
 		panic(err)
 	}
-	return Global.Table()
+	return Global.Query()
 }
 
-// Table Get a fluent query builder instance.
-func (manager *Manager) Table() query.Query {
+// Query Get a fluent query builder instance.
+func (manager *Manager) Query() query.Query {
 	write := manager.GetPrimary()
 	read := manager.GetRead()
-	return query.Table(
+	return query.New(
 		write.DriverName(),
-		&query.Connection{
+		&dbal_query.Connection{
 			Write: &write.DB,
 			Read:  &read.DB,
 		})

@@ -6,12 +6,14 @@ import (
 	"github.com/yaoapp/xun/dbal/query"
 )
 
-// Table  Get a fluent query builder instance.
-func Table() query.Query {
+// New  Get a fluent query builder instance.
+func New(conn *query.Connection) query.Query {
 	return &Builder{
-		Builder: query.NewBuilder(),
+		Builder: query.NewBuilder(conn),
 	}
 }
 
 // Join Add a join clause to the query.
-func (builder *Builder) Join() { fmt.Printf("MySQL JOIN\n") }
+func (builder *Builder) Join() {
+	fmt.Printf("\nJoin MySQL: \n===\n%#v\n===\n", builder.Conn)
+}

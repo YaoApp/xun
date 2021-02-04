@@ -28,4 +28,19 @@ func TestAddConnection(t *testing.T) {
 	schema := manager.Schema()
 	schema.Create()
 	schema.Drop()
+
+	qb := manager.Query()
+	qb.Where()
+	qb.Join()
+
+}
+
+func TestGlobal(t *testing.T) {
+	schema := Schema()
+	schema.Create()
+	schema.Drop()
+
+	qb := Query()
+	qb.Where()
+	qb.Join()
 }

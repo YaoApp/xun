@@ -15,5 +15,5 @@ func New(conn *schema.Connection) schema.Schema {
 
 // Create Indicate that the table needs to be created.
 func (blueprint *Blueprint) Create() {
-	fmt.Printf("\nCreate MySQL: \n===\n%#v\n===\n", blueprint.Conn.Write.DB)
+	fmt.Printf("\nCreate MySQL: \n===\n%#v\n===\n", blueprint.Conn)
 }

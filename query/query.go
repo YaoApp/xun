@@ -1,6 +1,7 @@
 package query
 
 import (
+	dbal "github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/query/driver/mysql"
 	"github.com/yaoapp/xun/query/driver/oracle"
 	"github.com/yaoapp/xun/query/driver/postgresql"
@@ -8,32 +9,20 @@ import (
 	"github.com/yaoapp/xun/query/driver/sqlserver"
 )
 
-// Table Get a fluent query builder instance.
-func Table(driver string, conn *Connection) Query {
-	return mysql.Table()
-}
-
-// TableMySQL  Get a fluent query builder instance of MySQL.
-func TableMySQL() Query {
-	return mysql.Table()
-}
-
-// TableSQLite Get a fluent query builder instance of SQLite.
-func TableSQLite() Query {
-	return sqlite.Table()
-}
-
-// TableSQLServer Get a fluent query builder instance of SQL Server.
-func TableSQLServer() Query {
-	return sqlserver.Table()
-}
-
-// TableOracle Get a fluent query builder instance of Oracle.
-func TableOracle() Query {
-	return oracle.Table()
-}
-
-// TablePostgreSQL Get a fluent query builder instance of postgreSQL.
-func TablePostgreSQL() Query {
-	return postgresql.Table()
+// New Get a fluent query builder instance.
+func New(driver string, conn *dbal.Connection) Query {
+	switch driver {
+	case "mysql":
+		return mysql.New(conn)
+	case "SQLite":
+		return sqlite.New(conn)
+	case "sqlsvr":
+		return sqlserver.New(conn)
+	case "oracle":
+		return oracle.New(conn)
+	case "postgresql":
+		return postgresql.New(conn)
+	default:
+		return mysql.New(conn)
+	}
 }

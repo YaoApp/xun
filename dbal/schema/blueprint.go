@@ -22,7 +22,7 @@ func (blueprint *Blueprint) Create() {}
 
 // Drop Indicate that the table should be dropped.
 func (blueprint *Blueprint) Drop() {
-	fmt.Printf("\nDrop DBAL: \n===\n%#v\n===\n", blueprint.Conn.Write.DB)
+	fmt.Printf("\nDrop DBAL: \n===\n%#v\n===\n", blueprint.Conn)
 }
 
 // DropIfExists Indicate that the table should be dropped if it exists.
