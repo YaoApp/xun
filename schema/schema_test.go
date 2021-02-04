@@ -27,3 +27,9 @@ func TestNewOracle(t *testing.T) {
 	schema.Create()
 	schema.Drop()
 }
+
+func TestNewPostgreSQL(t *testing.T) {
+	schema := NewPostgreSQL()
+	schema.Create()
+	schema.Drop()
+}

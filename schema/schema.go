@@ -3,6 +3,7 @@ package schema
 import (
 	"github.com/yaoapp/xun/schema/driver/mysql"
 	"github.com/yaoapp/xun/schema/driver/oracle"
+	"github.com/yaoapp/xun/schema/driver/postgresql"
 	"github.com/yaoapp/xun/schema/driver/sqlite"
 	"github.com/yaoapp/xun/schema/driver/sqlserver"
 )
@@ -30,4 +31,9 @@ func NewSQLServer() Schema {
 // NewOracle create the Oracle schema instance()
 func NewOracle() Schema {
 	return oracle.New()
+}
+
+// NewPostgreSQL create the Oracle schema instance()
+func NewPostgreSQL() Schema {
+	return postgresql.New()
 }

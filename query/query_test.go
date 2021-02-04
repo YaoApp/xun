@@ -27,3 +27,9 @@ func TestTableOracle(t *testing.T) {
 	builder.Where()
 	builder.Join()
 }
+
+func TestTablePostgreSQL(t *testing.T) {
+	builder := TablePostgreSQL()
+	builder.Where()
+	builder.Join()
+}

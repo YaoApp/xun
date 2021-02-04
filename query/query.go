@@ -3,6 +3,7 @@ package query
 import (
 	"github.com/yaoapp/xun/query/driver/mysql"
 	"github.com/yaoapp/xun/query/driver/oracle"
+	"github.com/yaoapp/xun/query/driver/postgresql"
 	"github.com/yaoapp/xun/query/driver/sqlite"
 	"github.com/yaoapp/xun/query/driver/sqlserver"
 )
@@ -30,4 +31,9 @@ func TableSQLServer() Query {
 // TableOracle Get a fluent query builder instance of Oracle.
 func TableOracle() Query {
 	return oracle.Table()
+}
+
+// TablePostgreSQL Get a fluent query builder instance of postgreSQL.
+func TablePostgreSQL() Query {
+	return postgresql.Table()
 }
