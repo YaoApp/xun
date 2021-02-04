@@ -2,20 +2,25 @@ package capsule
 
 import (
 	"errors"
+	"math/rand"
 	"sync"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
+	dbal_schema "github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/query"
 	"github.com/yaoapp/xun/schema"
 )
 
+// Global The global manager
+var Global *Manager = nil
+
 // New Create a database manager instance.
 func New() *Manager {
 	return &Manager{
-		Pools:       &sync.Map{},
+		Pool:        &Pool{},
 		Connections: &sync.Map{},
-		Current:     nil,
 	}
 }
 
@@ -27,72 +32,109 @@ func (manager *Manager) AddConnection(config Config) *Manager {
 		name = config.Name
 	}
 
-	group := "default"
-	if config.Group != "" {
-		group = config.Group
-	}
-
 	conn := &Connection{
-		DB: *sqlx.MustOpen(config.DriverName(), config.DataSource()),
-	}
-
-	p, has := manager.Pools.Load(group)
-	var pool Pool
-	if !has {
-		pool = Pool{
-			Primary:  []*Connection{},
-			Readonly: []*Connection{},
-		}
-	} else {
-		pool = p.(Pool)
+		DB:     *sqlx.MustOpen(config.DriverName(), config.DataSource()),
+		Config: &config,
 	}
 
 	if config.ReadOnly == true {
-		pool.Readonly = append(pool.Readonly, conn)
+		manager.Pool.Readonly = append(manager.Pool.Readonly, conn)
 	} else {
-		pool.Primary = append(pool.Primary, conn)
+		manager.Pool.Primary = append(manager.Pool.Primary, conn)
 	}
-	manager.Connections.Store(group+"."+name, conn)
+	manager.Connections.Store(name, conn)
 
-	if manager.Current == nil {
-		manager.Current = conn
+	if Global == nil {
+		Global = manager
 	}
 
 	return manager
 }
 
 // GetConnection Get a registered connection instance.
-func (manager *Manager) GetConnection(name string, group ...string) *Connection {
-	groupName := "default"
-	if len(group) > 0 {
-		groupName = group[0]
-	}
-	c, has := manager.Connections.Load(groupName + "." + name)
+func (manager *Manager) GetConnection(name string) *Connection {
+
+	c, has := manager.Connections.Load(name)
 	conn := c.(*Connection)
 	if !has {
-		err := errors.New("the connection " + groupName + "." + name + " is not registered")
+		err := errors.New("the connection " + name + " is not registered")
 		panic(err)
 	}
 	return conn
 }
 
-// SetAsGlobal Make this connetion instance available globally.
-func (manager *Manager) SetAsGlobal(name string, group ...string) {
-	conn := manager.GetConnection(name, group...)
-	manager.Current = conn
+// GetRand Get a registered connection instance.
+func GetRand(connections []*Connection) *Connection {
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+	i := r.Intn(len(connections))
+	return connections[i]
 }
 
-// Get Get current connection
-func (manager *Manager) Get() *Connection {
-	return manager.Current
+// GetPrimary Get a registered primary connection instance.
+func (manager *Manager) GetPrimary() *Connection {
+	length := len(manager.Pool.Primary)
+	if length < 1 {
+		err := errors.New("the Primary connection not found ")
+		panic(err)
+	} else if length == 1 {
+		return manager.Pool.Primary[0]
+	}
+	return GetRand(manager.Pool.Primary)
+}
+
+// GetRead Get a registered read only connection instance.
+func (manager *Manager) GetRead() *Connection {
+	length := len(manager.Pool.Readonly)
+	if length < 1 {
+		return manager.GetPrimary()
+	} else if length == 1 {
+		return manager.Pool.Readonly[0]
+	}
+	return GetRand(manager.Pool.Readonly)
+}
+
+// SetAsGlobal Make this connetion instance available globally.
+func (manager *Manager) SetAsGlobal() {
+	Global = manager
+}
+
+// Schema Get a schema builder instance.
+func Schema() schema.Schema {
+	if Global == nil {
+		err := errors.New("the global capsule not set")
+		panic(err)
+	}
+	return Global.Schema()
 }
 
 // Schema Get a schema builder instance.
 func (manager *Manager) Schema() schema.Schema {
-	return schema.New()
+	write := manager.GetPrimary()
+	return schema.New(
+		write.DriverName(),
+		&dbal_schema.Connection{
+			Write: &write.DB,
+		})
+}
+
+// Table Get a fluent query builder instance.
+func Table() query.Query {
+	if Global == nil {
+		err := errors.New("the global capsule not set")
+		panic(err)
+	}
+	return Global.Table()
 }
 
 // Table Get a fluent query builder instance.
 func (manager *Manager) Table() query.Query {
-	return query.Table()
+	write := manager.GetPrimary()
+	read := manager.GetRead()
+	return query.Table(
+		write.DriverName(),
+		&query.Connection{
+			Write: &write.DB,
+			Read:  &read.DB,
+		})
 }

@@ -7,9 +7,9 @@ import (
 )
 
 // New create new mysql blueprint instance
-func New() schema.Schema {
+func New(conn *schema.Connection) schema.Schema {
 	return &Blueprint{
-		Blueprint: schema.NewBlueprint(),
+		Blueprint: schema.NewBlueprint(conn),
 	}
 }
 

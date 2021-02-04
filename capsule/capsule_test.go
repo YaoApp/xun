@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAddConnectionWithoutGroup(t *testing.T) {
+func TestAddConnection(t *testing.T) {
 	manager := New().
 		AddConnection(Config{
 			Driver:   "mysql",

@@ -1,5 +1,7 @@
 package schema
 
+import "github.com/jmoiron/sqlx"
+
 // Schema The database Schema interface
 type Schema interface {
 	Create()
@@ -13,4 +15,10 @@ type Schema interface {
 }
 
 // Blueprint the dbal schema driver
-type Blueprint struct{ Schema }
+type Blueprint struct {
+	Conn *Connection
+	Schema
+}
+
+// Connection DB Connection
+type Connection struct{ Write *sqlx.DB }

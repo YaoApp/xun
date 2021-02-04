@@ -7,13 +7,13 @@ import (
 )
 
 // New create new mysql blueprint instance
-func New() schema.Schema {
+func New(conn *schema.Connection) schema.Schema {
 	return &Blueprint{
-		Blueprint: schema.NewBlueprint(),
+		Blueprint: schema.NewBlueprint(conn),
 	}
 }
 
 // Create Indicate that the table needs to be created.
 func (blueprint *Blueprint) Create() {
-	fmt.Printf("MySQL driver\n")
+	fmt.Printf("\nCreate MySQL: \n===\n%#v\n===\n", blueprint.Conn.Write.DB)
 }

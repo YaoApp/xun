@@ -1,6 +1,7 @@
 package schema
 
 import (
+	dbal "github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/schema/driver/mysql"
 	"github.com/yaoapp/xun/schema/driver/oracle"
 	"github.com/yaoapp/xun/schema/driver/postgresql"
@@ -9,31 +10,19 @@ import (
 )
 
 // New create the schema instance()
-func New() Schema {
-	return mysql.New()
-}
-
-// NewMySQL create the MySQL schema instance()
-func NewMySQL() Schema {
-	return mysql.New()
-}
-
-// NewSQLite create the SQLite schema instance()
-func NewSQLite() Schema {
-	return sqlite.New()
-}
-
-// NewSQLServer create the SQL Server schema instance()
-func NewSQLServer() Schema {
-	return sqlserver.New()
-}
-
-// NewOracle create the Oracle schema instance()
-func NewOracle() Schema {
-	return oracle.New()
-}
-
-// NewPostgreSQL create the Oracle schema instance()
-func NewPostgreSQL() Schema {
-	return postgresql.New()
+func New(driver string, conn *dbal.Connection) Schema {
+	switch driver {
+	case "mysql":
+		return mysql.New(conn)
+	case "SQLite":
+		return sqlite.New(conn)
+	case "sqlsvr":
+		return sqlserver.New(conn)
+	case "oracle":
+		return oracle.New(conn)
+	case "postgresql":
+		return postgresql.New(conn)
+	default:
+		return mysql.New(conn)
+	}
 }

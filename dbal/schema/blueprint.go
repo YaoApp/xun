@@ -5,14 +5,16 @@ import (
 )
 
 // New create new schema buider interface
-func New() Schema {
-	blueprint := NewBlueprint()
+func New(conn *Connection) Schema {
+	blueprint := NewBlueprint(conn)
 	return &blueprint
 }
 
 // NewBlueprint create new schema buider blueprint
-func NewBlueprint() Blueprint {
-	return Blueprint{}
+func NewBlueprint(conn *Connection) Blueprint {
+	return Blueprint{
+		Conn: conn,
+	}
 }
 
 // Create Indicate that the table needs to be created.
@@ -20,7 +22,7 @@ func (blueprint *Blueprint) Create() {}
 
 // Drop Indicate that the table should be dropped.
 func (blueprint *Blueprint) Drop() {
-	fmt.Printf("Drop DBAL\n")
+	fmt.Printf("\nDrop DBAL: \n===\n%#v\n===\n", blueprint.Conn.Write.DB)
 }
 
 // DropIfExists Indicate that the table should be dropped if it exists.

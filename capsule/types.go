@@ -8,8 +8,7 @@ import (
 
 // Manager The database manager
 type Manager struct {
-	Current     *Connection
-	Pools       *sync.Map // map[string]Pool
+	Pool        *Pool
 	Connections *sync.Map // map[string]*Connection
 }
 
@@ -22,6 +21,7 @@ type Pool struct {
 // Connection The database connection
 type Connection struct {
 	sqlx.DB
+	Config *Config
 }
 
 // Config the Connection Configuration
@@ -46,7 +46,6 @@ type Config struct {
 	Memory          *bool      `json:"memory,omitempty"`
 	SSL             *ConfigSSL `json:"ssl,omitempty"`
 	ReadOnly        bool       `json:"readonly,omitempty"`
-	Group           string     `json:"group,omitempty"`
 	Name            string     `json:"name,omitempty"`
 }
 

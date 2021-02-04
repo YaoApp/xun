@@ -9,7 +9,7 @@ import (
 )
 
 // Table Get a fluent query builder instance.
-func Table() Query {
+func Table(driver string, conn *Connection) Query {
 	return mysql.Table()
 }
 
