@@ -9,10 +9,8 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
-	dbal_query "github.com/yaoapp/xun/dbal/query"
-	dbal_schema "github.com/yaoapp/xun/dbal/schema"
-	"github.com/yaoapp/xun/query"
-	"github.com/yaoapp/xun/schema"
+	"github.com/yaoapp/xun/dbal/query"
+	"github.com/yaoapp/xun/dbal/schema"
 )
 
 // Global The global manager
@@ -24,6 +22,11 @@ func New() *Manager {
 		Pool:        &Pool{},
 		Connections: &sync.Map{},
 	}
+}
+
+// AddConnection Register a connection with the manager.
+func AddConnection(config Config) *Manager {
+	return New().AddConnection(config)
 }
 
 // AddConnection Register a connection with the manager.
@@ -113,9 +116,9 @@ func Schema() schema.Schema {
 // Schema Get a schema builder instance.
 func (manager *Manager) Schema() schema.Schema {
 	write := manager.GetPrimary()
-	return schema.New(
+	return newSchema(
 		write.Config.Driver,
-		&dbal_schema.Connection{
+		&schema.Connection{
 			Write: &write.DB,
 		})
 }
@@ -133,9 +136,9 @@ func Query() query.Query {
 func (manager *Manager) Query() query.Query {
 	write := manager.GetPrimary()
 	read := manager.GetRead()
-	return query.New(
+	return newQuery(
 		write.Config.Driver,
-		&dbal_query.Connection{
+		&query.Connection{
 			Write: &write.DB,
 			Read:  &read.DB,
 		})

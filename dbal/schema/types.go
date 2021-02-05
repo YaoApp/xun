@@ -2,6 +2,9 @@ package schema
 
 import "github.com/jmoiron/sqlx"
 
+// Connection DB Connection
+type Connection struct{ Write *sqlx.DB }
+
 // Schema The database Schema interface
 type Schema interface {
 	Create()
@@ -27,6 +30,3 @@ type Builder struct {
 type Blueprint struct {
 	BlueprintAPI
 }
-
-// Connection DB Connection
-type Connection struct{ Write *sqlx.DB }

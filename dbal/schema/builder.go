@@ -1,11 +1,13 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // New create new schema buider interface
 func New(conn *Connection) Schema {
-	blueprint := NewBuilder(conn)
-	return &blueprint
+	builder := NewBuilder(conn)
+	return &builder
 }
 
 // NewBuilder create new schema buider blueprint
@@ -17,6 +19,10 @@ func NewBuilder(conn *Connection) Builder {
 
 // Create a new table on the schema.
 func (builder *Builder) Create() {}
+
+// CreateT a new table on the schema.
+func (builder *Builder) CreateT(table string, callback func(blueprint *Blueprint)) {
+}
 
 // Drop Indicate that the table should be dropped.
 func (builder *Builder) Drop() {

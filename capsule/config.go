@@ -9,6 +9,9 @@ var drivers map[string]string = map[string]string{
 
 // DataSource get the data source format text
 func (config Config) DataSource() string {
+	if config.DSN != "" {
+		return config.DSN
+	}
 	switch config.Driver {
 	case "mysql":
 		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
