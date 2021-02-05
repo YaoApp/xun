@@ -9,6 +9,5 @@ import (
 func TestCreate(t *testing.T) {
 	db := unit.Use("mysql")
 	schema := db.Schema()
-	schema.Create()
 	schema.Drop()
 }

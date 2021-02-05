@@ -28,7 +28,6 @@ func TestAddConnection(t *testing.T) {
 			ReadOnly: true,
 		})
 	schema := manager.Schema()
-	schema.Create()
 	schema.Drop()
 
 	qb := manager.Query()
@@ -46,14 +45,12 @@ func TestAddConnectionSqlite(t *testing.T) {
 			Memory: true,
 		})
 	schema := manager.Schema()
-	schema.Create()
 	schema.Drop()
 }
 
 func TestGlobal(t *testing.T) {
 	fmt.Printf("\n\n== TestGlobal ====================\n")
 	schema := Schema()
-	schema.Create()
 	schema.Drop()
 
 	qb := Query()
@@ -72,7 +69,6 @@ func TestSetAsGlobal(t *testing.T) {
 	manager.SetAsGlobal()
 
 	schema := Schema()
-	schema.Create()
 	schema.Drop()
 
 	qb := Query()

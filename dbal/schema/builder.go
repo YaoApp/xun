@@ -35,10 +35,11 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 }
 
 // Create a new table on the schema.
-func (builder *Builder) Create() {}
-
-// CreateT a new table on the schema.
-func (builder *Builder) CreateT(table string, callback func(blueprint *Blueprint)) {
+func (builder *Builder) Create(name string, callback func(table *Blueprint)) {
+	table := NewBlueprint(name)
+	callback(table)
+	sql := table.sqlCreate()
+	builder.Conn.Write.MustExec(sql)
 }
 
 // Drop Indicate that the table should be dropped.

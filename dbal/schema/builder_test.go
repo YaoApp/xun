@@ -11,8 +11,9 @@ func getTestBuilder() *Builder {
 }
 
 func TestCreate(t *testing.T) {
-	builder := getTestBuilder()
-	builder.CreateT("table_test_builder", func(blueprint *Blueprint) {
-
+	schema := getTestBuilder()
+	schema.Create("table_test_builder", func(table *Blueprint) {
+		table.String("name", 20).Unique()
+		table.String("unionid", 128).Unique()
 	})
 }
