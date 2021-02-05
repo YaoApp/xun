@@ -2,7 +2,12 @@ package mysql
 
 import "github.com/yaoapp/xun/dbal/schema"
 
-// Blueprint the mysql driver
+// Builder the mysql driver
+type Builder struct {
+	schema.Builder
+}
+
+// Blueprint the table blueprint
 type Blueprint struct {
 	schema.Blueprint
 }

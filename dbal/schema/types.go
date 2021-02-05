@@ -8,16 +8,24 @@ type Schema interface {
 	Drop()
 	DropIfExists()
 	Rename()
-	Primary()
-
-	BigInteger()
-	String()
 }
 
-// Blueprint the dbal schema driver
-type Blueprint struct {
+// BlueprintAPI  the bluprint interface
+type BlueprintAPI interface {
+	BigInteger()
+	String()
+	Primary()
+}
+
+// Builder the dbal schema driver
+type Builder struct {
 	Conn *Connection
 	Schema
+}
+
+// Blueprint the table blueprint
+type Blueprint struct {
+	BlueprintAPI
 }
 
 // Connection DB Connection
