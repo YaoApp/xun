@@ -1,10 +1,12 @@
 package capsule
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestAddConnection(t *testing.T) {
+	fmt.Printf("\n\n== TestAddConnection ====================\n")
 	manager := New().
 		AddConnection(Config{
 			Driver:   "mysql",
@@ -35,7 +37,40 @@ func TestAddConnection(t *testing.T) {
 
 }
 
+func TestAddConnectionSqlite(t *testing.T) {
+	fmt.Printf("\n\n== TestAddConnectionSqlite ====================\n")
+	manager := New().
+		AddConnection(Config{
+			Driver: "sqlite",
+			DBName: "unit-test.db",
+			Memory: true,
+		})
+	schema := manager.Schema()
+	schema.Create()
+	schema.Drop()
+}
+
 func TestGlobal(t *testing.T) {
+	fmt.Printf("\n\n== TestGlobal ====================\n")
+	schema := Schema()
+	schema.Create()
+	schema.Drop()
+
+	qb := Query()
+	qb.Where()
+	qb.Join()
+}
+
+func TestSetAsGlobal(t *testing.T) {
+	fmt.Printf("\n\n== TestGlobalAfterSet ====================\n")
+	manager := New().
+		AddConnection(Config{
+			Driver: "sqlite",
+			DBName: "unit-test-2.db",
+			Memory: true,
+		})
+	manager.SetAsGlobal()
+
 	schema := Schema()
 	schema.Create()
 	schema.Drop()

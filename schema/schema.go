@@ -14,7 +14,7 @@ func New(driver string, conn *dbal.Connection) Schema {
 	switch driver {
 	case "mysql":
 		return mysql.New(conn)
-	case "SQLite":
+	case "sqlite":
 		return sqlite.New(conn)
 	case "sqlsvr":
 		return sqlserver.New(conn)

@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	dbal_query "github.com/yaoapp/xun/dbal/query"
 	dbal_schema "github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/query"
@@ -113,7 +114,7 @@ func Schema() schema.Schema {
 func (manager *Manager) Schema() schema.Schema {
 	write := manager.GetPrimary()
 	return schema.New(
-		write.DriverName(),
+		write.Config.Driver,
 		&dbal_schema.Connection{
 			Write: &write.DB,
 		})
@@ -133,7 +134,7 @@ func (manager *Manager) Query() query.Query {
 	write := manager.GetPrimary()
 	read := manager.GetRead()
 	return query.New(
-		write.DriverName(),
+		write.Config.Driver,
 		&dbal_query.Connection{
 			Write: &write.DB,
 			Read:  &read.DB,

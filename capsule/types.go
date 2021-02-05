@@ -43,7 +43,7 @@ type Config struct {
 	Service         *bool      `json:"service,omitempty"`
 	Persistent      *bool      `json:"persistent,omitempty"`
 	Pooled          *bool      `json:"pooled,omitempty"`
-	Memory          *bool      `json:"memory,omitempty"`
+	Memory          bool       `json:"memory,omitempty"`
 	SSL             *ConfigSSL `json:"ssl,omitempty"`
 	ReadOnly        bool       `json:"readonly,omitempty"`
 	Name            string     `json:"name,omitempty"`
