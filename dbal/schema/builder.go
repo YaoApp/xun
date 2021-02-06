@@ -35,15 +35,19 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 // Create a new table on the schema.
 func (builder *Builder) Create(name string, callback func(table *Blueprint)) error {
 	table := builder.Table(name)
-	callback(table)
-	return table.Create()
+	return table.Create(callback)
 }
 
 // MustCreate a new table on the schema.
 func (builder *Builder) MustCreate(name string, callback func(table *Blueprint)) *Blueprint {
 	table := builder.Table(name)
-	callback(table)
-	return table.MustCreate()
+	return table.MustCreate(callback)
+}
+
+// Alter a table on the schema.
+func (builder *Builder) Alter(name string, callback func(table *Blueprint)) error {
+	table := builder.Table(name)
+	return table.Alter(callback)
 }
 
 // Drop Indicate that the table should be dropped.

@@ -62,6 +62,20 @@ func TestRename(t *testing.T) {
 	builder.Drop("table_test_builder_re")
 }
 
+func TestAlter(t *testing.T) {
+	defer unit.Catch()
+	TestCreate(t)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_builder", func(table *schema.Blueprint) {
+		table.String("nickname", 50)
+		table.String("unionid", 200).Change()
+		table.Column("name").Remove()
+		table.Column("unionid").Rename("uid")
+	})
+	assert.Equal(t, nil, err, "the return error should be nil")
+	builder.Drop("table_test_builder")
+}
+
 func TestMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()

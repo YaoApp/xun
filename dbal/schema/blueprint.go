@@ -34,19 +34,29 @@ func (table *Blueprint) Exists() bool {
 }
 
 // Create a new table on the schema
-func (table *Blueprint) Create() error {
+func (table *Blueprint) Create(callback func(table *Blueprint)) error {
+	callback(table)
 	_, err := table.validate().Builder.Conn.Write.
 		Exec(table.sqlCreate())
 	return err
 }
 
 // MustCreate a new table on the schema
-func (table *Blueprint) MustCreate() *Blueprint {
-	err := table.Create()
+func (table *Blueprint) MustCreate(callback func(table *Blueprint)) *Blueprint {
+	err := table.Create(callback)
 	if err != nil {
 		panic(err)
 	}
 	return table
+}
+
+// Alter a table one the schema
+func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
+	table.GetColumnsFromDB()
+	newtable := table.Builder.Table(table.Name)
+	callback(newtable)
+	table.diffColumns(newtable)
+	return nil
 }
 
 // Drop a table from the schema.
@@ -96,16 +106,36 @@ func (table *Blueprint) MustRename(name string) *Blueprint {
 	return table
 }
 
-// BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
-func (table *Blueprint) BigInteger() {}
+// Column get the column instance of the table, if the column does not exist create
+func (table *Blueprint) Column(name string) *Column {
+	column, has := table.ColumnMap[name]
+	if has {
+		return column
+	}
+	return table.NewColumn(name)
+}
 
-// String Create a new string column on the table.
-func (table *Blueprint) String(name string, length int) *Column {
-	column := table.NewColumn(name)
-	column.Length = &length
-	column.Type = "string"
-	table.addColumn(column)
-	return column
+// GetColumnsFromDB get the columns of current table
+func (table *Blueprint) GetColumnsFromDB() {
+	rows, err := table.validate().Builder.Conn.Write.
+		Queryx(table.sqlColumns())
+	if err != nil {
+		panic(err)
+	}
+	for rows.Next() {
+		row := &TableField{}
+		err = rows.StructScan(row)
+		if err != nil {
+			panic(err)
+		}
+		if table.hasColumn(row.Field) {
+			table.Column(row.Field).UpField(row)
+		} else {
+			column := table.NewColumn(row.Field)
+			column.UpField(row)
+			table.addColumn(column)
+		}
+	}
 }
 
 // NewIndex New index instance
@@ -121,16 +151,27 @@ func (table *Blueprint) NewColumn(name string) *Column {
 	return &Column{Name: name, Table: table}
 }
 
-func (table *Blueprint) addColumn(column *Column) {
+func (table *Blueprint) hasColumn(name string) bool {
+	_, has := table.ColumnMap[name]
+	return has
+}
+
+func (table *Blueprint) diffColumns(newtable *Blueprint) []*Column {
+	return nil
+}
+
+func (table *Blueprint) addColumn(column *Column) *Column {
 	column.validate()
 	table.Columns = append(table.Columns, column)
 	table.ColumnMap[column.Name] = column
+	return column
 }
 
-func (table *Blueprint) addIndex(index *Index) {
+func (table *Blueprint) addIndex(index *Index) *Index {
 	index.validate()
 	table.Indexes = append(index.Table.Indexes, index)
 	table.IndexMap[index.Name] = index
+	return index
 }
 
 func (table *Blueprint) validate() *Blueprint {
@@ -147,6 +188,11 @@ func tableNameEscaped(name string) string {
 
 func (table *Blueprint) nameEscaped() string {
 	return tableNameEscaped(table.Name)
+}
+
+func (table *Blueprint) sqlColumns() string {
+	sql := fmt.Sprintf("DESC `%s`", table.nameEscaped())
+	return sql
 }
 
 func (table *Blueprint) sqlExists() string {

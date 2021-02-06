@@ -17,6 +17,7 @@ type Schema interface {
 	MustDropIfExists(string)
 	Rename(string, string) error
 	MustRename(string, string) *Blueprint
+	Alter(string, func(table *Blueprint)) error
 	GetColumnType(string) string
 	GetIndexType(string) string
 }
@@ -57,6 +58,9 @@ type Column struct {
 	Nullable *bool
 	Unsigned *bool
 	Table    *Blueprint
+	Changed  bool
+	Removed  bool
+	Newname  string
 }
 
 // Index  the table index definition
@@ -66,4 +70,22 @@ type Index struct {
 	Type    string
 	Columns []*Column
 	Table   *Blueprint
+}
+
+// TableField the table field
+type TableField struct {
+	Field   string      `db:"Field"`
+	Type    string      `db:"Type"`
+	Null    string      `db:"Null"`
+	Key     string      `db:"Key"`
+	Default interface{} `db:"Default"`
+	Extra   interface{} `db:"Extra"`
+}
+
+// TableIndex the table index
+type TableIndex struct {
+	NonUnique  int
+	KeyName    string
+	SeqInIndex int
+	ColumnName string
 }
