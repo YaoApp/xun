@@ -19,29 +19,88 @@ func getTestBuilder() *schema.Builder {
 func TestCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	builder.Create("table_test_builder", func(table *schema.Blueprint) {
+	err := builder.Create("table_test_builder", func(table *schema.Blueprint) {
 		table.String("name", 20).Unique()
 		table.String("unionid", 128).Unique()
 	})
-	assert.True(t, true, "the table should be true")
-}
-
-func TestExistsTrue(t *testing.T) {
-	defer unit.Catch()
-	builder := getTestBuilder()
-	table := builder.Table("table_test_builder")
-	assert.True(t, table.Exists(), "should return true")
+	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
 func TestDrop(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	builder.Drop("table_test_builder")
+	err := builder.Drop("table_test_builder")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestExistsFalse(t *testing.T) {
+func TestDropIfExistsTableNotExists(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	table := builder.Table("table_test_builder")
-	assert.True(t, !table.Exists(), "should return false")
+	err := builder.DropIfExists("table_not_exists")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.Equal(t, nil, err, "the return error should be nil")
+}
+
+func TestDropIfExistsTableExists(t *testing.T) {
+	defer unit.Catch()
+	TestCreate(t)
+	builder := getTestBuilder()
+	err := builder.DropIfExists("table_test_builder")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.Equal(t, nil, err, "the return error should be nil")
+}
+
+func TestRename(t *testing.T) {
+	defer unit.Catch()
+	TestCreate(t)
+	builder := getTestBuilder()
+	err := builder.Rename("table_test_builder", "table_test_builder_re")
+	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	builder.Drop("table_test_builder_re")
+}
+
+func TestMustCreate(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	table := builder.MustCreate("table_test_builder", func(table *schema.Blueprint) {
+		table.String("name", 20).Unique()
+		table.String("unionid", 128).Unique()
+	})
+	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.Equal(t, "table_test_builder", table.Name, "the table name should be table_test_builder")
+}
+
+func TestMustDrop(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.MustDrop("table_test_builder")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+}
+
+func TestMustDropIfExistsTableNotExists(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.MustDropIfExists("table_not_exists")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+}
+
+func TestMustDropIfExistsTableExists(t *testing.T) {
+	defer unit.Catch()
+	TestMustCreate(t)
+	builder := getTestBuilder()
+	builder.MustDropIfExists("table_test_builder")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+}
+
+func TestMustRename(t *testing.T) {
+	defer unit.Catch()
+	TestCreate(t)
+	builder := getTestBuilder()
+	table := builder.MustRename("table_test_builder", "table_test_builder_re")
+	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
+	assert.Equal(t, "table_test_builder_re", table.Name, "the table name should be table_test_builder_re")
+	builder.Drop("table_test_builder_re")
 }

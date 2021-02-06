@@ -3,6 +3,7 @@ package schema
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var columnTypes = map[string]string{
@@ -19,12 +20,12 @@ func (column *Column) Unique() *Column {
 
 func (column *Column) sqlCreate() string {
 	// `id` bigint(20) unsigned NOT NULL,
-	sql := fmt.Sprintf("`%s` %s(%d) %s", column.Name, GetColumnType(column.Type), *column.Length, "NOT NULL")
+	sql := fmt.Sprintf("`%s` %s(%d) %s", column.nameEscaped(), GetColumnType(column.Type), *column.Length, "NOT NULL")
 	return sql
 }
 
 func (column *Column) validate() *Column {
-	if column.Name == "" {
+	if column.nameEscaped() == "" {
 		err := errors.New("the column name must be set")
 		panic(err)
 	}
@@ -47,4 +48,8 @@ func GetColumnType(name string) string {
 		return columnTypes[name]
 	}
 	return "varchar"
+}
+
+func (column *Column) nameEscaped() string {
+	return strings.ReplaceAll(column.Name, "`", "")
 }

@@ -18,7 +18,7 @@ func (index *Index) sqlCreate() string {
 	for _, column := range index.Columns {
 		columns = append(columns, column.Name)
 	}
-	sql := fmt.Sprintf("%s KEY `%s` (`%s`)", GetIndexType(index.Type), index.Name, strings.Join(columns, "`,`"))
+	sql := fmt.Sprintf("%s KEY `%s` (`%s`)", GetIndexType(index.Type), index.nameEscaped(), strings.Join(columns, "`,`"))
 	return sql
 }
 
@@ -31,7 +31,7 @@ func GetIndexType(name string) string {
 }
 
 func (index *Index) validate() *Index {
-	if index.Name == "" {
+	if index.nameEscaped() == "" {
 		err := errors.New("the index name must be set")
 		panic(err)
 	}
@@ -47,4 +47,8 @@ func (index *Index) validate() *Index {
 	}
 
 	return index
+}
+
+func (index *Index) nameEscaped() string {
+	return strings.ReplaceAll(index.Name, "`", "")
 }

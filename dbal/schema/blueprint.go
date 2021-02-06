@@ -18,18 +18,6 @@ func NewBlueprint(name string, builder *Builder) *Blueprint {
 	}
 }
 
-// Create table
-func (table *Blueprint) Create() {
-	table.validate().Builder.Conn.Write.
-		MustExec(table.sqlCreate())
-}
-
-// Drop table
-func (table *Blueprint) Drop() {
-	table.validate().Builder.Conn.Write.
-		MustExec(table.sqlDrop())
-}
-
 // Exists check if the table is exists
 func (table *Blueprint) Exists() bool {
 	row := table.validate().Builder.Conn.Write.
@@ -43,6 +31,69 @@ func (table *Blueprint) Exists() bool {
 		return false
 	}
 	return table.Name == fmt.Sprintf("%s", res[0])
+}
+
+// Create a new table on the schema
+func (table *Blueprint) Create() error {
+	_, err := table.validate().Builder.Conn.Write.
+		Exec(table.sqlCreate())
+	return err
+}
+
+// MustCreate a new table on the schema
+func (table *Blueprint) MustCreate() *Blueprint {
+	err := table.Create()
+	if err != nil {
+		panic(err)
+	}
+	return table
+}
+
+// Drop a table from the schema.
+func (table *Blueprint) Drop() error {
+	_, err := table.validate().Builder.Conn.Write.
+		Exec(table.sqlDrop())
+	return err
+}
+
+// MustDrop a table from the schema.
+func (table *Blueprint) MustDrop() {
+	err := table.Drop()
+	if err != nil {
+		panic(err)
+	}
+}
+
+// DropIfExists drop the table if the table exists
+func (table *Blueprint) DropIfExists() error {
+	_, err := table.validate().Builder.Conn.Write.
+		Exec(table.sqlDropIfExists())
+	return err
+}
+
+// MustDropIfExists drop the table if the table exists
+func (table *Blueprint) MustDropIfExists() {
+	err := table.DropIfExists()
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Rename a table on the schema.
+func (table *Blueprint) Rename(name string) error {
+	_, err := table.validate().Builder.Conn.Write.
+		Exec(table.sqlRename(name))
+	table.Name = name
+	return err
+}
+
+// MustRename a table on the schema.
+func (table *Blueprint) MustRename(name string) *Blueprint {
+	err := table.Rename(name)
+	if err != nil {
+		panic(err)
+	}
+	return table
 }
 
 // BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
@@ -90,19 +141,37 @@ func (table *Blueprint) validate() *Blueprint {
 	return table
 }
 
+func tableNameEscaped(name string) string {
+	return strings.ReplaceAll(name, "`", "")
+}
+
+func (table *Blueprint) nameEscaped() string {
+	return tableNameEscaped(table.Name)
+}
+
 func (table *Blueprint) sqlExists() string {
-	sql := fmt.Sprintf("SHOW TABLES like '%s'", table.Name)
+	sql := fmt.Sprintf("SHOW TABLES like '%s'", table.nameEscaped())
 	return sql
 }
 
 func (table *Blueprint) sqlDrop() string {
-	sql := fmt.Sprintf("DROP Table `%s`", table.Name)
+	sql := fmt.Sprintf("DROP TABLE `%s`", table.nameEscaped())
+	return sql
+}
+
+func (table *Blueprint) sqlRename(name string) string {
+	sql := fmt.Sprintf("RENAME TABLE `%s` TO `%s`", table.nameEscaped(), tableNameEscaped(name))
+	return sql
+}
+
+func (table *Blueprint) sqlDropIfExists() string {
+	sql := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table.nameEscaped())
 	return sql
 }
 
 func (table *Blueprint) sqlCreate() string {
 
-	sql := "CREATE Table `" + table.Name + "` (\n"
+	sql := fmt.Sprintf("CREATE TABLE `%s` (\n", table.nameEscaped())
 
 	// columns
 	stmts := []string{}

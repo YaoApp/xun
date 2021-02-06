@@ -7,10 +7,15 @@ type Connection struct{ Write *sqlx.DB }
 
 // Schema The database Schema interface
 type Schema interface {
-	Create(string, func(table *Blueprint))
-	Drop(string)
-	DropIfExists()
-	Rename()
+	HasTable(string) bool
+	Create(string, func(table *Blueprint)) error
+	MustCreate(string, func(table *Blueprint)) *Blueprint
+	Drop(string) error
+	MustDrop(string)
+	DropIfExists(string) error
+	MustDropIfExists(string)
+	Rename(string, string) error
+	MustRename(string, string) *Blueprint
 	GetColumnType(string) string
 	GetIndexType(string) string
 }
