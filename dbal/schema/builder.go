@@ -64,7 +64,7 @@ func (builder *Builder) Table(name string) *Blueprint {
 	return table
 }
 
-// HasTable check the table exists
+// HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) bool {
 	table := builder.Table(name)
 	return table.Exists()

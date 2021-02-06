@@ -7,6 +7,7 @@ type Connection struct{ Write *sqlx.DB }
 
 // Schema The database Schema interface
 type Schema interface {
+	Table(string) *Blueprint
 	HasTable(string) bool
 	Create(string, func(table *Blueprint)) error
 	MustCreate(string, func(table *Blueprint)) *Blueprint
