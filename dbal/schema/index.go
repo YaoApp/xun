@@ -30,7 +30,7 @@ func GetIndexType(name string) string {
 	return "INDEX"
 }
 
-func (index *Index) validate() {
+func (index *Index) validate() *Index {
 	if index.Name == "" {
 		err := errors.New("the index name must be set")
 		panic(err)
@@ -45,4 +45,6 @@ func (index *Index) validate() {
 		err := errors.New("the index " + index.Name + "not bind table")
 		panic(err)
 	}
+
+	return index
 }

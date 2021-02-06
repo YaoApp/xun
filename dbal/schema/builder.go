@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"fmt"
-
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
@@ -36,15 +34,21 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 
 // Create a new table on the schema.
 func (builder *Builder) Create(name string, callback func(table *Blueprint)) {
-	table := NewBlueprint(name)
+	table := NewBlueprint(name, builder)
 	callback(table)
-	sql := table.sqlCreate()
-	builder.Conn.Write.MustExec(sql)
+	table.Create()
 }
 
 // Drop Indicate that the table should be dropped.
-func (builder *Builder) Drop() {
-	fmt.Printf("\nDrop DBAL: \n===\n%#v\n===\n", builder.Conn)
+func (builder *Builder) Drop(name string) {
+	table := NewBlueprint(name, builder)
+	table.Drop()
+}
+
+// Table get the table blueprint instance
+func (builder *Builder) Table(name string) *Blueprint {
+	table := NewBlueprint(name, builder)
+	return table
 }
 
 // DropIfExists Indicate that the table should be dropped if it exists.

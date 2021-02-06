@@ -23,7 +23,7 @@ func (column *Column) sqlCreate() string {
 	return sql
 }
 
-func (column *Column) validate() {
+func (column *Column) validate() *Column {
 	if column.Name == "" {
 		err := errors.New("the column name must be set")
 		panic(err)
@@ -38,6 +38,7 @@ func (column *Column) validate() {
 		err := errors.New("the column " + column.Name + "does not bind the table")
 		panic(err)
 	}
+	return column
 }
 
 // GetColumnType return the columns type

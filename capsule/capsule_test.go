@@ -27,12 +27,9 @@ func TestAddConnection(t *testing.T) {
 			Charset:  "utf8",
 			ReadOnly: true,
 		})
-	schema := manager.Schema()
-	schema.Drop()
 
-	qb := manager.Query()
-	qb.Where()
-	qb.Join()
+	manager.Schema()
+	manager.Query()
 
 }
 
@@ -44,18 +41,13 @@ func TestAddConnectionSqlite(t *testing.T) {
 			DBName: "unit-test.db",
 			Memory: true,
 		})
-	schema := manager.Schema()
-	schema.Drop()
+	manager.Schema()
 }
 
 func TestGlobal(t *testing.T) {
 	fmt.Printf("\n\n== TestGlobal ====================\n")
-	schema := Schema()
-	schema.Drop()
-
-	qb := Query()
-	qb.Where()
-	qb.Join()
+	Schema()
+	Query()
 }
 
 func TestSetAsGlobal(t *testing.T) {
@@ -68,10 +60,6 @@ func TestSetAsGlobal(t *testing.T) {
 		})
 	manager.SetAsGlobal()
 
-	schema := Schema()
-	schema.Drop()
-
-	qb := Query()
-	qb.Where()
-	qb.Join()
+	Schema()
+	Query()
 }

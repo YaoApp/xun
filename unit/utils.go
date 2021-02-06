@@ -6,13 +6,14 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/fatih/color"
 	"github.com/yaoapp/xun/capsule"
 )
 
 // "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local"
 
 // DSN the dsns for testing
-var DSN map[string]string = map[string]string{
+var dsns map[string]string = map[string]string{
 	"mysql":  os.Getenv("XUN_UNIT_MYSQL_DSN"),
 	"sqlite": os.Getenv("XUN_UNIT_SQLITE_DSN"),
 	"pgsql":  os.Getenv("XUN_UNIT_POSTGRE_DSN"),
@@ -22,15 +23,21 @@ var DSN map[string]string = map[string]string{
 
 // Use create a capsule intance using DSN
 func Use(name string) *capsule.Manager {
-	dsn, has := DSN[name]
-	if !has || dsn == "" {
-		err := errors.New("dsn not found!" + name)
-		panic(err)
-	}
+	dsn := DSN(name)
 	return capsule.AddConnection(capsule.Config{
 		Driver: name,
 		DSN:    dsn,
 	})
+}
+
+// DSN get the dsn from evn
+func DSN(name string) string {
+	dsn, has := dsns[name]
+	if !has || dsn == "" {
+		err := errors.New("dsn not found!" + name)
+		panic(err)
+	}
+	return dsn
 }
 
 // Catch and out
@@ -38,14 +45,14 @@ func Catch() {
 	if r := recover(); r != nil {
 		switch r.(type) {
 		case string:
-			fmt.Printf("%s\n", r)
+			color.Red("%s\n", r)
 			break
 		case error:
-			fmt.Printf("%s\n", r.(error).Error())
+			color.Red("%s\n", r.(error).Error())
 			break
 		default:
-			fmt.Printf("%#v\n", r)
+			color.Red("%#v\n", r)
 		}
-		fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
+		fmt.Println(string(debug.Stack()))
 	}
 }

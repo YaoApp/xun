@@ -8,15 +8,15 @@ type Connection struct{ Write *sqlx.DB }
 // Schema The database Schema interface
 type Schema interface {
 	Create(string, func(table *Blueprint))
-	Drop()
+	Drop(string)
 	DropIfExists()
 	Rename()
 	GetColumnType(string) string
 	GetIndexType(string) string
 }
 
-// BlueprintAPI  the bluprint interface
-type BlueprintAPI interface {
+// BlueprintInterface  the bluprint interface
+type BlueprintInterface interface {
 	BigInteger()
 	String(name string, length int) *Blueprint
 	Primary()
@@ -30,7 +30,8 @@ type Builder struct {
 
 // Blueprint the table blueprint
 type Blueprint struct {
-	BlueprintAPI
+	BlueprintInterface
+	Builder   *Builder
 	Comment   string
 	Name      string
 	Columns   []*Column
