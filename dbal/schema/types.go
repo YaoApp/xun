@@ -3,6 +3,7 @@ package schema
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/grammar"
 )
 
 // Connection DB Connection
@@ -38,7 +39,8 @@ type BlueprintMethods interface {
 
 // Builder the dbal schema driver
 type Builder struct {
-	Conn *Connection
+	Conn    *Connection
+	Grammar grammar.Grammar
 	Schema
 }
 

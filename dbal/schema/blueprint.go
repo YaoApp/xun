@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/yaoapp/xun/grammar"
 )
 
 // NewBlueprint create a new blueprint intance
@@ -21,11 +23,12 @@ func NewBlueprint(name string, builder *Builder) *Blueprint {
 // Exists check if the table is exists
 func (table *Blueprint) Exists() bool {
 	row := table.validate().Builder.Conn.Write.
-		QueryRowx(table.sqlExists())
+		QueryRowx(
+			table.Builder.Grammar.Exists(table.toGrammar()),
+		)
 	if row.Err() != nil {
 		panic(row.Err())
 	}
-
 	res, err := row.SliceScan()
 	if err != nil {
 		return false
@@ -235,6 +238,13 @@ func (table *Blueprint) validate() *Blueprint {
 		panic(err)
 	}
 	return table
+}
+
+func (table *Blueprint) toGrammar() grammar.Table {
+	return grammar.Table{
+		Name:    table.Name,
+		Comment: table.Comment,
+	}
 }
 
 func tableNameEscaped(name string) string {

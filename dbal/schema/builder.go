@@ -5,6 +5,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/grammar/mysql"
+	"github.com/yaoapp/xun/grammar/sqlite3"
 )
 
 // New create new schema buider interface
@@ -13,11 +16,23 @@ func New(conn *Connection) Schema {
 	return &builder
 }
 
-// NewBuilder create new schema buider blueprint
+// NewBuilder create a new schema buider blueprint
 func NewBuilder(conn *Connection) Builder {
 	return Builder{
-		Conn: conn,
+		Conn:    conn,
+		Grammar: NewGrammar(conn.WriteConfig.Driver),
 	}
+}
+
+// NewGrammar create a new grammar intance
+func NewGrammar(driver string) grammar.Grammar {
+	switch driver {
+	case "mysql":
+		return mysql.New()
+	case "sqlite3":
+		return sqlite3.New()
+	}
+	return mysql.New()
 }
 
 // NewBuilderByDSN create a new schema builder by given DSN
