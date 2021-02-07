@@ -9,7 +9,7 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
-func getTestBuilder() *schema.Builder {
+func getTestBuilder() schema.Schema {
 	defer unit.Catch()
 	driver := os.Getenv("XUN_UNIT_DSN")
 	dsn := unit.DSN(driver)
