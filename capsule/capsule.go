@@ -21,16 +21,24 @@ func New() *Manager {
 	return &Manager{
 		Pool:        &Pool{},
 		Connections: &sync.Map{},
+		Config:      &schema.Config{},
 	}
 }
 
+// NewConfig Create a database manager instance using the given config.
+func NewConfig(config schema.Config) *Manager {
+	manager := New()
+	manager.Config = &config
+	return manager
+}
+
 // AddConnection Register a connection with the manager.
-func AddConnection(config Config) *Manager {
+func AddConnection(config schema.ConnConfig) *Manager {
 	return New().AddConnection(config)
 }
 
 // AddConnection Register a connection with the manager.
-func (manager *Manager) AddConnection(config Config) *Manager {
+func (manager *Manager) AddConnection(config schema.ConnConfig) *Manager {
 
 	name := "main"
 	if config.Name != "" {
@@ -119,7 +127,9 @@ func (manager *Manager) Schema() schema.Schema {
 	return newSchema(
 		write.Config.Driver,
 		&schema.Connection{
-			Write: &write.DB,
+			Write:       &write.DB,
+			Config:      manager.Config,
+			WriteConfig: write.Config,
 		})
 }
 
@@ -139,7 +149,10 @@ func (manager *Manager) Query() query.Query {
 	return newQuery(
 		write.Config.Driver,
 		&query.Connection{
-			Write: &write.DB,
-			Read:  &read.DB,
+			Write:       &write.DB,
+			WriteConfig: write.Config,
+			Read:        &read.DB,
+			ReadConfig:  read.Config,
+			Config:      manager.Config,
 		})
 }

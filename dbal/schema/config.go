@@ -1,4 +1,4 @@
-package capsule
+package schema
 
 import "fmt"
 
@@ -8,7 +8,7 @@ var drivers map[string]string = map[string]string{
 }
 
 // DataSource get the data source format text
-func (config Config) DataSource() string {
+func (config ConnConfig) DataSource() string {
 	if config.DSN != "" {
 		return config.DSN
 	}
@@ -38,6 +38,11 @@ func (config Config) DataSource() string {
 }
 
 // DriverName get the driver name
-func (config Config) DriverName() string {
+func (config ConnConfig) DriverName() string {
 	return drivers[config.Driver]
+}
+
+// GetDBName return current db name
+func (config ConnConfig) GetDBName() string {
+	return config.DSN
 }

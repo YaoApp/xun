@@ -12,6 +12,17 @@ var indexTypes = map[string]string{
 	"primary": "PRIMARY",
 }
 
+// Drop mark as dropped for the index
+func (index *Index) Drop() {
+	index.dropped = true
+}
+
+// Rename mark as renamed with the given name for the index
+func (index *Index) Rename(new string) {
+	index.renamed = true
+	index.newname = new
+}
+
 func (index *Index) sqlCreate() string {
 	// UNIQUE KEY `unionid` (`unionid`)
 	columns := []string{}

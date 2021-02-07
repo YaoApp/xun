@@ -34,30 +34,22 @@ func (table *Blueprint) String(name string, length int) *Column {
 	return column
 }
 
-// Change mark as changed
-func (column *Column) Change() *Column {
-	column.Changed = true
-	return column
-}
-
-// Remove mark as removed
-func (column *Column) Remove() *Column {
-	column.Removed = true
-	return column
-}
-
-// Rename rename the column
-func (column *Column) Rename(name string) *Column {
-	column.Changed = true
-	column.Newname = name
-	return column
-}
-
 // UpField update the column by given table field.
 func (column *Column) UpField(field *TableField) *Column {
 	column.Name = field.Field
 	column.Type = GetColumnType(field.Type)
 	return column
+}
+
+// Drop mark as dropped for the index
+func (column *Column) Drop() {
+	column.dropped = true
+}
+
+// Rename mark as renamed with the given name for the index
+func (column *Column) Rename(new string) {
+	column.renamed = true
+	column.newname = new
 }
 
 func (column *Column) sqlCreate() string {

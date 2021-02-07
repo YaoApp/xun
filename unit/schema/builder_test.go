@@ -11,9 +11,9 @@ import (
 
 func getTestBuilder() *schema.Builder {
 	defer unit.Catch()
-	name := os.Getenv("XUN_UNIT_DSN")
-	dsn := unit.DSN(name)
-	return schema.NewBuilderByDSN(name, dsn)
+	driver := os.Getenv("XUN_UNIT_DSN")
+	dsn := unit.DSN(driver)
+	return schema.NewBuilderByDSN(driver, dsn)
 }
 
 func TestCreate(t *testing.T) {
@@ -68,9 +68,10 @@ func TestAlter(t *testing.T) {
 	builder := getTestBuilder()
 	err := builder.Alter("table_test_builder", func(table *schema.Blueprint) {
 		table.String("nickname", 50)
-		table.String("unionid", 200).Change()
-		table.Column("name").Remove()
-		table.Column("unionid").Rename("uid")
+		table.String("unionid", 200)
+		table.DropIndex("unionid")
+		table.DropColumn("name")
+		table.RenameColumn("unionid", "uid").Unique()
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
 	builder.Drop("table_test_builder")

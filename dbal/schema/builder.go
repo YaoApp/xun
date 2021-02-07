@@ -27,6 +27,12 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 	}
 	conn := &Connection{
 		Write: db,
+		WriteConfig: &ConnConfig{
+			DSN:    dsn,
+			Driver: driver,
+			Name:   "main",
+		},
+		Config: &Config{},
 	}
 	builder := NewBuilder(conn)
 	return &builder

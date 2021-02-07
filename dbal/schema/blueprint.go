@@ -52,10 +52,10 @@ func (table *Blueprint) MustCreate(callback func(table *Blueprint)) *Blueprint {
 
 // Alter a table one the schema
 func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
-	table.GetColumnsFromDB()
-	newtable := table.Builder.Table(table.Name)
-	callback(newtable)
-	table.diffColumns(newtable)
+	alter := table.Builder.Table(table.Name)
+	alter.alter = true
+	callback(alter)
+	alter.sqlAlter()
 	return nil
 }
 
@@ -115,8 +115,8 @@ func (table *Blueprint) Column(name string) *Column {
 	return table.NewColumn(name)
 }
 
-// GetColumnsFromDB get the columns of current table
-func (table *Blueprint) GetColumnsFromDB() {
+// GetColumnListing Get the column listing for the table
+func (table *Blueprint) GetColumnListing() {
 	rows, err := table.validate().Builder.Conn.Write.
 		Queryx(table.sqlColumns())
 	if err != nil {
@@ -128,7 +128,7 @@ func (table *Blueprint) GetColumnsFromDB() {
 		if err != nil {
 			panic(err)
 		}
-		if table.hasColumn(row.Field) {
+		if table.HasColumn(row.Field) {
 			table.Column(row.Field).UpField(row)
 		} else {
 			column := table.NewColumn(row.Field)
@@ -138,7 +138,11 @@ func (table *Blueprint) GetColumnsFromDB() {
 	}
 }
 
-// NewIndex New index instance
+// GetIndexListing Get the index listing for the table
+func (table *Blueprint) GetIndexListing() {
+}
+
+// NewIndex Create a new index instance
 func (table *Blueprint) NewIndex(name string, columns ...*Column) *Index {
 	index := &Index{Name: name, Columns: []*Column{}}
 	index.Columns = append(index.Columns, columns...)
@@ -146,18 +150,69 @@ func (table *Blueprint) NewIndex(name string, columns ...*Column) *Index {
 	return index
 }
 
-// NewColumn New column instance
+// GetIndex get the index instance for the given name, create if not exists.
+func (table *Blueprint) GetIndex(name string) *Index {
+	index, has := table.IndexMap[name]
+	if !has {
+		index = table.NewIndex(name)
+	}
+	return index
+}
+
+// NewColumn Create a new column instance
 func (table *Blueprint) NewColumn(name string) *Column {
 	return &Column{Name: name, Table: table}
 }
 
-func (table *Blueprint) hasColumn(name string) bool {
-	_, has := table.ColumnMap[name]
+// GetColumn get the column instance for the given name, create if not exists.
+func (table *Blueprint) GetColumn(name string) *Column {
+	column, has := table.ColumnMap[name]
+	if !has {
+		column = table.NewColumn(name)
+	}
+	return column
+}
+
+// HasColumn Determine if the table has a given column.
+func (table *Blueprint) HasColumn(name ...string) bool {
+	has := true
+	for _, n := range name {
+		_, has = table.ColumnMap[n]
+		if !has {
+			return has
+		}
+	}
 	return has
 }
 
-func (table *Blueprint) diffColumns(newtable *Blueprint) []*Column {
-	return nil
+// DropColumn Indicate that the given columns should be dropped.
+func (table *Blueprint) DropColumn(name ...string) {
+	for _, n := range name {
+		column := table.GetColumn(n)
+		column.Drop()
+	}
+}
+
+// RenameColumn Indicate that the given column should be renamed.
+func (table *Blueprint) RenameColumn(old string, new string) *Column {
+	column := table.GetColumn(old)
+	column.Rename(new)
+	return column
+}
+
+// DropIndex Indicate that the given indexes should be dropped.
+func (table *Blueprint) DropIndex(name ...string) {
+	for _, n := range name {
+		index := table.GetIndex(n)
+		index.Drop()
+	}
+}
+
+// RenameIndex Indicate that the given indexes should be renamed.
+func (table *Blueprint) RenameIndex(old string, new string) *Index {
+	index := table.GetIndex(old)
+	index.Rename(new)
+	return index
 }
 
 func (table *Blueprint) addColumn(column *Column) *Column {
@@ -191,7 +246,37 @@ func (table *Blueprint) nameEscaped() string {
 }
 
 func (table *Blueprint) sqlColumns() string {
-	sql := fmt.Sprintf("DESC `%s`", table.nameEscaped())
+	// SELECT *
+	// FROM INFORMATION_SCHEMA.COLUMNS
+	// WHERE TABLE_SCHEMA = 'test' AND TABLE_NAME ='products';
+	fields := []string{
+		"TABLE_SCHEMA AS `db_name`",
+		"TABLE_NAME AS `table_name`",
+		"COLUMN_NAME AS `field`",
+		"ORDINAL_POSITION AS `position`",
+		"COLUMN_DEFAULT AS `default`",
+		"IS_NULLABLE as `nullable`",
+		"DATA_TYPE as `type`",
+		"CHARACTER_MAXIMUM_LENGTH as `length`",
+		"CHARACTER_OCTET_LENGTH as `octet_length`",
+		"NUMERIC_PRECISION as `precision`",
+		"NUMERIC_SCALE as `scale`",
+		"DATETIME_PRECISION as `datetime_precision`",
+		"CHARACTER_SET_NAME as `character`",
+		"COLLATION_NAME as `collation`",
+		"COLUMN_KEY as `key`",
+		"EXTRA as `extra`",
+		"COLUMN_COMMENT as `comment`",
+	}
+	sql := ` 
+		SELECT %s	
+		FROM INFORMATION_SCHEMA.COLUMNS 
+		WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME ='%s';
+	`
+	cfg := table.Builder.Conn.WriteConfig
+	fmt.Printf("sqlColumns: %#v\n", cfg.GetDBName())
+	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
+	// fmt.Printf("%s", sql)
 	return sql
 }
 
@@ -234,4 +319,9 @@ func (table *Blueprint) sqlCreate() string {
 	sql = sql + "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
 
 	return sql
+}
+
+func (table *Blueprint) sqlAlter() []string {
+	table.sqlColumns()
+	return []string{}
 }

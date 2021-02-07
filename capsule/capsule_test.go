@@ -3,12 +3,14 @@ package capsule
 import (
 	"fmt"
 	"testing"
+
+	"github.com/yaoapp/xun/dbal/schema"
 )
 
 func TestAddConnection(t *testing.T) {
 	fmt.Printf("\n\n== TestAddConnection ====================\n")
 	manager := New().
-		AddConnection(Config{
+		AddConnection(schema.ConnConfig{
 			Driver:   "mysql",
 			Host:     "192.168.31.119",
 			Port:     3306,
@@ -17,7 +19,7 @@ func TestAddConnection(t *testing.T) {
 			DBName:   "xiang",
 			Charset:  "utf8",
 		}).
-		AddConnection(Config{
+		AddConnection(schema.ConnConfig{
 			Driver:   "mysql",
 			Host:     "192.168.31.119",
 			Port:     3306,
@@ -36,7 +38,7 @@ func TestAddConnection(t *testing.T) {
 func TestAddConnectionSqlite(t *testing.T) {
 	fmt.Printf("\n\n== TestAddConnectionSqlite ====================\n")
 	manager := New().
-		AddConnection(Config{
+		AddConnection(schema.ConnConfig{
 			Driver: "sqlite",
 			DBName: "unit-test.db",
 			Memory: true,
@@ -53,7 +55,7 @@ func TestGlobal(t *testing.T) {
 func TestSetAsGlobal(t *testing.T) {
 	fmt.Printf("\n\n== TestGlobalAfterSet ====================\n")
 	manager := New().
-		AddConnection(Config{
+		AddConnection(schema.ConnConfig{
 			Driver: "sqlite",
 			DBName: "unit-test-2.db",
 			Memory: true,

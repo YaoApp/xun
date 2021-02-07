@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/yaoapp/xun/capsule"
+	"github.com/yaoapp/xun/dbal/schema"
 )
 
 // "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local"
@@ -24,7 +25,7 @@ var dsns map[string]string = map[string]string{
 // Use create a capsule intance using DSN
 func Use(name string) *capsule.Manager {
 	dsn := DSN(name)
-	return capsule.AddConnection(capsule.Config{
+	return capsule.AddConnection(schema.ConnConfig{
 		Driver: name,
 		DSN:    dsn,
 	})
