@@ -4,14 +4,14 @@ import (
 	"sync"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun/dbal/schema"
+	"github.com/yaoapp/xun/dbal"
 )
 
 // Manager The database manager
 type Manager struct {
 	Pool        *Pool
 	Connections *sync.Map // map[string]*Connection
-	Config      *schema.Config
+	Config      *dbal.DBConfig
 }
 
 // Pool the connection pool
@@ -23,5 +23,5 @@ type Pool struct {
 // Connection The database connection
 type Connection struct {
 	sqlx.DB
-	Config *schema.ConnConfig
+	Config *dbal.Config
 }

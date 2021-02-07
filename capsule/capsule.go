@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -21,41 +22,64 @@ func New() *Manager {
 	return &Manager{
 		Pool:        &Pool{},
 		Connections: &sync.Map{},
-		Config:      &schema.Config{},
+		Config:      &dbal.DBConfig{},
 	}
 }
 
-// NewConfig Create a database manager instance using the given config.
-func NewConfig(config schema.Config) *Manager {
+// NewWithConfig Create a database manager instance using the given config.
+func NewWithConfig(config dbal.DBConfig) *Manager {
 	manager := New()
-	manager.Config = &config
+	manager.SetConfig(config)
 	return manager
 }
 
-// AddConnection Register a connection with the manager.
-func AddConnection(config schema.ConnConfig) *Manager {
-	return New().AddConnection(config)
+// AddConn Register a connection with the manager.
+func AddConn(name string, driver string, datasource string) *Manager {
+	return New().AddConn(name, driver, datasource)
+}
+
+// AddConn Register a connection with the manager.
+func (manager *Manager) AddConn(name string, driver string, datasource string) *Manager {
+	manager.AddConnection(name, driver, datasource, false)
+	return manager
+}
+
+// AddReadConn Register a readonly connection with the manager.
+func AddReadConn(name string, driver string, datasource string) *Manager {
+	return New().AddReadConn(name, driver, datasource)
+}
+
+// AddReadConn Register a readonly with the manager.
+func (manager *Manager) AddReadConn(name string, driver string, datasource string) *Manager {
+	manager.AddConnection(name, driver, datasource, true)
+	return manager
+}
+
+// SetConfig set the database manager as the given value
+func (manager *Manager) SetConfig(config dbal.DBConfig) {
+	manager.Config = &config
 }
 
 // AddConnection Register a connection with the manager.
-func (manager *Manager) AddConnection(config schema.ConnConfig) *Manager {
-
-	name := "main"
-	if config.Name != "" {
-		name = config.Name
+func (manager *Manager) AddConnection(name string, driver string, datasource string, readonly bool) *Manager {
+	config := dbal.Config{
+		Name:     name,
+		Driver:   driver,
+		DSN:      datasource,
+		ReadOnly: readonly,
 	}
 
 	conn := &Connection{
-		DB:     *sqlx.MustOpen(config.DriverName(), config.DataSource()),
+		DB:     *sqlx.MustOpen(config.Driver, config.DSN),
 		Config: &config,
 	}
-
+	manager.Pool.Primary = append(manager.Pool.Primary, conn)
 	if config.ReadOnly == true {
 		manager.Pool.Readonly = append(manager.Pool.Readonly, conn)
 	} else {
 		manager.Pool.Primary = append(manager.Pool.Primary, conn)
 	}
-	manager.Connections.Store(name, conn)
+	manager.Connections.Store(config.Name, conn)
 
 	if Global == nil {
 		Global = manager

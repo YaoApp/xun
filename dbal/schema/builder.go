@@ -4,6 +4,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
+	"github.com/yaoapp/xun/dbal"
 )
 
 // New create new schema buider interface
@@ -27,12 +28,12 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 	}
 	conn := &Connection{
 		Write: db,
-		WriteConfig: &ConnConfig{
+		WriteConfig: &dbal.Config{
 			DSN:    dsn,
 			Driver: driver,
 			Name:   "main",
 		},
-		Config: &Config{},
+		Config: &dbal.DBConfig{},
 	}
 	builder := NewBuilder(conn)
 	return &builder

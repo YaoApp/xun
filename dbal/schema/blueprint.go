@@ -273,8 +273,8 @@ func (table *Blueprint) sqlColumns() string {
 		FROM INFORMATION_SCHEMA.COLUMNS 
 		WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME ='%s';
 	`
-	cfg := table.Builder.Conn.WriteConfig
-	fmt.Printf("sqlColumns: %#v\n", cfg.GetDBName())
+	// cfg := table.Builder.Conn.WriteConfig
+	// fmt.Printf("sqlColumns: %#v\n", cfg.GetDBName())
 	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
 	// fmt.Printf("%s", sql)
 	return sql

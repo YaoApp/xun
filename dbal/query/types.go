@@ -2,7 +2,7 @@ package query
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun/dbal/schema"
+	"github.com/yaoapp/xun/dbal"
 )
 
 // Query The database Query interface
@@ -20,8 +20,8 @@ type Builder struct {
 // Connection DB Connection
 type Connection struct {
 	Write       *sqlx.DB
-	WriteConfig *schema.ConnConfig
+	WriteConfig *dbal.Config
 	Read        *sqlx.DB
-	ReadConfig  *schema.ConnConfig
-	Config      *schema.Config
+	ReadConfig  *dbal.Config
+	Config      *dbal.DBConfig
 }
