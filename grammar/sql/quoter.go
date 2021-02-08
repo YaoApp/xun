@@ -1,45 +1,28 @@
-package mysql
+package sql
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun/grammar"
-	"github.com/yaoapp/xun/grammar/sql"
 )
-
-// Mysql the mysql Grammar
-type Mysql struct {
-	sql.SQL
-}
 
 // Quoter the database quoting query text SQL type
 type Quoter struct{}
 
-// ID quoting query Identifier (`id`)
+// ID quoting query Identifier
 func (quoter Quoter) ID(name string, db *sqlx.DB) string {
 	name = strings.ReplaceAll(name, "`", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
-	return "`" + name + "`"
+	return name
 }
 
-// VAL quoting query value ( 'value' )
+// VAL quoting query value
 func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
 	input := fmt.Sprintf("%v", v)
 	input = strings.ReplaceAll(input, "'", "\\'")
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\r", "")
-	return "'" + input + "'"
-}
-
-// New Create a new mysql grammar inteface
-func New() grammar.Grammar {
-	my := Mysql{
-		SQL: sql.NewSQL(),
-	}
-	my.Driver = "mysql"
-	my.Quoter = Quoter{}
-	return my
+	return input
 }

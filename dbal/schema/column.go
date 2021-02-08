@@ -2,7 +2,6 @@ package schema
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -28,7 +27,7 @@ func (table *Blueprint) BigInteger() {}
 // String Create a new string column on the table.
 func (table *Blueprint) String(name string, length int) *Column {
 	column := table.NewColumn(name)
-	column.Length = &length
+	column.Length = length
 	column.Type = "string"
 	table.addColumn(column)
 	return column
@@ -52,10 +51,44 @@ func (column *Column) Rename(new string) {
 	column.newname = new
 }
 
-func (column *Column) sqlCreate() string {
-	// `id` bigint(20) unsigned NOT NULL,
-	sql := fmt.Sprintf("`%s` %s(%d) %s", column.nameEscaped(), GetTableFieldType(column.Type), *column.Length, "NOT NULL")
-	return sql
+// Precision get the column Precision
+func (column *Column) Precision() int {
+	switch column.Args.(type) {
+	case []int:
+		return column.Args.([]int)[0]
+	case int:
+		return column.Args.(int)
+	default:
+		return 0
+	}
+}
+
+// Scale get the column scale
+func (column *Column) Scale() int {
+	switch column.Args.(type) {
+	case []int:
+		if len(column.Args.([]int)) >= 1 {
+			return column.Args.([]int)[1]
+		}
+		return 0
+	default:
+		return 0
+	}
+}
+
+// DatetimePrecision get the column datetime precision
+func (column *Column) DatetimePrecision() int {
+	if column.Type != "timestamp" && column.Type != "datetime" && column.Type != "time" {
+		return 0
+	}
+	switch column.Args.(type) {
+	case []int:
+		return column.Args.([]int)[0]
+	case int:
+		return column.Args.(int)
+	default:
+		return 0
+	}
 }
 
 func (column *Column) validate() *Column {

@@ -2,12 +2,27 @@ package grammar
 
 import (
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // Grammar the Grammar inteface
 type Grammar interface {
-	Exists(table *Table) string
+	Exists(name string, db *sqlx.DB) bool
+	Create(table *Table, db *sqlx.DB) error
 	// GetColumnListing(table *Table, db *sqlx.DB) []*Field
+}
+
+// Quoter the database quoting query text intrface
+type Quoter interface {
+	ID(name string, db *sqlx.DB) string
+	VAL(v interface{}, db *sqlx.DB) string // operates on both string and []byte and int or other types.
+}
+
+// SQLBuilder the database sql gender intrface
+type SQLBuilder interface {
+	SQLCreateColumn(db *sqlx.DB, field *Field, types map[string]string, quoter Quoter) string
+	SQLCreateIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
 }
 
 // Table the table struct
@@ -20,6 +35,7 @@ type Table struct {
 	CreateTime    time.Time `db:"create_time"`
 	CreateOptions string    `db:"create_options"`
 	Collation     string    `db:"collation"`
+	Charset       string    `db:"charset"`
 	Rows          int       `db:"table_rows"`
 	RowLength     int       `db:"avg_row_length"`
 	IndexLength   int       `db:"index_length"`
@@ -38,7 +54,7 @@ type Field struct {
 	Default           interface{} `db:"default"`
 	Nullable          bool        `db:"nullable"`
 	Type              string      `db:"type"`
-	Length            string      `db:"length"`
+	Length            int         `db:"length"`
 	OctetLength       string      `db:"octet_length"`
 	Precision         int         `db:"precision"`
 	Scale             int         `db:"scale"`

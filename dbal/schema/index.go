@@ -2,7 +2,6 @@ package schema
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -21,16 +20,6 @@ func (index *Index) Drop() {
 func (index *Index) Rename(new string) {
 	index.renamed = true
 	index.newname = new
-}
-
-func (index *Index) sqlCreate() string {
-	// UNIQUE KEY `unionid` (`unionid`)
-	columns := []string{}
-	for _, column := range index.Columns {
-		columns = append(columns, column.Name)
-	}
-	sql := fmt.Sprintf("%s KEY `%s` (`%s`)", GetIndexType(index.Type), index.nameEscaped(), strings.Join(columns, "`,`"))
-	return sql
 }
 
 // GetIndexType get the index type

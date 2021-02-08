@@ -57,13 +57,21 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 // Create a new table on the schema.
 func (builder *Builder) Create(name string, callback func(table *Blueprint)) error {
 	table := builder.Table(name)
-	return table.Create(callback)
+	callback(table)
+	table.Table = table.GrammarTable()
+	return builder.Grammar.Create(table.Table, builder.Conn.Write)
 }
 
 // MustCreate a new table on the schema.
 func (builder *Builder) MustCreate(name string, callback func(table *Blueprint)) *Blueprint {
 	table := builder.Table(name)
-	return table.MustCreate(callback)
+	callback(table)
+	table.Table = table.GrammarTable()
+	err := builder.Grammar.Create(table.Table, builder.Conn.Write)
+	if err != nil {
+		panic(err)
+	}
+	return table
 }
 
 // Alter a table on the schema.
@@ -92,8 +100,7 @@ func (builder *Builder) Table(name string) *Blueprint {
 
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) bool {
-	table := builder.Table(name)
-	return table.Exists()
+	return builder.Grammar.Exists(name, builder.Conn.Write)
 }
 
 // DropIfExists Indicate that the table should be dropped if it exists.

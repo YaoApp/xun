@@ -63,7 +63,7 @@ type Column struct {
 	Comment  string
 	Name     string
 	Type     string
-	Length   *int
+	Length   int
 	Args     interface{}
 	Default  interface{}
 	Nullable *bool

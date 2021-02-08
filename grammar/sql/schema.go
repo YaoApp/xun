@@ -2,19 +2,52 @@ package sql
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
 )
 
-// New Create a new mysql grammar inteface
-func New() grammar.Grammar {
-	return SQL{
-		Driver: "sql",
+// Exists the Exists
+func (grammar SQL) Exists(name string, db *sqlx.DB) bool {
+	sql := fmt.Sprintf("SHOW TABLES like '%s'", name)
+	row := db.QueryRowx(sql)
+	if row.Err() != nil {
+		panic(row.Err())
 	}
+	res, err := row.SliceScan()
+	if err != nil {
+		return false
+	}
+	return name == fmt.Sprintf("%s", res[0])
 }
 
-// Exists the Exists
-func (grammar SQL) Exists(table *grammar.Table) string {
-	sql := fmt.Sprintf("SHOW TABLES like '%s'", table.Name)
-	return sql
+// Create a new table on the schema
+func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
+	name := grammar.Quoter.ID(table.Name, db)
+	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
+	stmts := []string{}
+
+	// fields
+	for _, field := range table.Fields {
+		stmts = append(stmts,
+			grammar.Builder.SQLCreateColumn(db, field, grammar.Types, grammar.Quoter),
+		)
+	}
+
+	// indexes
+	for _, index := range table.Indexes {
+		stmts = append(stmts,
+			grammar.Builder.SQLCreateIndex(db, index, grammar.IndexTypes, grammar.Quoter),
+		)
+	}
+
+	sql = sql + strings.Join(stmts, ",\n")
+	sql = sql + fmt.Sprintf(
+		"\n) ENGINE=%s DEFAULT CHARSET=%s COLLATE=%s",
+		table.Engine, table.Charset, table.Collation,
+	)
+
+	_, err := db.Exec(sql)
+	return err
 }

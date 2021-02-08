@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/yaoapp/xun/grammar"
 )
@@ -19,39 +20,6 @@ func NewBlueprint(name string, builder *Builder) *Blueprint {
 		IndexMap:  map[string]*Index{},
 	}
 	table.onChange("NewBlueprint", name, builder)
-	return table
-}
-
-// Exists check if the table is exists
-func (table *Blueprint) Exists() bool {
-	row := table.validate().Builder.Conn.Write.
-		QueryRowx(
-			table.Builder.Grammar.Exists(table.Table),
-		)
-	if row.Err() != nil {
-		panic(row.Err())
-	}
-	res, err := row.SliceScan()
-	if err != nil {
-		return false
-	}
-	return table.Name == fmt.Sprintf("%s", res[0])
-}
-
-// Create a new table on the schema
-func (table *Blueprint) Create(callback func(table *Blueprint)) error {
-	callback(table)
-	_, err := table.validate().Builder.Conn.Write.
-		Exec(table.sqlCreate())
-	return err
-}
-
-// MustCreate a new table on the schema
-func (table *Blueprint) MustCreate(callback func(table *Blueprint)) *Blueprint {
-	err := table.Create(callback)
-	if err != nil {
-		panic(err)
-	}
 	return table
 }
 
@@ -250,16 +218,67 @@ func (table *Blueprint) validate() *Blueprint {
 
 // onChange call this when the table changed
 func (table *Blueprint) onChange(event string, args ...interface{}) {
-	table.UpdateGrammarTable()
 }
 
-// UpdateGrammarTable translate type to the grammar table.
-func (table *Blueprint) UpdateGrammarTable() *grammar.Table {
-	table.Table = &grammar.Table{
-		Name:    table.Name,
-		Comment: table.Comment,
+// GrammarTable translate type to the grammar table.
+func (table *Blueprint) GrammarTable() *grammar.Table {
+	db := table.Builder.Conn.WriteConfig.DBName()
+	gtable := &grammar.Table{
+		DBName:    db,
+		Name:      table.Name,
+		Comment:   table.Comment,
+		Fields:    []*grammar.Field{},
+		Indexes:   []*grammar.Index{},
+		Collation: table.Builder.Conn.Config.Collation,
+		Charset:   table.Builder.Conn.Config.Charset,
 	}
-	return table.Table
+
+	// translate columns
+	fieldMap := sync.Map{}
+	for _, column := range table.Columns {
+		field := &grammar.Field{
+			DBName:            db,
+			TableName:         table.Name,
+			Field:             column.Name,
+			Type:              column.Type,
+			Length:            column.Length,
+			Precision:         column.Precision(),
+			Scale:             column.Scale(),
+			DatetimePrecision: column.DatetimePrecision(),
+			Comment:           column.Comment,
+			Collation:         table.Builder.Conn.Config.Collation,
+			Charset:           table.Builder.Conn.Config.Charset,
+			Indexes:           []*grammar.Index{},
+		}
+		gtable.Fields = append(gtable.Fields, field)
+		fieldMap.Store(column.Name, field)
+	}
+
+	// translate indexes
+	for _, index := range table.Indexes {
+		gindex := &grammar.Index{
+			DBName:    db,
+			TableName: table.Name,
+			Index:     index.Name,
+			Type:      index.Type,
+			Comment:   index.Comment,
+			Fields:    []*grammar.Field{},
+		}
+		// bind columns and indexes
+		for _, column := range index.Columns {
+			field, has := fieldMap.Load(column.Name)
+			if has {
+				gindex.Fields = append(gindex.Fields, field.(*grammar.Field))
+				field.(*grammar.Field).Indexes = append(field.(*grammar.Field).Indexes, gindex)
+			}
+		}
+		gtable.Indexes = append(gtable.Indexes, gindex)
+	}
+
+	gtable.SetDefaultEngine("InnoDB")
+	gtable.SetDefaultCollation("utf8mb4_unicode_ci")
+	gtable.SetDefaultCharset("utf8mb4")
+	return gtable
 }
 
 func tableNameEscaped(name string) string {
@@ -305,11 +324,6 @@ func (table *Blueprint) sqlColumns() string {
 	return sql
 }
 
-func (table *Blueprint) sqlExists() string {
-	sql := fmt.Sprintf("SHOW TABLES like '%s'", table.nameEscaped())
-	return sql
-}
-
 func (table *Blueprint) sqlDrop() string {
 	sql := fmt.Sprintf("DROP TABLE `%s`", table.nameEscaped())
 	return sql
@@ -322,27 +336,6 @@ func (table *Blueprint) sqlRename(name string) string {
 
 func (table *Blueprint) sqlDropIfExists() string {
 	sql := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table.nameEscaped())
-	return sql
-}
-
-func (table *Blueprint) sqlCreate() string {
-
-	sql := fmt.Sprintf("CREATE TABLE `%s` (\n", table.nameEscaped())
-
-	// columns
-	stmts := []string{}
-	for _, column := range table.Columns {
-		stmts = append(stmts, column.sqlCreate())
-	}
-
-	for _, index := range table.Indexes {
-		stmts = append(stmts, index.sqlCreate())
-	}
-
-	// indexes
-	sql = sql + strings.Join(stmts, ",\n")
-	sql = sql + "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-
 	return sql
 }
 
