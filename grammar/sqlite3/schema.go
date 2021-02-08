@@ -6,17 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
-	"github.com/yaoapp/xun/grammar/sql"
 )
-
-// New Create a new mysql grammar inteface
-func New() grammar.Grammar {
-	sqlite := SQLite3{
-		SQL: sql.NewSQL(),
-	}
-	sqlite.Driver = "sqlite3"
-	return sqlite
-}
 
 // Exists the Exists
 func (grammar SQLite3) Exists(name string, db *sqlx.DB) bool {
@@ -26,8 +16,6 @@ func (grammar SQLite3) Exists(name string, db *sqlx.DB) bool {
 		panic(row.Err())
 	}
 	res, err := row.SliceScan()
-	fmt.Printf("SQLite Exists: %s\n", sql)
-	fmt.Printf("SQLite Result: %v %v\n", res, err)
 	if err != nil {
 		return false
 	}
@@ -46,9 +34,27 @@ func (grammar SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 			grammar.Builder.SQLCreateColumn(db, field, grammar.Types, grammar.Quoter),
 		)
 	}
-
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf("\n)")
+
+	// Create table
 	_, err := db.Exec(sql)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// indexes
+	indexes := []string{}
+	for _, index := range table.Indexes {
+		indexes = append(indexes,
+			grammar.Builder.SQLCreateIndex(db, index, grammar.IndexTypes, grammar.Quoter),
+		)
+	}
+
+	_, err = db.Exec(strings.Join(indexes, ";\n"))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
