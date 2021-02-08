@@ -1,9 +1,10 @@
 package mysql
 
-import "github.com/yaoapp/xun/grammar"
+import (
+	"github.com/yaoapp/xun/grammar/sql"
+)
 
-// Grammar the mysql Grammar
-type Grammar struct {
-	Driver string
-	grammar.Grammar
+// Mysql the mysql Grammar
+type Mysql struct {
+	sql.SQL
 }

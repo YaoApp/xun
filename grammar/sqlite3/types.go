@@ -1,9 +1,10 @@
 package sqlite3
 
-import "github.com/yaoapp/xun/grammar"
+import (
+	"github.com/yaoapp/xun/grammar/sql"
+)
 
-// Grammar the sqlite3 Grammar
-type Grammar struct {
-	Driver string
-	grammar.Grammar
+// SQLite3 the sqlite3 Grammar
+type SQLite3 struct {
+	sql.SQL
 }

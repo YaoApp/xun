@@ -10,7 +10,7 @@ import (
 
 // NewBlueprint create a new blueprint intance
 func NewBlueprint(name string, builder *Builder) *Blueprint {
-	return &Blueprint{
+	table := &Blueprint{
 		Name:      name,
 		Builder:   builder,
 		Columns:   []*Column{},
@@ -18,13 +18,15 @@ func NewBlueprint(name string, builder *Builder) *Blueprint {
 		Indexes:   []*Index{},
 		IndexMap:  map[string]*Index{},
 	}
+	table.onChange("NewBlueprint", name, builder)
+	return table
 }
 
 // Exists check if the table is exists
 func (table *Blueprint) Exists() bool {
 	row := table.validate().Builder.Conn.Write.
 		QueryRowx(
-			table.Builder.Grammar.Exists(table.toGrammar()),
+			table.Builder.Grammar.Exists(table.Table),
 		)
 	if row.Err() != nil {
 		panic(row.Err())
@@ -194,12 +196,14 @@ func (table *Blueprint) DropColumn(name ...string) {
 		column := table.GetColumn(n)
 		column.Drop()
 	}
+	table.onChange("DropColumn", name)
 }
 
 // RenameColumn Indicate that the given column should be renamed.
 func (table *Blueprint) RenameColumn(old string, new string) *Column {
 	column := table.GetColumn(old)
 	column.Rename(new)
+	table.onChange("RenameColumn", old, new)
 	return column
 }
 
@@ -209,12 +213,14 @@ func (table *Blueprint) DropIndex(name ...string) {
 		index := table.GetIndex(n)
 		index.Drop()
 	}
+	table.onChange("DropIndex", name)
 }
 
 // RenameIndex Indicate that the given indexes should be renamed.
 func (table *Blueprint) RenameIndex(old string, new string) *Index {
 	index := table.GetIndex(old)
 	index.Rename(new)
+	table.onChange("RenameIndex", old, new)
 	return index
 }
 
@@ -222,6 +228,7 @@ func (table *Blueprint) addColumn(column *Column) *Column {
 	column.validate()
 	table.Columns = append(table.Columns, column)
 	table.ColumnMap[column.Name] = column
+	table.onChange("addColumn", column)
 	return column
 }
 
@@ -229,6 +236,7 @@ func (table *Blueprint) addIndex(index *Index) *Index {
 	index.validate()
 	table.Indexes = append(index.Table.Indexes, index)
 	table.IndexMap[index.Name] = index
+	table.onChange("addIndex", index)
 	return index
 }
 
@@ -240,11 +248,18 @@ func (table *Blueprint) validate() *Blueprint {
 	return table
 }
 
-func (table *Blueprint) toGrammar() grammar.Table {
-	return grammar.Table{
+// onChange call this when the table changed
+func (table *Blueprint) onChange(event string, args ...interface{}) {
+	table.UpdateGrammarTable()
+}
+
+// UpdateGrammarTable translate type to the grammar table.
+func (table *Blueprint) UpdateGrammarTable() *grammar.Table {
+	table.Table = &grammar.Table{
 		Name:    table.Name,
 		Comment: table.Comment,
 	}
+	return table.Table
 }
 
 func tableNameEscaped(name string) string {
@@ -286,7 +301,7 @@ func (table *Blueprint) sqlColumns() string {
 	cfg := table.Builder.Conn.WriteConfig
 	fmt.Printf("sqlColumns: %#v\n", cfg.Sqlite3DBName())
 	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
-	// fmt.Printf("%s", sql)
+	fmt.Printf("%s", sql)
 	return sql
 }
 

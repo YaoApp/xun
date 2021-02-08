@@ -55,6 +55,7 @@ type Blueprint struct {
 	Indexes   []*Index
 	IndexMap  map[string]*Index
 	alter     bool
+	Table     *grammar.Table
 }
 
 // Column the table column definition
