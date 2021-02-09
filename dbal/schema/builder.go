@@ -65,14 +65,14 @@ func (builder *Builder) HasTable(name string) bool {
 }
 
 // Create a new table on the schema.
-func (builder *Builder) Create(name string, callback func(table *Table)) error {
+func (builder *Builder) Create(name string, callback func(table Blueprint)) error {
 	table := builder.Table(name)
 	callback(table)
 	return builder.Grammar.Create(&table.Table, builder.Conn.Write)
 }
 
 // MustCreate a new table on the schema.
-func (builder *Builder) MustCreate(name string, callback func(table *Table)) *Table {
+func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) *Table {
 	table := builder.Table(name)
 	callback(table)
 	err := builder.Grammar.Create(&table.Table, builder.Conn.Write)
@@ -81,14 +81,14 @@ func (builder *Builder) MustCreate(name string, callback func(table *Table)) *Ta
 }
 
 // Alter a table on the schema.
-func (builder *Builder) Alter(name string, callback func(table *Table)) error {
+func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
 	table := builder.Table(name)
 	callback(table)
 	return builder.Grammar.Alter(&table.Table, builder.Conn.Write)
 }
 
 // MustAlter a table on the schema.
-func (builder *Builder) MustAlter(name string, callback func(table *Table)) *Table {
+func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) *Table {
 	table := builder.Table(name)
 	callback(table)
 	err := builder.Grammar.Alter(&table.Table, builder.Conn.Write)

@@ -1,11 +1,13 @@
 package schema
 
-var columnTypes = map[string]string{
-	"string": "VARCHAR",
+// Drop mark as dropped for the index
+func (column *Column) Drop() {
+	column.Dropped = true
 }
 
-var fieldTypes = map[string]string{
-	"VARCHAR": "string",
+// Rename mark as renamed with the given name for the index
+func (column *Column) Rename(new string) {
+	column.Newname = new
 }
 
 // Unique set as index
@@ -16,24 +18,20 @@ func (column *Column) Unique() *Column {
 	return column
 }
 
-// BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
-func (table *Table) BigInteger() {}
-
-// String Create a new string column on the table.
-func (table *Table) String(name string, length int) *Column {
-	column := table.NewColumn(name)
-	column.Length = length
-	column.Type = "string"
-	table.AddColumn(column)
+// Primary set as primary key
+func (column *Column) Primary() *Column {
+	index := column.Table.NewIndex(column.Name, column)
+	index.Type = "primary"
+	column.Table.AddIndex(index)
+	column.Column.Primary = true
 	return column
 }
 
-// Drop mark as dropped for the index
-func (column *Column) Drop() {
-	column.Dropped = true
-}
-
-// Rename mark as renamed with the given name for the index
-func (column *Column) Rename(new string) {
-	column.Newname = new
+// Index set as index key
+func (column *Column) Index() *Column {
+	index := column.Table.NewIndex(column.Name, column)
+	index.Type = "index"
+	column.Table.AddIndex(index)
+	column.Column.Primary = true
+	return column
 }
