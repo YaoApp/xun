@@ -11,33 +11,13 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// New create new schema buider interface
+// New create a new schema interface using the given connection
 func New(conn *Connection) Schema {
-	builder := NewBuilder(conn)
-	return &builder
+	return NewBuilder(conn)
 }
 
-// NewBuilder create a new schema buider blueprint
-func NewBuilder(conn *Connection) Builder {
-	return Builder{
-		Conn:    conn,
-		Grammar: NewGrammar(conn.WriteConfig.Driver),
-	}
-}
-
-// NewGrammar create a new grammar intance
-func NewGrammar(driver string) grammar.Grammar {
-	switch driver {
-	case "mysql":
-		return mysql.New()
-	case "sqlite3":
-		return sqlite3.New()
-	}
-	return mysql.New()
-}
-
-// NewBuilderByDSN create a new schema builder by given DSN
-func NewBuilderByDSN(driver string, dsn string) *Builder {
+// NewUse create a new schema interface using the given driver and DSN
+func NewUse(driver string, dsn string) Schema {
 	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		panic(err)
@@ -51,8 +31,26 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 		},
 		Config: &dbal.DBConfig{},
 	}
-	builder := NewBuilder(conn)
-	return &builder
+	return NewBuilder(conn)
+}
+
+// NewBuilder create a new schema builder instance
+func NewBuilder(conn *Connection) *Builder {
+	return &Builder{
+		Conn:    conn,
+		Grammar: NewGrammar(conn.WriteConfig.Driver),
+	}
+}
+
+// NewGrammar create a new grammar instance
+func NewGrammar(driver string) grammar.Grammar {
+	switch driver {
+	case "mysql":
+		return mysql.New()
+	case "sqlite3":
+		return sqlite3.New()
+	}
+	return mysql.New()
 }
 
 // Table get the table blueprint instance
