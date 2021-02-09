@@ -65,6 +65,7 @@ type Field struct {
 	Key               string      `db:"key"`
 	Extra             string      `db:"extra"`
 	Comment           string      `db:"comment"`
+	Primary           bool        `db:"primary"`
 	Indexes           []*Index
 }
 
