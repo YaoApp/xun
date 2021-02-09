@@ -6,5 +6,5 @@ import (
 
 // Get a schema builder instance.
 func newSchema(driver string, conn *schema.Connection) schema.Schema {
-	return schema.New(conn)
+	return schema.Use(conn)
 }

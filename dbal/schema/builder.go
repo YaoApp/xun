@@ -11,13 +11,8 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// New create a new schema interface using the given connection
-func New(conn *Connection) Schema {
-	return NewBuilder(conn)
-}
-
-// NewUse create a new schema interface using the given driver and DSN
-func NewUse(driver string, dsn string) Schema {
+// New create a new schema interface using the given driver and DSN
+func New(driver string, dsn string) Schema {
 	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		panic(err)
@@ -31,6 +26,11 @@ func NewUse(driver string, dsn string) Schema {
 		},
 		Config: &dbal.DBConfig{},
 	}
+	return Use(conn)
+}
+
+// Use create a new schema interface using the given connection
+func Use(conn *Connection) Schema {
 	return NewBuilder(conn)
 }
 

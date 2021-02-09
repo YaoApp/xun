@@ -13,7 +13,7 @@ func getTestBuilder() schema.Schema {
 	defer unit.Catch()
 	driver := os.Getenv("XUN_UNIT_DSN")
 	dsn := unit.DSN(driver)
-	return schema.NewUse(driver, dsn)
+	return schema.New(driver, dsn)
 }
 
 func TestCreate(t *testing.T) {
