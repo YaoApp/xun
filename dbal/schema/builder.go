@@ -8,6 +8,7 @@ import (
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/grammar/mysql"
 	"github.com/yaoapp/xun/grammar/sqlite3"
+	"github.com/yaoapp/xun/utils"
 )
 
 // New create new schema buider interface
@@ -68,9 +69,7 @@ func (builder *Builder) MustCreate(name string, callback func(table *Blueprint))
 	callback(table)
 	table.Table = table.GrammarTable()
 	err := builder.Grammar.Create(table.Table, builder.Conn.Write)
-	if err != nil {
-		panic(err)
-	}
+	utils.PanicIF(err)
 	return table
 }
 
@@ -82,14 +81,13 @@ func (builder *Builder) Alter(name string, callback func(table *Blueprint)) erro
 
 // Drop Indicate that the table should be dropped.
 func (builder *Builder) Drop(name string) error {
-	table := builder.Table(name)
-	return table.Drop()
+	return builder.Grammar.Drop(name, builder.Conn.Write)
 }
 
 // MustDrop Indicate that the table should be dropped.
 func (builder *Builder) MustDrop(name string) {
-	table := builder.Table(name)
-	table.MustDrop()
+	err := builder.Drop(name)
+	utils.PanicIF(err)
 }
 
 // Table get the table blueprint instance

@@ -51,3 +51,10 @@ func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	_, err := db.Exec(sql)
 	return err
 }
+
+// Drop a table from the schema.
+func (grammar SQL) Drop(name string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("DROP TABLE %s", grammar.Quoter.ID(name, db))
+	_, err := db.Exec(sql)
+	return err
+}

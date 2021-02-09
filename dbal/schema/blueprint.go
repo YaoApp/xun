@@ -32,21 +32,6 @@ func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
 	return nil
 }
 
-// Drop a table from the schema.
-func (table *Blueprint) Drop() error {
-	_, err := table.validate().Builder.Conn.Write.
-		Exec(table.sqlDrop())
-	return err
-}
-
-// MustDrop a table from the schema.
-func (table *Blueprint) MustDrop() {
-	err := table.Drop()
-	if err != nil {
-		panic(err)
-	}
-}
-
 // DropIfExists drop the table if the table exists
 func (table *Blueprint) DropIfExists() error {
 	_, err := table.validate().Builder.Conn.Write.
@@ -321,11 +306,6 @@ func (table *Blueprint) sqlColumns() string {
 	fmt.Printf("sqlColumns: %#v\n", cfg.Sqlite3DBName())
 	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
 	fmt.Printf("%s", sql)
-	return sql
-}
-
-func (table *Blueprint) sqlDrop() string {
-	sql := fmt.Sprintf("DROP TABLE `%s`", table.nameEscaped())
 	return sql
 }
 

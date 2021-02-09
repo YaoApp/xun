@@ -7,3 +7,10 @@ func GetIF(condition bool, value interface{}, defaultValue interface{}) interfac
 	}
 	return defaultValue
 }
+
+// PanicIF if the given value is not nil then panic, else do nothing
+func PanicIF(v interface{}) {
+	if v != nil {
+		panic(v)
+	}
+}
