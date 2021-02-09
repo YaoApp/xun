@@ -11,6 +11,11 @@ import (
 // Builder the SQL builder
 type Builder struct{}
 
+// SQLTableExists return the SQL for checking table exists.
+func (builder Builder) SQLTableExists(db *sqlx.DB, name string, quoter grammar.Quoter) string {
+	return fmt.Sprintf("SHOW TABLES like %s", quoter.VAL(name, db))
+}
+
 // SQLCreateColumn return the add column sql for table create
 func (builder Builder) SQLCreateColumn(db *sqlx.DB, field *grammar.Field, types map[string]string, quoter grammar.Quoter) string {
 	// `id` bigint(20) unsigned NOT NULL,

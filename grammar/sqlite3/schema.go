@@ -8,20 +8,6 @@ import (
 	"github.com/yaoapp/xun/grammar"
 )
 
-// Exists the Exists
-func (grammar SQLite3) Exists(name string, db *sqlx.DB) bool {
-	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammar.Quoter.VAL(name, db))
-	row := db.QueryRowx(sql)
-	if row.Err() != nil {
-		panic(row.Err())
-	}
-	res, err := row.SliceScan()
-	if err != nil {
-		return false
-	}
-	return name == fmt.Sprintf("%s", res[0])
-}
-
 // Create a new table on the schema
 func (grammar SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	name := grammar.Quoter.ID(table.Name, db)

@@ -10,7 +10,7 @@ import (
 
 // Exists the Exists
 func (grammar SQL) Exists(name string, db *sqlx.DB) bool {
-	sql := fmt.Sprintf("SHOW TABLES like %s", grammar.Quoter.VAL(name, db))
+	sql := grammar.Builder.SQLTableExists(db, name, grammar.Quoter)
 	row := db.QueryRowx(sql)
 	if row.Err() != nil {
 		panic(row.Err())

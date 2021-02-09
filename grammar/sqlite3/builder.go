@@ -8,6 +8,11 @@ import (
 	"github.com/yaoapp/xun/grammar"
 )
 
+// SQLTableExists return the SQL for checking table exists.
+func (builder Builder) SQLTableExists(db *sqlx.DB, name string, quoter grammar.Quoter) string {
+	return fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", quoter.VAL(name, db))
+}
+
 // SQLCreateIndex  return the add index sql for table create
 func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
 	typ, has := indexTypes[index.Type]
