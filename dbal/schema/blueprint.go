@@ -32,23 +32,6 @@ func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
 	return nil
 }
 
-// Rename a table on the schema.
-func (table *Blueprint) Rename(name string) error {
-	_, err := table.validate().Builder.Conn.Write.
-		Exec(table.sqlRename(name))
-	table.Name = name
-	return err
-}
-
-// MustRename a table on the schema.
-func (table *Blueprint) MustRename(name string) *Blueprint {
-	err := table.Rename(name)
-	if err != nil {
-		panic(err)
-	}
-	return table
-}
-
 // Column get the column instance of the table, if the column does not exist create
 func (table *Blueprint) Column(name string) *Column {
 	column, has := table.ColumnMap[name]
@@ -291,11 +274,6 @@ func (table *Blueprint) sqlColumns() string {
 	fmt.Printf("sqlColumns: %#v\n", cfg.Sqlite3DBName())
 	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
 	fmt.Printf("%s", sql)
-	return sql
-}
-
-func (table *Blueprint) sqlRename(name string) string {
-	sql := fmt.Sprintf("RENAME TABLE `%s` TO `%s`", table.nameEscaped(), tableNameEscaped(name))
 	return sql
 }
 

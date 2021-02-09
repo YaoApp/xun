@@ -55,6 +55,17 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 	return &builder
 }
 
+// Table get the table blueprint instance
+func (builder *Builder) Table(name string) *Blueprint {
+	table := NewBlueprint(name, builder)
+	return table
+}
+
+// HasTable determine if the given table exists.
+func (builder *Builder) HasTable(name string) bool {
+	return builder.Grammar.Exists(name, builder.Conn.Write)
+}
+
 // Create a new table on the schema.
 func (builder *Builder) Create(name string, callback func(table *Blueprint)) error {
 	table := builder.Table(name)
@@ -90,17 +101,6 @@ func (builder *Builder) MustDrop(name string) {
 	utils.PanicIF(err)
 }
 
-// Table get the table blueprint instance
-func (builder *Builder) Table(name string) *Blueprint {
-	table := NewBlueprint(name, builder)
-	return table
-}
-
-// HasTable determine if the given table exists.
-func (builder *Builder) HasTable(name string) bool {
-	return builder.Grammar.Exists(name, builder.Conn.Write)
-}
-
 // DropIfExists Indicate that the table should be dropped if it exists.
 func (builder *Builder) DropIfExists(name string) error {
 	return builder.Grammar.DropIfExists(name, builder.Conn.Write)
@@ -113,15 +113,15 @@ func (builder *Builder) MustDropIfExists(name string) {
 }
 
 // Rename a table on the schema.
-func (builder *Builder) Rename(from string, to string) error {
-	table := builder.Table(from)
-	return table.Rename(to)
+func (builder *Builder) Rename(old string, new string) error {
+	return builder.Grammar.Rename(old, new, builder.Conn.Write)
 }
 
 // MustRename a table on the schema.
-func (builder *Builder) MustRename(from string, to string) *Blueprint {
-	table := builder.Table(from)
-	return table.MustRename(to)
+func (builder *Builder) MustRename(old string, new string) *Blueprint {
+	err := builder.Rename(old, new)
+	utils.PanicIF(err)
+	return builder.Table(new)
 }
 
 // Primary Specify the primary key(s) for the table.

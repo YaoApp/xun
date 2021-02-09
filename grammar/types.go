@@ -12,6 +12,7 @@ type Grammar interface {
 	Create(table *Table, db *sqlx.DB) error
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error
+	Rename(old string, new string, db *sqlx.DB) error
 	// GetColumnListing(table *Table, db *sqlx.DB) []*Field
 }
 
