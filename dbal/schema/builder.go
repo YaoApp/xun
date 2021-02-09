@@ -56,7 +56,7 @@ func NewBuilderByDSN(driver string, dsn string) *Builder {
 }
 
 // Table get the table blueprint instance
-func (builder *Builder) Table(name string) *Blueprint {
+func (builder *Builder) Table(name string) *Table {
 	table := NewBlueprint(name, builder)
 	return table
 }
@@ -67,7 +67,7 @@ func (builder *Builder) HasTable(name string) bool {
 }
 
 // Create a new table on the schema.
-func (builder *Builder) Create(name string, callback func(table *Blueprint)) error {
+func (builder *Builder) Create(name string, callback func(table *Table)) error {
 	table := builder.Table(name)
 	callback(table)
 	table.Table = table.GrammarTable()
@@ -75,7 +75,7 @@ func (builder *Builder) Create(name string, callback func(table *Blueprint)) err
 }
 
 // MustCreate a new table on the schema.
-func (builder *Builder) MustCreate(name string, callback func(table *Blueprint)) *Blueprint {
+func (builder *Builder) MustCreate(name string, callback func(table *Table)) *Table {
 	table := builder.Table(name)
 	callback(table)
 	table.Table = table.GrammarTable()
@@ -85,7 +85,7 @@ func (builder *Builder) MustCreate(name string, callback func(table *Blueprint))
 }
 
 // Alter a table on the schema.
-func (builder *Builder) Alter(name string, callback func(table *Blueprint)) error {
+func (builder *Builder) Alter(name string, callback func(table *Table)) error {
 	table := builder.Table(name)
 	callback(table)
 	table.Table = table.GrammarTable()
@@ -93,7 +93,7 @@ func (builder *Builder) Alter(name string, callback func(table *Blueprint)) erro
 }
 
 // MustAlter a table on the schema.
-func (builder *Builder) MustAlter(name string, callback func(table *Blueprint)) *Blueprint {
+func (builder *Builder) MustAlter(name string, callback func(table *Table)) *Table {
 	table := builder.Table(name)
 	callback(table)
 	table.Table = table.GrammarTable()
@@ -130,7 +130,7 @@ func (builder *Builder) Rename(old string, new string) error {
 }
 
 // MustRename a table on the schema.
-func (builder *Builder) MustRename(old string, new string) *Blueprint {
+func (builder *Builder) MustRename(old string, new string) *Table {
 	err := builder.Rename(old, new)
 	utils.PanicIF(err)
 	return builder.Table(new)

@@ -2,7 +2,6 @@ package schema
 
 import (
 	"errors"
-	"strings"
 )
 
 var columnTypes = map[string]string{
@@ -22,21 +21,14 @@ func (column *Column) Unique() *Column {
 }
 
 // BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
-func (table *Blueprint) BigInteger() {}
+func (table *Table) BigInteger() {}
 
 // String Create a new string column on the table.
-func (table *Blueprint) String(name string, length int) *Column {
+func (table *Table) String(name string, length int) *Column {
 	column := table.NewColumn(name)
 	column.Length = length
 	column.Type = "string"
 	table.addColumn(column)
-	return column
-}
-
-// UpField update the column by given table field.
-func (column *Column) UpField(field *TableField) *Column {
-	column.Name = field.Field
-	column.Type = GetColumnType(field.Type)
 	return column
 }
 
@@ -92,7 +84,7 @@ func (column *Column) DatetimePrecision() int {
 }
 
 func (column *Column) validate() *Column {
-	if column.nameEscaped() == "" {
+	if column.Name == "" {
 		err := errors.New("the column name must be set")
 		panic(err)
 	}
@@ -107,24 +99,4 @@ func (column *Column) validate() *Column {
 		panic(err)
 	}
 	return column
-}
-
-// GetColumnType return the columns type
-func GetColumnType(name string) string {
-	if _, has := fieldTypes[name]; has {
-		return fieldTypes[name]
-	}
-	return "varchar"
-}
-
-// GetTableFieldType return the columns type
-func GetTableFieldType(name string) string {
-	if _, has := columnTypes[name]; has {
-		return columnTypes[name]
-	}
-	return "string"
-}
-
-func (column *Column) nameEscaped() string {
-	return strings.ReplaceAll(column.Name, "`", "")
 }

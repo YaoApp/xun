@@ -19,7 +19,7 @@ func getTestBuilder() schema.Schema {
 func TestCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	err := builder.Create("table_test_builder", func(table *schema.Blueprint) {
+	err := builder.Create("table_test_builder", func(table *schema.Table) {
 		table.String("name", 20).Unique()
 		table.String("unionid", 128).Unique()
 	})
@@ -66,7 +66,7 @@ func TestAlter(t *testing.T) {
 	defer unit.Catch()
 	TestCreate(t)
 	builder := getTestBuilder()
-	err := builder.Alter("table_test_builder", func(table *schema.Blueprint) {
+	err := builder.Alter("table_test_builder", func(table *schema.Table) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid")
@@ -80,7 +80,7 @@ func TestAlter(t *testing.T) {
 func TestMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	table := builder.MustCreate("table_test_builder", func(table *schema.Blueprint) {
+	table := builder.MustCreate("table_test_builder", func(table *schema.Table) {
 		table.String("name", 20).Unique()
 		table.String("unionid", 128).Unique()
 	})
@@ -124,7 +124,7 @@ func TestMustAlter(t *testing.T) {
 	defer unit.Catch()
 	TestCreate(t)
 	builder := getTestBuilder()
-	table := builder.MustAlter("table_test_builder", func(table *schema.Blueprint) {
+	table := builder.MustAlter("table_test_builder", func(table *schema.Table) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid")

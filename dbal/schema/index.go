@@ -2,7 +2,6 @@ package schema
 
 import (
 	"errors"
-	"strings"
 )
 
 var indexTypes = map[string]string{
@@ -31,7 +30,7 @@ func GetIndexType(name string) string {
 }
 
 func (index *Index) validate() *Index {
-	if index.nameEscaped() == "" {
+	if index.Name == "" {
 		err := errors.New("the index name must be set")
 		panic(err)
 	}
@@ -47,8 +46,4 @@ func (index *Index) validate() *Index {
 	}
 
 	return index
-}
-
-func (index *Index) nameEscaped() string {
-	return strings.ReplaceAll(index.Name, "`", "")
 }

@@ -15,24 +15,24 @@ type Connection struct {
 
 // Schema The database Schema interface
 type Schema interface {
-	Table(string) *Blueprint
+	Table(string) *Table
 	HasTable(string) bool
-	Create(string, func(table *Blueprint)) error
-	MustCreate(string, func(table *Blueprint)) *Blueprint
+	Create(string, func(table *Table)) error
+	MustCreate(string, func(table *Table)) *Table
 	Drop(string) error
 	MustDrop(string)
 	DropIfExists(string) error
 	MustDropIfExists(string)
 	Rename(string, string) error
-	MustRename(string, string) *Blueprint
-	Alter(string, func(table *Blueprint)) error
-	MustAlter(string, func(table *Blueprint)) *Blueprint
+	MustRename(string, string) *Table
+	Alter(string, func(table *Table)) error
+	MustAlter(string, func(table *Table)) *Table
 }
 
-// BlueprintMethods  the bluprint interface
-type BlueprintMethods interface {
+// Blueprint  the bluprint interface
+type Blueprint interface {
 	BigInteger()
-	String(name string, length int) *Blueprint
+	String(name string, length int) *Table
 	Primary()
 }
 
@@ -43,9 +43,9 @@ type Builder struct {
 	Schema
 }
 
-// Blueprint the table blueprint
-type Blueprint struct {
-	BlueprintMethods
+// Table the table blueprint
+type Table struct {
+	Blueprint
 	Builder   *Builder
 	Comment   string
 	Name      string
@@ -67,7 +67,7 @@ type Column struct {
 	Default  interface{}
 	Nullable *bool
 	Unsigned *bool
-	Table    *Blueprint
+	Table    *Table
 	dropped  bool
 	renamed  bool
 	newname  string
@@ -79,26 +79,8 @@ type Index struct {
 	Name    string
 	Type    string
 	Columns []*Column
-	Table   *Blueprint
+	Table   *Table
 	dropped bool
 	renamed bool
 	newname string
-}
-
-// TableField the table field
-type TableField struct {
-	Field   string      `db:"Field"`
-	Type    string      `db:"Type"`
-	Null    string      `db:"Null"`
-	Key     string      `db:"Key"`
-	Default interface{} `db:"Default"`
-	Extra   interface{} `db:"Extra"`
-}
-
-// TableIndex the table index
-type TableIndex struct {
-	NonUnique  int
-	KeyName    string
-	SeqInIndex int
-	ColumnName string
 }
