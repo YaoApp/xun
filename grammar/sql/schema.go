@@ -72,3 +72,12 @@ func (grammar SQL) Rename(old string, new string, db *sqlx.DB) error {
 	_, err := db.Exec(sql)
 	return err
 }
+
+// Alter a table on the schema
+func (grammar SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
+	fmt.Printf(`SELECT xxx	
+		FROM INFORMATION_SCHEMA.COLUMNS 
+		WHERE TABLE_SCHEMA = 'xxx' AND TABLE_NAME ='xxx'
+	`)
+	return nil
+}

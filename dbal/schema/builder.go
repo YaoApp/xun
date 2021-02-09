@@ -87,7 +87,19 @@ func (builder *Builder) MustCreate(name string, callback func(table *Blueprint))
 // Alter a table on the schema.
 func (builder *Builder) Alter(name string, callback func(table *Blueprint)) error {
 	table := builder.Table(name)
-	return table.Alter(callback)
+	callback(table)
+	table.Table = table.GrammarTable()
+	return builder.Grammar.Alter(table.Table, builder.Conn.Write)
+}
+
+// MustAlter a table on the schema.
+func (builder *Builder) MustAlter(name string, callback func(table *Blueprint)) *Blueprint {
+	table := builder.Table(name)
+	callback(table)
+	table.Table = table.GrammarTable()
+	err := builder.Grammar.Alter(table.Table, builder.Conn.Write)
+	utils.PanicIF(err)
+	return table
 }
 
 // Drop Indicate that the table should be dropped.

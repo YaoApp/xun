@@ -119,3 +119,19 @@ func TestMustRename(t *testing.T) {
 	assert.Equal(t, "table_test_builder_re", table.Name, "the table name should be table_test_builder_re")
 	builder.Drop("table_test_builder_re")
 }
+
+func TestMustAlter(t *testing.T) {
+	defer unit.Catch()
+	TestCreate(t)
+	builder := getTestBuilder()
+	table := builder.MustAlter("table_test_builder", func(table *schema.Blueprint) {
+		table.String("nickname", 50)
+		table.String("unionid", 200)
+		table.DropIndex("unionid")
+		table.DropColumn("name")
+		table.RenameColumn("unionid", "uid").Unique()
+	})
+	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.Equal(t, "table_test_builder", table.Name, "the table name should be table_test_builder")
+	builder.Drop("table_test_builder")
+}

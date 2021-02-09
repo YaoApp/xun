@@ -10,6 +10,7 @@ import (
 type Grammar interface {
 	Exists(name string, db *sqlx.DB) bool
 	Create(table *Table, db *sqlx.DB) error
+	Alter(table *Table, db *sqlx.DB) error
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error
 	Rename(old string, new string, db *sqlx.DB) error

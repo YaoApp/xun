@@ -23,15 +23,6 @@ func NewBlueprint(name string, builder *Builder) *Blueprint {
 	return table
 }
 
-// Alter a table one the schema
-func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
-	alter := table.Builder.Table(table.Name)
-	alter.alter = true
-	callback(alter)
-	alter.sqlAlter()
-	return nil
-}
-
 // Column get the column instance of the table, if the column does not exist create
 func (table *Blueprint) Column(name string) *Column {
 	column, has := table.ColumnMap[name]
@@ -234,14 +225,6 @@ func (table *Blueprint) GrammarTable() *grammar.Table {
 	return gtable
 }
 
-func tableNameEscaped(name string) string {
-	return strings.ReplaceAll(name, "`", "")
-}
-
-func (table *Blueprint) nameEscaped() string {
-	return tableNameEscaped(table.Name)
-}
-
 func (table *Blueprint) sqlColumns() string {
 	// SELECT *
 	// FROM INFORMATION_SCHEMA.COLUMNS
@@ -272,12 +255,7 @@ func (table *Blueprint) sqlColumns() string {
 	`
 	cfg := table.Builder.Conn.WriteConfig
 	fmt.Printf("sqlColumns: %#v\n", cfg.Sqlite3DBName())
-	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.nameEscaped())
+	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.Name)
 	fmt.Printf("%s", sql)
 	return sql
-}
-
-func (table *Blueprint) sqlAlter() []string {
-	table.sqlColumns()
-	return []string{}
 }

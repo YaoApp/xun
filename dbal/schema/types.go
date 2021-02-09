@@ -26,8 +26,7 @@ type Schema interface {
 	Rename(string, string) error
 	MustRename(string, string) *Blueprint
 	Alter(string, func(table *Blueprint)) error
-	GetColumnType(string) string
-	GetIndexType(string) string
+	MustAlter(string, func(table *Blueprint)) *Blueprint
 }
 
 // BlueprintMethods  the bluprint interface
