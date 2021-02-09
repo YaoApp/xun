@@ -32,3 +32,8 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 
 	return sql
 }
+
+// SQLRenameTable return the SQL for the renaming table.
+func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quoter grammar.Quoter) string {
+	return fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quoter.ID(old, db), quoter.ID(new, db))
+}

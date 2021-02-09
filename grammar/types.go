@@ -28,6 +28,7 @@ type SQLBuilder interface {
 	SQLCreateColumn(db *sqlx.DB, field *Field, types map[string]string, quoter Quoter) string
 	SQLCreateIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
 	SQLTableExists(db *sqlx.DB, name string, quoter Quoter) string
+	SQLRenameTable(db *sqlx.DB, old string, new string, quoter Quoter) string
 }
 
 // Table the table struct

@@ -68,7 +68,7 @@ func (grammar SQL) DropIfExists(name string, db *sqlx.DB) error {
 
 // Rename a table on the schema.
 func (grammar SQL) Rename(old string, new string, db *sqlx.DB) error {
-	sql := fmt.Sprintf("ALTER TABLE %s RENAME %s", grammar.Quoter.ID(old, db), grammar.Quoter.ID(new, db))
+	sql := grammar.Builder.SQLRenameTable(db, old, new, grammar.Quoter)
 	_, err := db.Exec(sql)
 	return err
 }

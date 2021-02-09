@@ -17,6 +17,11 @@ func (builder Builder) SQLTableExists(db *sqlx.DB, name string, quoter grammar.Q
 	return fmt.Sprintf("SHOW TABLES like %s", quoter.VAL(name, db))
 }
 
+// SQLRenameTable return the SQL for the renaming table.
+func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quoter grammar.Quoter) string {
+	return fmt.Sprintf("ALTER TABLE %s RENAME %s", quoter.ID(old, db), quoter.ID(new, db))
+}
+
 // SQLCreateColumn return the add column sql for table create
 func (builder Builder) SQLCreateColumn(db *sqlx.DB, field *grammar.Field, types map[string]string, quoter grammar.Quoter) string {
 	// `id` bigint(20) unsigned NOT NULL,
