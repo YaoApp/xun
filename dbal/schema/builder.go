@@ -103,14 +103,13 @@ func (builder *Builder) HasTable(name string) bool {
 
 // DropIfExists Indicate that the table should be dropped if it exists.
 func (builder *Builder) DropIfExists(name string) error {
-	table := builder.Table(name)
-	return table.DropIfExists()
+	return builder.Grammar.DropIfExists(name, builder.Conn.Write)
 }
 
 // MustDropIfExists Indicate that the table should be dropped if it exists.
 func (builder *Builder) MustDropIfExists(name string) {
-	table := builder.Table(name)
-	table.MustDropIfExists()
+	err := builder.DropIfExists(name)
+	utils.PanicIF(err)
 }
 
 // Rename a table on the schema.

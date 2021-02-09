@@ -58,3 +58,10 @@ func (grammar SQL) Drop(name string, db *sqlx.DB) error {
 	_, err := db.Exec(sql)
 	return err
 }
+
+// DropIfExists if the table exists, drop it from the schema.
+func (grammar SQL) DropIfExists(name string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammar.Quoter.ID(name, db))
+	_, err := db.Exec(sql)
+	return err
+}

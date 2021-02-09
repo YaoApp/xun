@@ -32,21 +32,6 @@ func (table *Blueprint) Alter(callback func(table *Blueprint)) error {
 	return nil
 }
 
-// DropIfExists drop the table if the table exists
-func (table *Blueprint) DropIfExists() error {
-	_, err := table.validate().Builder.Conn.Write.
-		Exec(table.sqlDropIfExists())
-	return err
-}
-
-// MustDropIfExists drop the table if the table exists
-func (table *Blueprint) MustDropIfExists() {
-	err := table.DropIfExists()
-	if err != nil {
-		panic(err)
-	}
-}
-
 // Rename a table on the schema.
 func (table *Blueprint) Rename(name string) error {
 	_, err := table.validate().Builder.Conn.Write.
@@ -311,11 +296,6 @@ func (table *Blueprint) sqlColumns() string {
 
 func (table *Blueprint) sqlRename(name string) string {
 	sql := fmt.Sprintf("RENAME TABLE `%s` TO `%s`", table.nameEscaped(), tableNameEscaped(name))
-	return sql
-}
-
-func (table *Blueprint) sqlDropIfExists() string {
-	sql := fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table.nameEscaped())
 	return sql
 }
 
