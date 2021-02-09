@@ -39,6 +39,7 @@ func NewBuilder(conn *Connection) *Builder {
 	return &Builder{
 		Conn:    conn,
 		Grammar: NewGrammar(conn.WriteConfig.Driver),
+		Mode:    "production",
 	}
 }
 
@@ -51,6 +52,13 @@ func NewGrammar(driver string) grammar.Grammar {
 		return sqlite3.New()
 	}
 	return mysql.New()
+}
+
+// SetMode set builder mode
+func (builder *Builder) SetMode(name string) Schema {
+	builder.Mode = utils.GetIF(name == "debug", "debug", "production").(string)
+	builder.Grammar.SetMode(name)
+	return builder
 }
 
 // Table get the table blueprint instance

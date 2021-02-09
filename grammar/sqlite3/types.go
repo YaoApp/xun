@@ -26,5 +26,5 @@ func New() grammar.Grammar {
 		"unique": "UNIQUE INDEX",
 		"index":  "INDEX",
 	}
-	return sqlite
+	return &sqlite
 }

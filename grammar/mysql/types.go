@@ -41,5 +41,5 @@ func New() grammar.Grammar {
 	}
 	my.Driver = "mysql"
 	my.Quoter = Quoter{}
-	return my
+	return &my
 }
