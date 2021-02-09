@@ -29,13 +29,6 @@ type Schema interface {
 	MustAlter(string, func(table *Table)) *Table
 }
 
-// Blueprint  the bluprint interface
-type Blueprint interface {
-	BigInteger()
-	String(name string, length int) *Table
-	Primary()
-}
-
 // Builder the dbal schema driver
 type Builder struct {
 	Conn    *Connection
@@ -45,7 +38,6 @@ type Builder struct {
 
 // Table the table blueprint
 type Table struct {
-	Blueprint
 	grammar.Table
 	Builder   *Builder
 	ColumnMap map[string]*Column
