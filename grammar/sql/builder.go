@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Builder the SQL builder
@@ -31,26 +32,10 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, field *grammar.Field, types 
 		typ = fmt.Sprintf("%s(%d)", typ, field.Length)
 	}
 
-	nullable := "NOT NULL"
-	if field.Nullable {
-		nullable = " NULL"
-	}
-
-	defaultValue := ""
-	if field.Default != nil {
-		defaultValue = fmt.Sprintf("DEFAULT %v", field.Default)
-	}
-
-	comment := ""
-	if field.Comment != "" {
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(field.Comment, db))
-	}
-
-	collation := ""
-	if field.Collation != "" {
-		collation = fmt.Sprintf("COLLATE %s", collation)
-	}
-
+	nullable := utils.GetIF(field.Nullable, "NOT NULL", " NULL").(string)
+	defaultValue := utils.GetIF(field.Default != nil, fmt.Sprintf("DEFAULT %v", field.Default), "").(string)
+	comment := utils.GetIF(field.Comment != "", fmt.Sprintf("COMMENT %s", quoter.VAL(field.Comment, db)), "").(string)
+	collation := utils.GetIF(field.Collation != "", fmt.Sprintf("COLLATE %s", field.Collation), "").(string)
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s",
 		quoter.ID(field.Field, db), typ, nullable, defaultValue, field.Extra, comment, collation)
