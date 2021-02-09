@@ -9,11 +9,17 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
+var builder schema.Schema
+
 func getTestBuilder() schema.Schema {
 	defer unit.Catch()
+	if builder != nil {
+		return builder
+	}
 	driver := os.Getenv("XUN_UNIT_DSN")
 	dsn := unit.DSN(driver)
-	return schema.New(driver, dsn).SetMode(os.Getenv("XUN_UNIT_MODE"))
+	builder = schema.New(driver, dsn).SetMode(os.Getenv("XUN_UNIT_MODE"))
+	return builder
 }
 
 func TestCreate(t *testing.T) {
