@@ -46,41 +46,20 @@ type Builder struct {
 // Table the table blueprint
 type Table struct {
 	Blueprint
+	grammar.Table
 	Builder   *Builder
-	Comment   string
-	Name      string
-	Columns   []*Column
 	ColumnMap map[string]*Column
-	Indexes   []*Index
 	IndexMap  map[string]*Index
-	alter     bool
-	Table     *grammar.Table
 }
 
 // Column the table column definition
 type Column struct {
-	Comment  string
-	Name     string
-	Type     string
-	Length   int
-	Args     interface{}
-	Default  interface{}
-	Nullable *bool
-	Unsigned *bool
-	Table    *Table
-	dropped  bool
-	renamed  bool
-	newname  string
+	grammar.Column
+	Table *Table
 }
 
 // Index  the table index definition
 type Index struct {
-	Comment string
-	Name    string
-	Type    string
-	Columns []*Column
-	Table   *Table
-	dropped bool
-	renamed bool
-	newname string
+	grammar.Index
+	Table *Table
 }

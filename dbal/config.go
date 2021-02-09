@@ -49,5 +49,5 @@ func (config Config) Sqlite3DBName() string {
 		}
 		return params.Get("url")
 	}
-	return ""
+	return "memory"
 }

@@ -23,7 +23,7 @@ type Quoter interface {
 	VAL(v interface{}, db *sqlx.DB) string // operates on both string and []byte and int or other types.
 }
 
-// SQLBuilder the database sql gender intrface
+// SQLBuilder the database sql gender interface
 type SQLBuilder interface {
 	SQLCreateColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
 	SQLCreateIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
@@ -46,6 +46,8 @@ type Table struct {
 	RowLength     int       `db:"avg_row_length"`
 	IndexLength   int       `db:"index_length"`
 	AutoIncrement int       `db:"auto_increment"`
+	ColumnMap     map[string]*Column
+	IndexMap      map[string]*Index
 	Columns       []*Column
 	Indexes       []*Index
 }
@@ -58,6 +60,7 @@ type Column struct {
 	Position          int         `db:"position"`
 	Default           interface{} `db:"default"`
 	Nullable          bool        `db:"nullable"`
+	Unsigned          bool        `db:"unsigned"`
 	Type              string      `db:"type"`
 	Length            int         `db:"length"`
 	OctetLength       string      `db:"octet_length"`
@@ -72,6 +75,8 @@ type Column struct {
 	Primary           bool        `db:"primary"`
 	Table             *Table
 	Indexes           []*Index
+	Dropped           bool
+	Newname           string
 }
 
 // Index the talbe index
@@ -89,4 +94,6 @@ type Index struct {
 	IndexComment string `db:"index_comment"`
 	Table        *Table
 	Columns      []*Column
+	Dropped      bool
+	Newname      string
 }

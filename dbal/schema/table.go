@@ -1,23 +1,18 @@
 package schema
 
 import (
-	"errors"
-	"sync"
-
 	"github.com/yaoapp/xun/grammar"
 )
 
-// NewBlueprint create a new blueprint intance
-func NewBlueprint(name string, builder *Builder) *Table {
+// NewTable create a new blueprint intance
+func NewTable(name string, builder *Builder) *Table {
 	table := &Table{
-		Name:      name,
+		Table:     grammar.NewTable(name, builder.Conn.WriteConfig.DBName()),
 		Builder:   builder,
-		Columns:   []*Column{},
 		ColumnMap: map[string]*Column{},
-		Indexes:   []*Index{},
 		IndexMap:  map[string]*Index{},
 	}
-	table.onChange("NewBlueprint", name, builder)
+	table.onChange("NewTable", name, builder)
 	return table
 }
 
@@ -30,20 +25,28 @@ func (table *Table) Column(name string) *Column {
 	return table.NewColumn(name)
 }
 
-// GetColumnListing Get the column listing for the table
-func (table *Table) GetColumnListing() {
-}
-
-// GetIndexListing Get the index listing for the table
-func (table *Table) GetIndexListing() {
-}
-
 // NewIndex Create a new index instance
 func (table *Table) NewIndex(name string, columns ...*Column) *Index {
-	index := &Index{Name: name, Columns: []*Column{}}
-	index.Columns = append(index.Columns, columns...)
-	index.Table = table
+	cols := []*grammar.Column{}
+	for _, column := range columns {
+		cols = append(cols, &column.Column)
+	}
+	index := &Index{
+		Index: table.Table.NewIndex(name, cols...),
+		Table: table,
+	}
+	table.IndexMap[name] = index
 	return index
+}
+
+// NewColumn Create a new column instance
+func (table *Table) NewColumn(name string) *Column {
+	column := &Column{
+		Column: table.Table.NewColumn(name),
+		Table:  table,
+	}
+	table.ColumnMap[name] = column
+	return column
 }
 
 // GetIndex get the index instance for the given name, create if not exists.
@@ -53,11 +56,6 @@ func (table *Table) GetIndex(name string) *Index {
 		index = table.NewIndex(name)
 	}
 	return index
-}
-
-// NewColumn Create a new column instance
-func (table *Table) NewColumn(name string) *Column {
-	return &Column{Name: name, Table: table}
 }
 
 // GetColumn get the column instance for the given name, create if not exists.
@@ -115,28 +113,28 @@ func (table *Table) RenameIndex(old string, new string) *Index {
 	return index
 }
 
-func (table *Table) addColumn(column *Column) *Column {
-	column.validate()
-	table.Columns = append(table.Columns, column)
+// GetColumnListing Get the column listing for the table
+func (table *Table) GetColumnListing() {
+}
+
+// GetIndexListing Get the index listing for the table
+func (table *Table) GetIndexListing() {
+}
+
+// AddColumn add a column to the table
+func (table *Table) AddColumn(column *Column) *Column {
+	table.Table.AddColumn(&column.Column)
 	table.ColumnMap[column.Name] = column
-	table.onChange("addColumn", column)
+	table.onChange("AddColumn", column)
 	return column
 }
 
-func (table *Table) addIndex(index *Index) *Index {
-	index.validate()
-	table.Indexes = append(index.Table.Indexes, index)
+// AddIndex add an index to the table
+func (table *Table) AddIndex(index *Index) *Index {
+	table.Table.AddIndex(&index.Index)
 	table.IndexMap[index.Name] = index
-	table.onChange("addIndex", index)
+	table.onChange("AddIndex", index)
 	return index
-}
-
-func (table *Table) validate() *Table {
-	if table.Builder == nil {
-		err := errors.New("the table " + table.Name + "does not bind the builder")
-		panic(err)
-	}
-	return table
 }
 
 // onChange call this when the table changed
@@ -144,65 +142,67 @@ func (table *Table) onChange(event string, args ...interface{}) {
 }
 
 // GrammarTable translate type to the grammar table.
-func (table *Table) GrammarTable() *grammar.Table {
-	db := table.Builder.Conn.WriteConfig.DBName()
-	gtable := &grammar.Table{
-		DBName:    db,
-		Name:      table.Name,
-		Comment:   table.Comment,
-		Columns:   []*grammar.Column{},
-		Indexes:   []*grammar.Index{},
-		Collation: table.Builder.Conn.Config.Collation,
-		Charset:   table.Builder.Conn.Config.Charset,
-	}
+// func (table *Table) GrammarTable() *grammar.Table {
+// 	gtable := &table.Table
+// 	return gtable
+// db := table.Builder.Conn.WriteConfig.DBName()
+// gtable := &grammar.Table{
+// 	DBName:    db,
+// 	Name:      table.Name,
+// 	Comment:   table.Comment,
+// 	Columns:   []*grammar.Column{},
+// 	Indexes:   []*grammar.Index{},
+// 	Collation: table.Builder.Conn.Config.Collation,
+// 	Charset:   table.Builder.Conn.Config.Charset,
+// }
 
-	// translate columns
-	ColumnMap := sync.Map{}
-	for _, column := range table.Columns {
-		Column := &grammar.Column{
-			DBName:            db,
-			TableName:         table.Name,
-			Name:              column.Name,
-			Type:              column.Type,
-			Length:            column.Length,
-			Precision:         column.Precision(),
-			Scale:             column.Scale(),
-			DatetimePrecision: column.DatetimePrecision(),
-			Comment:           column.Comment,
-			Collation:         table.Builder.Conn.Config.Collation,
-			Charset:           table.Builder.Conn.Config.Charset,
-			Indexes:           []*grammar.Index{},
-		}
-		gtable.Columns = append(gtable.Columns, Column)
-		ColumnMap.Store(column.Name, Column)
-	}
+// // translate columns
+// ColumnMap := sync.Map{}
+// for _, column := range table.Columns {
+// 	Column := &grammar.Column{
+// 		DBName:            db,
+// 		TableName:         table.Name,
+// 		Name:              column.Name,
+// 		Type:              column.Type,
+// 		Length:            column.Length,
+// 		Precision:         column.Precision(),
+// 		Scale:             column.Scale(),
+// 		DatetimePrecision: column.DatetimePrecision(),
+// 		Comment:           column.Comment,
+// 		Collation:         table.Builder.Conn.Config.Collation,
+// 		Charset:           table.Builder.Conn.Config.Charset,
+// 		Indexes:           []*grammar.Index{},
+// 	}
+// 	gtable.Columns = append(gtable.Columns, Column)
+// 	ColumnMap.Store(column.Name, Column)
+// }
 
-	// translate indexes
-	for _, index := range table.Indexes {
-		gindex := &grammar.Index{
-			DBName:    db,
-			TableName: table.Name,
-			Name:      index.Name,
-			Type:      index.Type,
-			Comment:   index.Comment,
-			Columns:   []*grammar.Column{},
-		}
-		// bind columns and indexes
-		for _, column := range index.Columns {
-			Column, has := ColumnMap.Load(column.Name)
-			if has {
-				gindex.Columns = append(gindex.Columns, Column.(*grammar.Column))
-				Column.(*grammar.Column).Indexes = append(Column.(*grammar.Column).Indexes, gindex)
-			}
-		}
-		gtable.Indexes = append(gtable.Indexes, gindex)
-	}
+// // translate indexes
+// for _, index := range table.Indexes {
+// 	gindex := &grammar.Index{
+// 		DBName:    db,
+// 		TableName: table.Name,
+// 		Name:      index.Name,
+// 		Type:      index.Type,
+// 		Comment:   index.Comment,
+// 		Columns:   []*grammar.Column{},
+// 	}
+// 	// bind columns and indexes
+// 	for _, column := range index.Columns {
+// 		Column, has := ColumnMap.Load(column.Name)
+// 		if has {
+// 			gindex.Columns = append(gindex.Columns, Column.(*grammar.Column))
+// 			Column.(*grammar.Column).Indexes = append(Column.(*grammar.Column).Indexes, gindex)
+// 		}
+// 	}
+// 	gtable.Indexes = append(gtable.Indexes, gindex)
+// }
 
-	gtable.SetDefaultEngine("InnoDB")
-	gtable.SetDefaultCollation("utf8mb4_unicode_ci")
-	gtable.SetDefaultCharset("utf8mb4")
-	return gtable
-}
+// gtable.SetDefaultEngine("InnoDB")
+// gtable.SetDefaultCollation("utf8mb4_unicode_ci")
+// gtable.SetDefaultCharset("utf8mb4")
+// return gtable
+// }
 
 // func (table *Table) sqlColumns() string {
 // 	// SELECT *

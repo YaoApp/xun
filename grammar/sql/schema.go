@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Exists the Exists
@@ -42,10 +43,14 @@ func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 		)
 	}
 
+	engine := utils.GetIF(table.Engine != "", "ENGINE "+table.Engine, "")
+	charset := utils.GetIF(table.Charset != "", "DEFAULT CHARSET "+table.Charset, "")
+	collation := utils.GetIF(table.Collation != "", "COLLATE="+table.Collation, "")
+
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf(
-		"\n) ENGINE=%s DEFAULT CHARSET=%s COLLATE=%s",
-		table.Engine, table.Charset, table.Collation,
+		"\n) %s %s %s",
+		engine, charset, collation,
 	)
 
 	_, err := db.Exec(sql)
