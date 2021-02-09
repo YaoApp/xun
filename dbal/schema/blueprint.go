@@ -150,19 +150,19 @@ func (table *Table) GrammarTable() *grammar.Table {
 		DBName:    db,
 		Name:      table.Name,
 		Comment:   table.Comment,
-		Fields:    []*grammar.Field{},
+		Columns:   []*grammar.Column{},
 		Indexes:   []*grammar.Index{},
 		Collation: table.Builder.Conn.Config.Collation,
 		Charset:   table.Builder.Conn.Config.Charset,
 	}
 
 	// translate columns
-	fieldMap := sync.Map{}
+	ColumnMap := sync.Map{}
 	for _, column := range table.Columns {
-		field := &grammar.Field{
+		Column := &grammar.Column{
 			DBName:            db,
 			TableName:         table.Name,
-			Field:             column.Name,
+			Name:              column.Name,
 			Type:              column.Type,
 			Length:            column.Length,
 			Precision:         column.Precision(),
@@ -173,8 +173,8 @@ func (table *Table) GrammarTable() *grammar.Table {
 			Charset:           table.Builder.Conn.Config.Charset,
 			Indexes:           []*grammar.Index{},
 		}
-		gtable.Fields = append(gtable.Fields, field)
-		fieldMap.Store(column.Name, field)
+		gtable.Columns = append(gtable.Columns, Column)
+		ColumnMap.Store(column.Name, Column)
 	}
 
 	// translate indexes
@@ -182,17 +182,17 @@ func (table *Table) GrammarTable() *grammar.Table {
 		gindex := &grammar.Index{
 			DBName:    db,
 			TableName: table.Name,
-			Index:     index.Name,
+			Name:      index.Name,
 			Type:      index.Type,
 			Comment:   index.Comment,
-			Fields:    []*grammar.Field{},
+			Columns:   []*grammar.Column{},
 		}
 		// bind columns and indexes
 		for _, column := range index.Columns {
-			field, has := fieldMap.Load(column.Name)
+			Column, has := ColumnMap.Load(column.Name)
 			if has {
-				gindex.Fields = append(gindex.Fields, field.(*grammar.Field))
-				field.(*grammar.Field).Indexes = append(field.(*grammar.Field).Indexes, gindex)
+				gindex.Columns = append(gindex.Columns, Column.(*grammar.Column))
+				Column.(*grammar.Column).Indexes = append(Column.(*grammar.Column).Indexes, gindex)
 			}
 		}
 		gtable.Indexes = append(gtable.Indexes, gindex)
@@ -208,10 +208,10 @@ func (table *Table) GrammarTable() *grammar.Table {
 // 	// SELECT *
 // 	// FROM INFORMATION_SCHEMA.COLUMNS
 // 	// WHERE TABLE_SCHEMA = 'test' AND TABLE_NAME ='products';
-// 	fields := []string{
+// 	Columns := []string{
 // 		"TABLE_SCHEMA AS `db_name`",
 // 		"TABLE_NAME AS `table_name`",
-// 		"COLUMN_NAME AS `field`",
+// 		"COLUMN_NAME AS `Column`",
 // 		"ORDINAL_POSITION AS `position`",
 // 		"COLUMN_DEFAULT AS `default`",
 // 		"IS_NULLABLE as `nullable`",
@@ -234,7 +234,7 @@ func (table *Table) GrammarTable() *grammar.Table {
 // 	`
 // 	cfg := table.Builder.Conn.WriteConfig
 // 	fmt.Printf("sqlColumns: %#v\n", cfg.Sqlite3DBName())
-// 	sql = fmt.Sprintf(sql, strings.Join(fields, ","), "xiang", table.Name)
+// 	sql = fmt.Sprintf(sql, strings.Join(Columns, ","), "xiang", table.Name)
 // 	fmt.Printf("%s", sql)
 // 	return sql
 // }

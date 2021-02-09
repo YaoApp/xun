@@ -14,10 +14,10 @@ func (grammar SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
-	// fields
-	for _, field := range table.Fields {
+	// Columns
+	for _, Column := range table.Columns {
 		stmts = append(stmts,
-			grammar.Builder.SQLCreateColumn(db, field, grammar.Types, grammar.Quoter),
+			grammar.Builder.SQLCreateColumn(db, Column, grammar.Types, grammar.Quoter),
 		)
 	}
 	sql = sql + strings.Join(stmts, ",\n")

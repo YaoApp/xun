@@ -23,27 +23,27 @@ func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quote
 }
 
 // SQLCreateColumn return the add column sql for table create
-func (builder Builder) SQLCreateColumn(db *sqlx.DB, field *grammar.Field, types map[string]string, quoter grammar.Quoter) string {
+func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[field.Type]
+	typ, has := types[Column.Type]
 	if !has {
 		typ = "VARCHAR"
 	}
-	if field.Precision > 0 && field.Scale > 0 {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, field.Precision, field.Scale)
-	} else if field.DatetimePrecision > 0 {
-		typ = fmt.Sprintf("%s(%d)", typ, field.DatetimePrecision)
-	} else if field.Length > 0 {
-		typ = fmt.Sprintf("%s(%d)", typ, field.Length)
+	if Column.Precision > 0 && Column.Scale > 0 {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, Column.Precision, Column.Scale)
+	} else if Column.DatetimePrecision > 0 {
+		typ = fmt.Sprintf("%s(%d)", typ, Column.DatetimePrecision)
+	} else if Column.Length > 0 {
+		typ = fmt.Sprintf("%s(%d)", typ, Column.Length)
 	}
 
-	nullable := utils.GetIF(field.Nullable, "NOT NULL", " NULL").(string)
-	defaultValue := utils.GetIF(field.Default != nil, fmt.Sprintf("DEFAULT %v", field.Default), "").(string)
-	comment := utils.GetIF(field.Comment != "", fmt.Sprintf("COMMENT %s", quoter.VAL(field.Comment, db)), "").(string)
-	collation := utils.GetIF(field.Collation != "", fmt.Sprintf("COLLATE %s", field.Collation), "").(string)
+	nullable := utils.GetIF(Column.Nullable, "NOT NULL", " NULL").(string)
+	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
+	comment := utils.GetIF(Column.Comment != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
+	collation := utils.GetIF(Column.Collation != "", fmt.Sprintf("COLLATE %s", Column.Collation), "").(string)
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s",
-		quoter.ID(field.Field, db), typ, nullable, defaultValue, field.Extra, comment, collation)
+		quoter.ID(Column.Name, db), typ, nullable, defaultValue, Column.Extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -58,8 +58,8 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, field := range index.Fields {
-		columns = append(columns, quoter.ID(field.Field, db))
+	for _, Column := range index.Columns {
+		columns = append(columns, quoter.ID(Column.Name, db))
 	}
 
 	comment := ""
@@ -69,7 +69,7 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 
 	sql := fmt.Sprintf(
 		"%s %s (%s) %s",
-		typ, quoter.ID(index.Index, db), strings.Join(columns, "`,`"), comment)
+		typ, quoter.ID(index.Name, db), strings.Join(columns, "`,`"), comment)
 
 	return sql
 }

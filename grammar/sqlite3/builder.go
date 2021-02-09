@@ -22,13 +22,13 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, field := range index.Fields {
-		columns = append(columns, quoter.ID(field.Field, db))
+	for _, Column := range index.Columns {
+		columns = append(columns, quoter.ID(Column.Name, db))
 	}
 
 	sql := fmt.Sprintf(
 		"CREATE %s %s ON %s (%s)",
-		typ, quoter.ID(index.Index, db), quoter.ID(index.TableName, db), strings.Join(columns, "`,`"))
+		typ, quoter.ID(index.Name, db), quoter.ID(index.TableName, db), strings.Join(columns, "`,`"))
 
 	return sql
 }

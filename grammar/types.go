@@ -14,7 +14,7 @@ type Grammar interface {
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error
 	Rename(old string, new string, db *sqlx.DB) error
-	// GetColumnListing(table *Table, db *sqlx.DB) []*Field
+	// GetColumnListing(table *Table, db *sqlx.DB) []*Column
 }
 
 // Quoter the database quoting query text intrface
@@ -25,7 +25,7 @@ type Quoter interface {
 
 // SQLBuilder the database sql gender intrface
 type SQLBuilder interface {
-	SQLCreateColumn(db *sqlx.DB, field *Field, types map[string]string, quoter Quoter) string
+	SQLCreateColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
 	SQLCreateIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
 	SQLTableExists(db *sqlx.DB, name string, quoter Quoter) string
 	SQLRenameTable(db *sqlx.DB, old string, new string, quoter Quoter) string
@@ -46,16 +46,15 @@ type Table struct {
 	RowLength     int       `db:"avg_row_length"`
 	IndexLength   int       `db:"index_length"`
 	AutoIncrement int       `db:"auto_increment"`
-	Fields        []*Field
+	Columns       []*Column
 	Indexes       []*Index
-	IndexesUnique []*Index
 }
 
-// Field the table field
-type Field struct {
+// Column the table Column
+type Column struct {
 	DBName            string      `db:"db_name"`
 	TableName         string      `db:"table_name"`
-	Field             string      `db:"field"`
+	Name              string      `db:"name"`
 	Position          int         `db:"position"`
 	Default           interface{} `db:"default"`
 	Nullable          bool        `db:"nullable"`
@@ -71,6 +70,7 @@ type Field struct {
 	Extra             string      `db:"extra"`
 	Comment           string      `db:"comment"`
 	Primary           bool        `db:"primary"`
+	Table             *Table
 	Indexes           []*Index
 }
 
@@ -78,9 +78,8 @@ type Field struct {
 type Index struct {
 	DBName       string `db:"db_name"`
 	TableName    string `db:"table_name"`
-	Index        string `db:"index_name"`
+	Name         string `db:"index_name"`
 	SEQ          int    `db:"SEQ"`
-	Field        string `db:"field"`
 	Collation    string `db:"collation"`
 	Nullable     bool   `db:"nullable"`
 	Unique       bool   `db:"unique"`
@@ -88,5 +87,6 @@ type Index struct {
 	Type         string `db:"type"`
 	Comment      string `db:"comment"`
 	IndexComment string `db:"index_comment"`
-	Fields       []*Field
+	Table        *Table
+	Columns      []*Column
 }
