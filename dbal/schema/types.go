@@ -8,7 +8,6 @@ import (
 
 // Schema The schema interface
 type Schema interface {
-	SetMode(string) Schema
 	Table(string) *Table
 	HasTable(string) bool
 	Create(string, func(table Blueprint)) error

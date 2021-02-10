@@ -54,13 +54,6 @@ func NewGrammar(driver string) grammar.Grammar {
 	return mysql.New()
 }
 
-// SetMode set builder mode
-func (builder *Builder) SetMode(name string) Schema {
-	builder.Mode = utils.GetIF(name == "debug", "debug", "production").(string)
-	builder.Grammar.SetMode(name)
-	return builder
-}
-
 // Table get the table blueprint instance
 func (builder *Builder) Table(name string) *Table {
 	table := NewTable(name, builder)

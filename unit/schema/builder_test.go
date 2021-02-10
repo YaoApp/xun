@@ -18,7 +18,7 @@ func getTestBuilder() schema.Schema {
 	}
 	driver := os.Getenv("XUN_UNIT_DSN")
 	dsn := unit.DSN(driver)
-	builder = schema.New(driver, dsn).SetMode(os.Getenv("XUN_UNIT_MODE"))
+	builder = schema.New(driver, dsn)
 	return builder
 }
 

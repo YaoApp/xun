@@ -148,13 +148,11 @@ func Schema() schema.Schema {
 // Schema Get a schema builder instance.
 func (manager *Manager) Schema() schema.Schema {
 	write := manager.GetPrimary()
-	return newSchema(
-		write.Config.Driver,
-		&schema.Connection{
-			Write:       &write.DB,
-			Config:      manager.Config,
-			WriteConfig: write.Config,
-		})
+	return schema.Use(&schema.Connection{
+		Write:       &write.DB,
+		Config:      manager.Config,
+		WriteConfig: write.Config,
+	})
 }
 
 // Query Get a fluent query builder instance.

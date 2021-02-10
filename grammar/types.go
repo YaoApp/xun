@@ -14,8 +14,6 @@ type Grammar interface {
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error
 	Rename(old string, new string, db *sqlx.DB) error
-	SetMode(mode string) Grammar
-	DebugInfo(format string, a ...interface{})
 	// GetColumnListing(table *Table, db *sqlx.DB) []*Column
 }
 
