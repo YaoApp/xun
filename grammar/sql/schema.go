@@ -55,6 +55,7 @@ func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 		"\n) %s %s %s",
 		engine, charset, collation,
 	)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
@@ -62,6 +63,7 @@ func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 // Drop a table from the schema.
 func (grammar SQL) Drop(name string, db *sqlx.DB) error {
 	sql := fmt.Sprintf("DROP TABLE %s", grammar.Quoter.ID(name, db))
+	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
@@ -69,6 +71,7 @@ func (grammar SQL) Drop(name string, db *sqlx.DB) error {
 // DropIfExists if the table exists, drop it from the schema.
 func (grammar SQL) DropIfExists(name string, db *sqlx.DB) error {
 	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammar.Quoter.ID(name, db))
+	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
@@ -76,15 +79,17 @@ func (grammar SQL) DropIfExists(name string, db *sqlx.DB) error {
 // Rename a table on the schema.
 func (grammar SQL) Rename(old string, new string, db *sqlx.DB) error {
 	sql := grammar.Builder.SQLRenameTable(db, old, new, grammar.Quoter)
+	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
 
 // Alter a table on the schema
 func (grammar SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
-	fmt.Printf("Alter SQL:\n%s\n", `SELECT xxx	
+	sql := `SELECT xxx	
 		FROM INFORMATION_SCHEMA.COLUMNS 
 		WHERE TABLE_SCHEMA = 'xxx' AND TABLE_NAME ='xxx'
-	`)
+	`
+	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	return nil
 }
