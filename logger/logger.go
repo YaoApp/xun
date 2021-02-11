@@ -98,6 +98,10 @@ func Fatal(code int, message string) *Content {
 
 // Fatal represents truly catastrophic situations, as far as your application is concerned.
 func (logger *Logger) Fatal(code int, message string) *Content {
+	if logger.Level < LevelFatal {
+		return &Content{logger: logger}
+	}
+
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
 	if ok {
@@ -124,6 +128,9 @@ func Error(code int, message string) *Content {
 
 // Error An error is a serious issue and represents the failure of something important going on in your application.
 func (logger *Logger) Error(code int, message string) *Content {
+	if logger.Level < LevelError {
+		return &Content{logger: logger}
+	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
 	if ok {
@@ -150,6 +157,9 @@ func Warn(methodType string, trace ...string) *Content {
 
 // Warn Now we're getting into the grayer area of hypotheticals.
 func (logger *Logger) Warn(methodType string, trace ...string) *Content {
+	if logger.Level < LevelWarn {
+		return &Content{logger: logger}
+	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
 	if ok {
@@ -176,6 +186,9 @@ func Info(methodType string, trace ...string) *Content {
 
 // Info Finally, we can dial down the stress level.
 func (logger *Logger) Info(methodType string, trace ...string) *Content {
+	if logger.Level < LevelInfo {
+		return &Content{logger: logger}
+	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
 	if ok {
@@ -201,6 +214,9 @@ func Debug(methodType string, trace ...string) *Content {
 
 // Debug With DEBUG, you start to include more granular, diagnostic information.
 func (logger *Logger) Debug(methodType string, trace ...string) *Content {
+	if logger.Level < LevelDebug {
+		return &Content{logger: logger}
+	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
 	if ok {
