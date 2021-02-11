@@ -15,3 +15,4 @@
 # vendor/
 .DS_Store
 unit/*.db
+unit/*.log

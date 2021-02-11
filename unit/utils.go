@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/yaoapp/xun/capsule"
+	"github.com/yaoapp/xun/logger"
 )
 
 // "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local"
@@ -35,6 +36,20 @@ func DSN(name string) string {
 		panic(err)
 	}
 	return dsn
+}
+
+// SetLogger set the unit file logger
+func SetLogger() {
+	logfile := os.Getenv("XUN_UNIT_LOG")
+	output := os.Stdout
+	if logfile != "" {
+		f, err := os.OpenFile(logfile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if err == nil {
+			output = f
+		}
+	}
+	logger.DefaultLogger.SetOutput(output)
+	logger.DefaultErrorLogger.SetOutput(output)
 }
 
 // Catch and out

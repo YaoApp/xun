@@ -14,7 +14,7 @@ import (
 // Exists the Exists
 func (grammar SQL) Exists(name string, db *sqlx.DB) bool {
 	sql := grammar.Builder.SQLTableExists(db, name, grammar.Quoter)
-	defer logger.LogR(sql, time.Now())
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)
 	if row.Err() != nil {
 		panic(row.Err())

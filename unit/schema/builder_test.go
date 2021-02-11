@@ -11,6 +11,10 @@ import (
 
 var builder schema.Schema
 
+func init() {
+	unit.SetLogger()
+}
+
 func getTestBuilder() schema.Schema {
 	defer unit.Catch()
 	if builder != nil {
