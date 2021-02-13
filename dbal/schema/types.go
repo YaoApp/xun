@@ -24,13 +24,20 @@ type Schema interface {
 
 // Blueprint the table operating interface
 type Blueprint interface {
-	String(name string, length int) *Column
 	HasColumn(name ...string) bool
 	DropColumn(name ...string)
 	RenameColumn(old string, new string) *Column
 	HasIndex(name ...string) bool
-	DropIndex(name ...string)
+	CreatePrimary(columnName string)
+	CreateIndex(key string, columnNames ...string)
+	CreateUnique(key string, columnNames ...string)
+	DropIndex(key ...string)
 	RenameIndex(old string, new string) *Index
+	String(name string, length int) *Column
+	BigInteger(name string) *Column
+	UnsignedBigInteger(name string) *Column
+	BigIncrements(name string) *Column
+	ID(name string) *Column
 }
 
 // Connection the database connection for schema operating

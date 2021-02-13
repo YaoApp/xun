@@ -46,10 +46,12 @@ type Table struct {
 	RowLength     int       `db:"avg_row_length"`
 	IndexLength   int       `db:"index_length"`
 	AutoIncrement int       `db:"auto_increment"`
+	Primary       *Column
 	ColumnMap     map[string]*Column
 	IndexMap      map[string]*Index
 	Columns       []*Column
 	Indexes       []*Index
+	Commands      []*Command
 }
 
 // Column the table Column
@@ -60,7 +62,7 @@ type Column struct {
 	Position          int         `db:"position"`
 	Default           interface{} `db:"default"`
 	Nullable          bool        `db:"nullable"`
-	Unsigned          bool        `db:"unsigned"`
+	IsUnsigned        bool        `db:"unsigned"`
 	Type              string      `db:"type"`
 	Length            int         `db:"length"`
 	OctetLength       string      `db:"octet_length"`
@@ -96,4 +98,10 @@ type Index struct {
 	Columns      []*Column
 	Dropped      bool
 	Newname      string
+}
+
+// Command The Command that should be run for the table.
+type Command struct {
+	Name   string        // The command name
+	Params []interface{} // The command parameters
 }

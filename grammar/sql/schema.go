@@ -12,8 +12,8 @@ import (
 )
 
 // Exists the Exists
-func (grammar SQL) Exists(name string, db *sqlx.DB) bool {
-	sql := grammar.Builder.SQLTableExists(db, name, grammar.Quoter)
+func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
+	sql := grammarSQL.Builder.SQLTableExists(db, name, grammarSQL.Quoter)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)
 	if row.Err() != nil {
@@ -27,22 +27,44 @@ func (grammar SQL) Exists(name string, db *sqlx.DB) bool {
 }
 
 // Create a new table on the schema
-func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
-	name := grammar.Quoter.ID(table.Name, db)
+func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
+	name := grammarSQL.Quoter.ID(table.Name, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
+	columns := []*grammar.Column{}
+	indexes := []*grammar.Index{}
+
+	// Commands
+	// The commands must be:
+	//    AddColumn(column *Column)    for adding a column
+	//    ModifyColumn(column *Column) for modifying a colu
+	//    RenameColumn(old string,new string)  for renaming a column
+	//    DropColumn(name string)  for dropping a column
+	//    CreateIndex(index *Index) for creating a index
+	//    DropIndex( name string) for  dropping a index
+	//    RenameIndex(old string,new string)  for renaming a index
+	for _, command := range table.Commands {
+		switch command.Name {
+		case "AddColumn":
+			columns = append(columns, command.Params[0].(*grammar.Column))
+			break
+		case "CreateIndex":
+			indexes = append(indexes, command.Params[0].(*grammar.Index))
+			break
+		}
+	}
 
 	// Columns
-	for _, Column := range table.Columns {
+	for _, Column := range columns {
 		stmts = append(stmts,
-			grammar.Builder.SQLCreateColumn(db, Column, grammar.Types, grammar.Quoter),
+			grammarSQL.Builder.SQLCreateColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
 		)
 	}
 
 	// indexes
-	for _, index := range table.Indexes {
+	for _, index := range indexes {
 		stmts = append(stmts,
-			grammar.Builder.SQLCreateIndex(db, index, grammar.IndexTypes, grammar.Quoter),
+			grammarSQL.Builder.SQLCreateIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
 		)
 	}
 
@@ -61,35 +83,54 @@ func (grammar SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 }
 
 // Drop a table from the schema.
-func (grammar SQL) Drop(name string, db *sqlx.DB) error {
-	sql := fmt.Sprintf("DROP TABLE %s", grammar.Quoter.ID(name, db))
+func (grammarSQL SQL) Drop(name string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("DROP TABLE %s", grammarSQL.Quoter.ID(name, db))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
 
 // DropIfExists if the table exists, drop it from the schema.
-func (grammar SQL) DropIfExists(name string, db *sqlx.DB) error {
-	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammar.Quoter.ID(name, db))
+func (grammarSQL SQL) DropIfExists(name string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammarSQL.Quoter.ID(name, db))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
 
 // Rename a table on the schema.
-func (grammar SQL) Rename(old string, new string, db *sqlx.DB) error {
-	sql := grammar.Builder.SQLRenameTable(db, old, new, grammar.Quoter)
+func (grammarSQL SQL) Rename(old string, new string, db *sqlx.DB) error {
+	sql := grammarSQL.Builder.SQLRenameTable(db, old, new, grammarSQL.Quoter)
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
 
 // Alter a table on the schema
-func (grammar SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
-	sql := `SELECT xxx	
-		FROM INFORMATION_SCHEMA.COLUMNS 
-		WHERE TABLE_SCHEMA = 'xxx' AND TABLE_NAME ='xxx'
-	`
+func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
+	// sql := `SELECT xxx
+	// 	FROM INFORMATION_SCHEMA.COLUMNS
+	// 	WHERE TABLE_SCHEMA = 'xxx' AND TABLE_NAME ='xxx'
+	// `
+	name := grammarSQL.Quoter.ID(table.Name, db)
+	sql := fmt.Sprintf("ALTER TABLE %s \n", name)
+	stmts := []string{}
+
+	// Columns
+	for _, Column := range table.Columns {
+		if Column.Dropped { // Drop
+			stmts = append(stmts, fmt.Sprintf("DROP COLUMN %s", grammarSQL.Quoter.ID(Column.Name, db)))
+			// } else if Column.Exists { // Modify
+			// 	stmts = append(stmts, fmt.Sprintf("MODIFY COLUMN %s column_definition", grammarSQL.Quoter.ID(Column.Name, db)))
+		} else if Column.Newname != "" { // Rename
+			stmts = append(stmts, fmt.Sprintf("RENAME COLUMN %s TO %s", grammarSQL.Quoter.ID(Column.Name, db), grammarSQL.Quoter.ID(Column.Newname, db)))
+		} else { // ADD
+			stmts = append(stmts,
+				"ADD "+grammarSQL.Builder.SQLCreateColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			)
+		}
+	}
+	sql = sql + strings.Join(stmts, ",\n")
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	return nil
 }

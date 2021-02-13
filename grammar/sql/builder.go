@@ -37,13 +37,14 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 		typ = fmt.Sprintf("%s(%d)", typ, Column.Length)
 	}
 
-	nullable := utils.GetIF(Column.Nullable, "NOT NULL", " NULL").(string)
+	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
 	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
 	comment := utils.GetIF(Column.Comment != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(Column.Collation != "", fmt.Sprintf("COLLATE %s", Column.Collation), "").(string)
+	extra := utils.GetIF(Column.Extra != "", "AUTO_INCREMENT", "")
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s",
-		quoter.ID(Column.Name, db), typ, nullable, defaultValue, Column.Extra, comment, collation)
+		quoter.ID(Column.Name, db), typ, nullable, defaultValue, extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -69,7 +70,7 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 
 	sql := fmt.Sprintf(
 		"%s %s (%s) %s",
-		typ, quoter.ID(index.Name, db), strings.Join(columns, "`,`"), comment)
+		typ, quoter.ID(index.Name, db), strings.Join(columns, ","), comment)
 
 	return sql
 }

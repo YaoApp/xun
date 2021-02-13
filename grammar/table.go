@@ -5,10 +5,12 @@ func NewTable(name string, dbname string) Table {
 	return Table{
 		DBName:    dbname,
 		Name:      name,
+		Primary:   nil,
 		Columns:   []*Column{},
 		ColumnMap: map[string]*Column{},
 		Indexes:   []*Index{},
 		IndexMap:  map[string]*Index{},
+		Commands:  []*Command{},
 	}
 }
 
@@ -24,8 +26,8 @@ func (table *Table) NewIndex(name string, columns ...*Column) Index {
 	return index
 }
 
-// AddIndex add a index to the table
-func (table *Table) AddIndex(index *Index) *Table {
+// PushIndex push an index instance to the table indexes
+func (table *Table) PushIndex(index *Index) *Table {
 	table.IndexMap[index.Name] = index
 	table.Indexes = append(table.Indexes, index)
 	return table
@@ -42,9 +44,26 @@ func (table *Table) NewColumn(name string) Column {
 	return column
 }
 
-// AddColumn add a column to the table
-func (table *Table) AddColumn(column *Column) *Table {
+// PushColumn push a column instance to the table columns
+func (table *Table) PushColumn(column *Column) *Table {
 	table.ColumnMap[column.Name] = column
 	table.Columns = append(table.Columns, column)
 	return table
+}
+
+// AddCommand Add a new command to the table.
+//
+// The commands must be:
+//    AddColumn(column *Column)    for adding a column
+//    ModifyColumn(column *Column) for modifying a colu
+//    RenameColumn(old string,new string)  for renaming a column
+//    DropColumn(name string)  for dropping a column
+//    CreateIndex(index *Index) for creating a index
+//    DropIndex( name string) for  dropping a index
+//    RenameIndex(old string,new string)  for renaming a index
+func (table *Table) AddCommand(name string, params ...interface{}) {
+	table.Commands = append(table.Commands, &Command{
+		Name:   name,
+		Params: params,
+	})
 }

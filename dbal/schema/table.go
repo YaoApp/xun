@@ -35,7 +35,11 @@ func (table *Table) NewIndex(name string, columns ...*Column) *Index {
 		Index: table.Table.NewIndex(name, cols...),
 		Table: table,
 	}
-	table.IndexMap[name] = index
+
+	// mapping index
+	for _, column := range columns {
+		column.Indexes = append(column.Indexes, &index.Index)
+	}
 	return index
 }
 
@@ -45,7 +49,6 @@ func (table *Table) NewColumn(name string) *Column {
 		Column: table.Table.NewColumn(name),
 		Table:  table,
 	}
-	table.ColumnMap[name] = column
 	return column
 }
 
@@ -67,20 +70,60 @@ func (table *Table) GetColumn(name string) *Column {
 	return column
 }
 
-// AddColumn add a column to the table
-func (table *Table) AddColumn(column *Column) *Column {
-	table.Table.AddColumn(&column.Column)
+// PushColumn add a column to the table
+func (table *Table) PushColumn(column *Column) *Column {
+	table.Table.PushColumn(&column.Column)
 	table.ColumnMap[column.Name] = column
-	table.onChange("AddColumn", column)
+	table.onChange("PushColumn", column)
 	return column
 }
 
-// AddIndex add an index to the table
-func (table *Table) AddIndex(index *Index) *Index {
-	table.Table.AddIndex(&index.Index)
+// PushIndex add an index to the table
+func (table *Table) PushIndex(index *Index) *Index {
+	table.Table.PushIndex(&index.Index)
 	table.IndexMap[index.Name] = index
-	table.onChange("AddIndex", index)
+	table.onChange("PushIndex", index)
 	return index
+}
+
+// AddCommand Add a new command to the table.
+func (table *Table) AddCommand(name string, params ...interface{}) {
+	table.Table.AddCommand(name, params...)
+}
+
+// AddColumnCommand add a new command that adding a column
+func (table *Table) AddColumnCommand(column *grammar.Column) {
+	table.AddCommand("AddColumn", column)
+}
+
+// ModifyColumnCommand add a new command that modifing a column
+func (table *Table) ModifyColumnCommand(column *grammar.Column) {
+	table.AddCommand("ModifyColumn", column)
+}
+
+// RenameColumnCommand add a new command that renaming a column
+func (table *Table) RenameColumnCommand(old string, new string) {
+	table.AddCommand("RenameColumn", old, new)
+}
+
+// DropColumnCommand add a new command that dropping a column
+func (table *Table) DropColumnCommand(name string) {
+	table.AddCommand("DropColumn", name)
+}
+
+// CreateIndexCommand add a new command that creating a index
+func (table *Table) CreateIndexCommand(index *grammar.Index) {
+	table.AddCommand("CreateIndex", index)
+}
+
+// DropIndexCommand add a new command that dropping a index
+func (table *Table) DropIndexCommand(name string) {
+	table.AddCommand("DropIndex", name)
+}
+
+// RenameIndexCommand add a new command that renaming a index
+func (table *Table) RenameIndexCommand(old string, new string) {
+	table.AddCommand("RenameColumn", old, new)
 }
 
 // onChange call this when the table changed

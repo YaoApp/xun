@@ -26,5 +26,8 @@ func New() grammar.Grammar {
 		"unique": "UNIQUE INDEX",
 		"index":  "INDEX",
 	}
+	types := sqlite.SQL.Types
+	types["bigInteger"] = "INTEGER"
+	sqlite.Types = types
 	return &sqlite
 }
