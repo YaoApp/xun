@@ -55,9 +55,21 @@ func NewGrammar(driver string) grammar.Grammar {
 }
 
 // Table get the table blueprint instance
-func (builder *Builder) Table(name string) *Table {
+func (builder *Builder) table(name string) *Table {
 	table := NewTable(name, builder)
 	return table
+}
+
+// MustGet a table on the schema.
+func (builder *Builder) MustGet(name string) Blueprint {
+	table, err := builder.Get(name)
+	utils.PanicIF(err)
+	return table
+}
+
+// Get a table on the schema.
+func (builder *Builder) Get(name string) (Blueprint, error) {
+	return builder.table(name), nil
 }
 
 // HasTable determine if the given table exists.
@@ -67,14 +79,14 @@ func (builder *Builder) HasTable(name string) bool {
 
 // Create a new table on the schema.
 func (builder *Builder) Create(name string, callback func(table Blueprint)) error {
-	table := builder.Table(name)
+	table := builder.table(name)
 	callback(table)
 	return builder.Grammar.Create(&table.Table, builder.Conn.Write)
 }
 
 // MustCreate a new table on the schema.
-func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) *Table {
-	table := builder.Table(name)
+func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) Blueprint {
+	table := builder.table(name)
 	callback(table)
 	err := builder.Grammar.Create(&table.Table, builder.Conn.Write)
 	utils.PanicIF(err)
@@ -83,14 +95,14 @@ func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) 
 
 // Alter a table on the schema.
 func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
-	table := builder.Table(name)
+	table := builder.table(name)
 	callback(table)
 	return builder.Grammar.Alter(&table.Table, builder.Conn.Write)
 }
 
 // MustAlter a table on the schema.
-func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) *Table {
-	table := builder.Table(name)
+func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) Blueprint {
+	table := builder.table(name)
 	callback(table)
 	err := builder.Grammar.Alter(&table.Table, builder.Conn.Write)
 	utils.PanicIF(err)
@@ -125,10 +137,10 @@ func (builder *Builder) Rename(old string, new string) error {
 }
 
 // MustRename a table on the schema.
-func (builder *Builder) MustRename(old string, new string) *Table {
+func (builder *Builder) MustRename(old string, new string) Blueprint {
 	err := builder.Rename(old, new)
 	utils.PanicIF(err)
-	return builder.Table(new)
+	return builder.table(new)
 }
 
 // Primary Specify the primary key(s) for the table.

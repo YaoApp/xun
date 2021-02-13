@@ -8,22 +8,24 @@ import (
 
 // Schema The schema interface
 type Schema interface {
-	Table(string) *Table
-	HasTable(string) bool
+	Get(string) (Blueprint, error)
 	Create(string, func(table Blueprint)) error
-	MustCreate(string, func(table Blueprint)) *Table
 	Drop(string) error
+	Alter(string, func(table Blueprint)) error
+	HasTable(string) bool
+	MustGet(string) Blueprint
+	MustCreate(string, func(table Blueprint)) Blueprint
 	MustDrop(string)
+	MustAlter(string, func(table Blueprint)) Blueprint
+	Rename(string, string) error
+	MustRename(string, string) Blueprint
 	DropIfExists(string) error
 	MustDropIfExists(string)
-	Rename(string, string) error
-	MustRename(string, string) *Table
-	Alter(string, func(table Blueprint)) error
-	MustAlter(string, func(table Blueprint)) *Table
 }
 
 // Blueprint the table operating interface
 type Blueprint interface {
+	GetName() string
 	HasColumn(name ...string) bool
 	DropColumn(name ...string)
 	RenameColumn(old string, new string) *Column

@@ -100,7 +100,7 @@ func TestMustCreate(t *testing.T) {
 		table.String("unionid", 128).Unique()
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
-	assert.Equal(t, "table_test_builder", table.Name, "the table name should be table_test_builder")
+	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 }
 
 func TestMustDrop(t *testing.T) {
@@ -131,7 +131,7 @@ func TestMustRename(t *testing.T) {
 	builder := getTestBuilder()
 	table := builder.MustRename("table_test_builder", "table_test_builder_re")
 	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
-	assert.Equal(t, "table_test_builder_re", table.Name, "the table name should be table_test_builder_re")
+	assert.Equal(t, "table_test_builder_re", table.GetName(), "the table name should be table_test_builder_re")
 	builder.Drop("table_test_builder_re")
 }
 
@@ -147,6 +147,6 @@ func TestMustAlter(t *testing.T) {
 		table.RenameColumn("unionid", "uid").Unique()
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
-	assert.Equal(t, "table_test_builder", table.Name, "the table name should be table_test_builder")
+	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 	builder.Drop("table_test_builder")
 }

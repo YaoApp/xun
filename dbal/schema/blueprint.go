@@ -24,6 +24,11 @@ func (table *Table) HasIndex(name ...string) bool {
 	return has
 }
 
+// GetName get the table name
+func (table *Table) GetName() string {
+	return table.Name
+}
+
 // AddColumn add or modify a column to the table
 func (table *Table) AddColumn(column *Column) *Column {
 	if table.HasColumn(column.Name) {
