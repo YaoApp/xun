@@ -24,6 +24,34 @@ func (table *Table) HasIndex(name ...string) bool {
 	return has
 }
 
+// GetColumns Get the columns map of the table
+func (table *Table) GetColumns() map[string]*Column {
+	return table.ColumnMap
+}
+
+// GetIndexes Get the indexes map of the table
+func (table *Table) GetIndexes() map[string]*Index {
+	return table.IndexMap
+}
+
+// GetIndex get the index instance for the given name, create if not exists.
+func (table *Table) GetIndex(name string) *Index {
+	index, has := table.IndexMap[name]
+	if !has {
+		index = table.NewIndex(name)
+	}
+	return index
+}
+
+// GetColumn get the column instance for the given name, create if not exists.
+func (table *Table) GetColumn(name string) *Column {
+	column, has := table.ColumnMap[name]
+	if !has {
+		column = table.NewColumn(name)
+	}
+	return column
+}
+
 // GetName get the table name
 func (table *Table) GetName() string {
 	return table.Name

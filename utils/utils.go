@@ -33,6 +33,32 @@ func Println(v interface{}) {
 	fmt.Printf("%s\n", s)
 }
 
+// MapFilp flipping the given map
+func MapFilp(v interface{}) (interface{}, bool) {
+	switch v.(type) {
+	case map[string]string:
+		res := map[string]string{}
+		for key, val := range v.(map[string]string) {
+			res[val] = key
+		}
+		return res, true
+	case map[string]int:
+		res := map[int]string{}
+		for key, val := range v.(map[string]int) {
+			res[val] = key
+		}
+		return res, true
+	case map[int]string:
+		res := map[string]int{}
+		for key, val := range v.(map[int]string) {
+			res[val] = key
+		}
+		return res, true
+	default:
+		return nil, false
+	}
+}
+
 // Set set the value for the pointer
 func Set(v interface{}, value interface{}) {
 	v = &value

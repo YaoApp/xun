@@ -72,6 +72,23 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// attaching columns
+	for _, column := range table.Table.Columns {
+		name := column.Name
+		table.ColumnMap[name] = &Column{
+			Column: *column,
+			Table:  table,
+		}
+	}
+	// attaching indexes
+	for _, index := range table.Table.Indexes {
+		name := index.Name
+		table.IndexMap[name] = &Index{
+			Index: *index,
+			Table: table,
+		}
+	}
 	return table, nil
 }
 

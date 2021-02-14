@@ -3,6 +3,7 @@ package sqlite3
 import (
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/grammar/sql"
+	"github.com/yaoapp/xun/utils"
 )
 
 // SQLite3 the sqlite3 Grammar
@@ -26,8 +27,16 @@ func New() grammar.Grammar {
 		"unique": "UNIQUE INDEX",
 		"index":  "INDEX",
 	}
+
+	// overwrite types
 	types := sqlite.SQL.Types
 	types["bigInteger"] = "INTEGER"
 	sqlite.Types = types
+
+	// set fliptypes
+	flipTypes, ok := utils.MapFilp(sqlite.Types)
+	if ok {
+		sqlite.FlipTypes = flipTypes.(map[string]string)
+	}
 	return &sqlite
 }

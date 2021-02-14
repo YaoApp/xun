@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,7 +29,7 @@ func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
 
 // Get a table on the schema
 func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
-	_, err := grammarSQL.GetColumnListing(table.DBName, table.Name, db)
+	columns, err := grammarSQL.GetColumnListing(table.DBName, table.Name, db)
 	if err != nil {
 		return err
 	}
@@ -37,7 +38,30 @@ func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	utils.Println(indexes)
+
+	// attaching columns
+	for _, column := range columns {
+		column.Indexes = []*grammar.Index{}
+		table.PushColumn(column)
+	}
+
+	// attaching indexes
+	for i := range indexes {
+		idx := indexes[i]
+		if !table.HasColumn(idx.ColumnName) {
+			return errors.New("the column does not exists" + idx.ColumnName)
+		}
+		column := table.ColumnMap[idx.ColumnName]
+		if !table.HasIndex(idx.Name) {
+			index := *idx
+			index.Columns = []*grammar.Column{}
+			column.Indexes = append(column.Indexes, &index)
+			table.PushIndex(&index)
+		}
+		index := table.IndexMap[idx.Name]
+		index.Columns = append(index.Columns, column)
+	}
+
 	return nil
 }
 
@@ -68,7 +92,8 @@ func (grammarSQL SQL) GetIndexListing(dbName string, tableName string, db *sqlx.
 	sql := fmt.Sprintf(`
 			SELECT %s
 			FROM INFORMATION_SCHEMA.STATISTICS
-			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
+			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+			ORDER BY SEQ_IN_INDEX;
 		`,
 		strings.Join(selectColumns, ","),
 		grammarSQL.Quoter.VAL(dbName, db),
@@ -79,6 +104,17 @@ func (grammarSQL SQL) GetIndexListing(dbName string, tableName string, db *sqlx.
 	err := db.Select(&indexes, sql)
 	if err != nil {
 		return nil, err
+	}
+
+	// counting the type of indexes
+	for _, index := range indexes {
+		if index.Name == "PRIMARY" {
+			index.Type = "primary"
+		} else if index.Unique {
+			index.Type = "unique"
+		} else {
+			index.Type = "index"
+		}
 	}
 	return indexes, nil
 }
@@ -96,7 +132,7 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 			WHEN IS_NULLABLE = "NO" THEN false
 			ELSE false
 		END AS ` + "`nullable`",
-		"DATA_TYPE as `type`",
+		"UPPER(DATA_TYPE) as `type`",
 		"CHARACTER_MAXIMUM_LENGTH as `length`",
 		"CHARACTER_OCTET_LENGTH as `octet_length`",
 		"NUMERIC_PRECISION as `precision`",
@@ -126,6 +162,14 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 	err := db.Select(&columns, sql)
 	if err != nil {
 		return nil, err
+	}
+
+	// Cast the database data type to DBAL data type
+	for _, column := range columns {
+		typ, has := grammarSQL.FlipTypes[column.Type]
+		if has {
+			column.Type = typ
+		}
 	}
 	return columns, nil
 }

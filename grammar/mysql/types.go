@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/grammar/sql"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Mysql the mysql Grammar
@@ -41,5 +42,11 @@ func New() grammar.Grammar {
 	}
 	my.Driver = "mysql"
 	my.Quoter = Quoter{}
+
+	// set fliptypes
+	flipTypes, ok := utils.MapFilp(my.Types)
+	if ok {
+		my.FlipTypes = flipTypes.(map[string]string)
+	}
 	return &my
 }

@@ -61,6 +61,18 @@ func (table *Table) PushColumn(column *Column) *Table {
 	return table
 }
 
+// HasColumn checking if the given name column exists
+func (table *Table) HasColumn(name string) bool {
+	_, has := table.ColumnMap[name]
+	return has
+}
+
+// HasIndex checking if the given name index exists
+func (table *Table) HasIndex(name string) bool {
+	_, has := table.IndexMap[name]
+	return has
+}
+
 // AddCommand Add a new command to the table.
 //
 // The commands must be:

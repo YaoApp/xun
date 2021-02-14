@@ -26,6 +26,10 @@ type Schema interface {
 // Blueprint the table operating interface
 type Blueprint interface {
 	GetName() string
+	GetColumns() map[string]*Column
+	GetIndexes() map[string]*Index
+	GetColumn(name string) *Column
+	GetIndex(name string) *Index
 	HasColumn(name ...string) bool
 	DropColumn(name ...string)
 	RenameColumn(old string, new string) *Column

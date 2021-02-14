@@ -2,6 +2,7 @@ package sql
 
 import (
 	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/utils"
 )
 
 // SQL the SQL Grammar
@@ -9,6 +10,7 @@ type SQL struct {
 	Driver     string
 	Mode       string
 	Types      map[string]string
+	FlipTypes  map[string]string
 	IndexTypes map[string]string
 	Quoter     grammar.Quoter
 	Builder    grammar.SQLBuilder
@@ -17,6 +19,10 @@ type SQL struct {
 // New Create a new mysql grammar inteface
 func New() grammar.Grammar {
 	sql := NewSQL()
+	flipTypes, ok := utils.MapFilp(sql.Types)
+	if ok {
+		sql.FlipTypes = flipTypes.(map[string]string)
+	}
 	return &sql
 }
 
@@ -32,67 +38,33 @@ func NewSQL() SQL {
 			"unique":  "UNIQUE KEY",
 			"index":   "KEY",
 		},
+		FlipTypes: map[string]string{},
 		Types: map[string]string{
-			"bigInteger":            "BIGINT",
-			"string":                "VARCHAR",
-			"binary":                "VARCHAR",
-			"boolean":               "VARCHAR",
-			"char":                  "VARCHAR",
-			"dateTimeTz":            "VARCHAR",
-			"dateTime":              "VARCHAR",
-			"date":                  "VARCHAR",
-			"decimal":               "VARCHAR",
-			"double":                "VARCHAR",
-			"enum":                  "VARCHAR",
-			"float":                 "VARCHAR",
-			"foreignId":             "VARCHAR",
-			"geometryCollection":    "VARCHAR",
-			"geometry":              "VARCHAR",
-			"id":                    "VARCHAR",
-			"increments":            "VARCHAR",
-			"integer":               "VARCHAR",
-			"ipAddress":             "VARCHAR",
-			"json":                  "VARCHAR",
-			"jsonb":                 "VARCHAR",
-			"lineString":            "VARCHAR",
-			"longText":              "VARCHAR",
-			"macAddress":            "VARCHAR",
-			"mediumIncrements":      "VARCHAR",
-			"mediumInteger":         "VARCHAR",
-			"mediumText":            "VARCHAR",
-			"morphs":                "VARCHAR",
-			"multiLineString":       "VARCHAR",
-			"multiPoint":            "VARCHAR",
-			"multiPolygon":          "VARCHAR",
-			"nullableMorphs":        "VARCHAR",
-			"nullableTimestamps":    "VARCHAR",
-			"nullableUuidMorphs":    "VARCHAR",
-			"point":                 "VARCHAR",
-			"polygon":               "VARCHAR",
-			"rememberToken":         "VARCHAR",
-			"set":                   "VARCHAR",
-			"smallIncrements":       "VARCHAR",
-			"smallInteger":          "VARCHAR",
-			"softDeletesTz":         "VARCHAR",
-			"softDeletes":           "VARCHAR",
-			"text":                  "VARCHAR",
-			"timeTz":                "VARCHAR",
-			"time":                  "VARCHAR",
-			"timestampTz":           "VARCHAR",
-			"timestamp":             "VARCHAR",
-			"timestampsTz":          "VARCHAR",
-			"timestamps":            "VARCHAR",
-			"tinyIncrements":        "VARCHAR",
-			"tinyInteger":           "VARCHAR",
-			"unsignedBigInteger":    "VARCHAR",
-			"unsignedDecimal":       "VARCHAR",
-			"unsignedInteger":       "VARCHAR",
-			"unsignedMediumInteger": "VARCHAR",
-			"unsignedSmallInteger":  "VARCHAR",
-			"unsignedTinyInteger":   "VARCHAR",
-			"uuidMorphs":            "VARCHAR",
-			"uuid":                  "VARCHAR",
-			"year":                  "VARCHAR",
+			"bigInteger":    "BIGINT",
+			"string":        "VARCHAR",
+			"binary":        "binary",
+			"boolean":       "boolean",
+			"char":          "char",
+			"dateTimeTz":    "dateTimeTz",
+			"dateTime":      "dateTime",
+			"date":          "date",
+			"decimal":       "decimal",
+			"double":        "double",
+			"enum":          "enum",
+			"float":         "float",
+			"integer":       "integer",
+			"json":          "JSON",
+			"jsonb":         "JSONB",
+			"longText":      "LONGTEXT",
+			"mediumInteger": "mediumInteger",
+			"mediumText":    "mediumText",
+			"smallInteger":  "smallInteger",
+			"text":          "text",
+			"timestamp":     "timestamp",
+			"timestampsTz":  "timestampsTz",
+			"tinyInteger":   "tinyInteger",
+			"uuid":          "UUID",
+			"year":          "YEAR",
 		},
 	}
 }
