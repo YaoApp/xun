@@ -15,7 +15,7 @@ type Grammar interface {
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error
 	Rename(old string, new string, db *sqlx.DB) error
-	// GetColumnListing(table *Table, db *sqlx.DB) []*Column
+	GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*Column, error)
 }
 
 // Quoter the database quoting query text intrface
@@ -26,8 +26,8 @@ type Quoter interface {
 
 // SQLBuilder the database sql gender interface
 type SQLBuilder interface {
-	SQLCreateColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
-	SQLCreateIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
+	SQLAddColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
+	SQLAddIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
 	SQLTableExists(db *sqlx.DB, name string, quoter Quoter) string
 	SQLRenameTable(db *sqlx.DB, old string, new string, quoter Quoter) string
 }
@@ -84,17 +84,19 @@ type Column struct {
 
 // Index the talbe index
 type Index struct {
-	DBName       string `db:"db_name"`
-	TableName    string `db:"table_name"`
-	Name         string `db:"index_name"`
-	SEQ          int    `db:"SEQ"`
-	Collation    string `db:"collation"`
-	Nullable     bool   `db:"nullable"`
-	Unique       bool   `db:"unique"`
-	SubPart      int    `db:"sub_part"`
-	Type         string `db:"type"`
-	Comment      string `db:"comment"`
-	IndexComment string `db:"index_comment"`
+	DBName       string  `db:"db_name"`
+	TableName    string  `db:"table_name"`
+	ColumnName   string  `db:"column_name"`
+	Name         string  `db:"index_name"`
+	SEQ          int     `db:"seq_in_index"`
+	Collation    string  `db:"collation"`
+	Nullable     bool    `db:"nullable"`
+	Unique       bool    `db:"unique"`
+	SubPart      int     `db:"sub_part"`
+	Type         string  `db:"type"`
+	IndexType    string  `db:"index_type"`
+	Comment      *string `db:"comment"`
+	IndexComment *string `db:"index_comment"`
 	Table        *Table
 	Columns      []*Column
 	Dropped      bool

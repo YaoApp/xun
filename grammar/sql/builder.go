@@ -22,8 +22,8 @@ func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quote
 	return fmt.Sprintf("ALTER TABLE %s RENAME %s", quoter.ID(old, db), quoter.ID(new, db))
 }
 
-// SQLCreateColumn return the add column sql for table create
-func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
+// SQLAddColumn return the add column sql for table create
+func (builder Builder) SQLAddColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
 	// `id` bigint(20) unsigned NOT NULL,
 	typ, has := types[Column.Type]
 	if !has {
@@ -50,8 +50,8 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 	return sql
 }
 
-// SQLCreateIndex  return the add index sql for table create
-func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
+// SQLAddIndex  return the add index sql for table create
+func (builder Builder) SQLAddIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
 	typ, has := indexTypes[index.Type]
 	if !has {
 		typ = "KEY"
@@ -64,7 +64,7 @@ func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTy
 	}
 
 	comment := ""
-	if index.Comment != "" {
+	if index.Comment != nil {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
 	}
 

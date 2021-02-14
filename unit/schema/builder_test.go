@@ -30,7 +30,7 @@ func getTestBuilder() schema.Schema {
 func TestGet(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	table, err := builder.Get("app")
+	table, err := builder.Get("user")
 	fmt.Printf("Table is:%#v\nERRROR:%v\n", table, err)
 	// assert.Equal(t, nil, err, "the return error should be nil")
 }

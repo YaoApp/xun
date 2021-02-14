@@ -42,7 +42,7 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLCreateColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
 		)
 	}
 	sql = sql + strings.Join(stmts, ",\n")
@@ -59,7 +59,7 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	indexStmts := []string{}
 	for _, index := range indexes {
 		indexStmts = append(indexStmts,
-			grammarSQL.Builder.SQLCreateIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+			grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
 		)
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())

@@ -14,8 +14,8 @@ func (builder Builder) SQLTableExists(db *sqlx.DB, name string, quoter grammar.Q
 	return fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", quoter.VAL(name, db))
 }
 
-// SQLCreateIndex  return the add index sql for table create
-func (builder Builder) SQLCreateIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
+// SQLAddIndex  return the add index sql for table create
+func (builder Builder) SQLAddIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
 	typ, has := indexTypes[index.Type]
 	if !has {
 		typ = "KEY"

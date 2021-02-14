@@ -28,17 +28,74 @@ func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
 
 // Get a table on the schema
 func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
+	_, err := grammarSQL.GetColumnListing(table.DBName, table.Name, db)
+	if err != nil {
+		return err
+	}
+
+	indexes, err := grammarSQL.GetIndexListing(table.DBName, table.Name, db)
+	if err != nil {
+		return err
+	}
+	utils.Println(indexes)
+	return nil
+}
+
+// GetIndexListing get a table indexes structure
+func (grammarSQL SQL) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Index, error) {
+	selectColumns := []string{
+		"`TABLE_SCHEMA` AS `db_name`",
+		"`TABLE_NAME` AS `table_name`",
+		"`INDEX_NAME` AS `index_name`",
+		"`COLUMN_NAME` AS `column_name`",
+		"`COLLATION` AS `collation`",
+		`CASE
+			WHEN NULLABLE = 'YES' THEN true
+			WHEN NULLABLE = "NO" THEN false
+			ELSE false
+		END AS ` + "`nullable`",
+		`CASE
+			WHEN NON_UNIQUE = 0 THEN true
+			WHEN NON_UNIQUE = 1 THEN false
+			ELSE 0
+		END AS ` + "`unique`",
+		"`COMMENT` AS `comment`",
+		"`INDEX_TYPE` AS `index_type`",
+		"`COLUMN_NAME` AS `column_name`",
+		"`SEQ_IN_INDEX` AS `seq_in_index`",
+		"`INDEX_COMMENT` AS `index_comment`",
+	}
+	sql := fmt.Sprintf(`
+			SELECT %s
+			FROM INFORMATION_SCHEMA.STATISTICS
+			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
+		`,
+		strings.Join(selectColumns, ","),
+		grammarSQL.Quoter.VAL(dbName, db),
+		grammarSQL.Quoter.VAL(tableName, db),
+	)
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	indexes := []*grammar.Index{}
+	err := db.Select(&indexes, sql)
+	if err != nil {
+		return nil, err
+	}
+	return indexes, nil
+}
+
+// GetColumnListing get a table columns structure
+func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Column, error) {
 	selectColumns := []string{
 		"TABLE_SCHEMA AS `db_name`",
 		"TABLE_NAME AS `table_name`",
 		"COLUMN_NAME AS `name`",
 		"ORDINAL_POSITION AS `position`",
 		"COLUMN_DEFAULT AS `default`",
-		`case
-			when IS_NULLABLE = 'YES' then true
-			when IS_NULLABLE = "NO" then false
-			else false
-		end AS ` + "`nullable`",
+		`CASE
+			WHEN IS_NULLABLE = 'YES' THEN true
+			WHEN IS_NULLABLE = "NO" THEN false
+			ELSE false
+		END AS ` + "`nullable`",
 		"DATA_TYPE as `type`",
 		"CHARACTER_MAXIMUM_LENGTH as `length`",
 		"CHARACTER_OCTET_LENGTH as `octet_length`",
@@ -48,10 +105,10 @@ func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
 		"CHARACTER_SET_NAME as `charset`",
 		"COLLATION_NAME as `collation`",
 		"COLUMN_KEY as `key`",
-		`case
-			when COLUMN_KEY = 'PRI' then true
-			else false
-		end AS ` + "`primary`",
+		`CASE
+			WHEN COLUMN_KEY = 'PRI' THEN true
+			ELSE false
+		END AS ` + "`primary`",
 		"EXTRA as `extra`",
 		"COLUMN_COMMENT as `comment`",
 	}
@@ -61,18 +118,16 @@ func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
 			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
 		`,
 		strings.Join(selectColumns, ","),
-		grammarSQL.Quoter.VAL(table.DBName, db),
-		grammarSQL.Quoter.VAL(table.Name, db),
+		grammarSQL.Quoter.VAL(dbName, db),
+		grammarSQL.Quoter.VAL(tableName, db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	// columns := []grammar.Column{}
-	err := db.Select(&table.Columns, sql)
+	columns := []*grammar.Column{}
+	err := db.Select(&columns, sql)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// fmt.Printf("table.Columns: \n")
-	// utils.Println(table.Columns)
-	return nil
+	return columns, nil
 }
 
 // Create a new table on the schema
@@ -106,14 +161,14 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLCreateColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
 		)
 	}
 
 	// indexes
 	for _, index := range indexes {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLCreateIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+			grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
 		)
 	}
 
@@ -175,7 +230,7 @@ func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
 			stmts = append(stmts, fmt.Sprintf("RENAME COLUMN %s TO %s", grammarSQL.Quoter.ID(Column.Name, db), grammarSQL.Quoter.ID(Column.Newname, db)))
 		} else { // ADD
 			stmts = append(stmts,
-				"ADD "+grammarSQL.Builder.SQLCreateColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+				"ADD "+grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
 			)
 		}
 	}
