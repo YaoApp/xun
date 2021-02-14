@@ -9,6 +9,7 @@ import (
 // Grammar the Grammar inteface
 type Grammar interface {
 	Exists(name string, db *sqlx.DB) bool
+	Get(table *Table, db *sqlx.DB) error
 	Create(table *Table, db *sqlx.DB) error
 	Alter(table *Table, db *sqlx.DB) error
 	Drop(name string, db *sqlx.DB) error
@@ -64,16 +65,16 @@ type Column struct {
 	Nullable          bool        `db:"nullable"`
 	IsUnsigned        bool        `db:"unsigned"`
 	Type              string      `db:"type"`
-	Length            int         `db:"length"`
-	OctetLength       string      `db:"octet_length"`
-	Precision         int         `db:"precision"`
-	Scale             int         `db:"scale"`
-	DatetimePrecision int         `db:"datetime_precision"`
-	Charset           string      `db:"charset"`
-	Collation         string      `db:"collation"`
-	Key               string      `db:"key"`
-	Extra             string      `db:"extra"`
-	Comment           string      `db:"comment"`
+	Length            *int        `db:"length"`
+	OctetLength       *int        `db:"octet_length"`
+	Precision         *int        `db:"precision"`
+	Scale             *int        `db:"scale"`
+	DatetimePrecision *int        `db:"datetime_precision"`
+	Charset           *string     `db:"charset"`
+	Collation         *string     `db:"collation"`
+	Key               *string     `db:"key"`
+	Extra             *string     `db:"extra"`
+	Comment           *string     `db:"comment"`
 	Primary           bool        `db:"primary"`
 	Table             *Table
 	Indexes           []*Index

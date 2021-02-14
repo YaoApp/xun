@@ -26,6 +26,55 @@ func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
 	return name == fmt.Sprintf("%s", res[0])
 }
 
+// Get a table on the schema
+func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
+	selectColumns := []string{
+		"TABLE_SCHEMA AS `db_name`",
+		"TABLE_NAME AS `table_name`",
+		"COLUMN_NAME AS `name`",
+		"ORDINAL_POSITION AS `position`",
+		"COLUMN_DEFAULT AS `default`",
+		`case
+			when IS_NULLABLE = 'YES' then true
+			when IS_NULLABLE = "NO" then false
+			else false
+		end AS ` + "`nullable`",
+		"DATA_TYPE as `type`",
+		"CHARACTER_MAXIMUM_LENGTH as `length`",
+		"CHARACTER_OCTET_LENGTH as `octet_length`",
+		"NUMERIC_PRECISION as `precision`",
+		"NUMERIC_SCALE as `scale`",
+		"DATETIME_PRECISION as `datetime_precision`",
+		"CHARACTER_SET_NAME as `charset`",
+		"COLLATION_NAME as `collation`",
+		"COLUMN_KEY as `key`",
+		`case
+			when COLUMN_KEY = 'PRI' then true
+			else false
+		end AS ` + "`primary`",
+		"EXTRA as `extra`",
+		"COLUMN_COMMENT as `comment`",
+	}
+	sql := fmt.Sprintf(`
+			SELECT %s
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
+		`,
+		strings.Join(selectColumns, ","),
+		grammarSQL.Quoter.VAL(table.DBName, db),
+		grammarSQL.Quoter.VAL(table.Name, db),
+	)
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	// columns := []grammar.Column{}
+	err := db.Select(&table.Columns, sql)
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("table.Columns: \n")
+	// utils.Println(table.Columns)
+	return nil
+}
+
 // Create a new table on the schema
 func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.Name, db)

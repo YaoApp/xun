@@ -117,7 +117,7 @@ func (table *Table) RenameIndex(old string, new string) *Index {
 // String Create a new string column on the table.
 func (table *Table) String(name string, length int) *Column {
 	column := table.NewColumn(name)
-	column.Length = length
+	column.Length = &length
 	column.Type = "string"
 	table.AddColumn(column)
 	return column

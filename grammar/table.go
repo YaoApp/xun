@@ -36,10 +36,20 @@ func (table *Table) PushIndex(index *Index) *Table {
 // NewColumn create a new column intstance
 func (table *Table) NewColumn(name string) Column {
 	column := Column{
-		DBName:    table.DBName,
-		TableName: table.Name,
-		Table:     table,
-		Name:      name,
+		DBName:            table.DBName,
+		TableName:         table.Name,
+		Table:             table,
+		Name:              name,
+		Length:            nil,
+		OctetLength:       nil,
+		Precision:         nil,
+		Scale:             nil,
+		DatetimePrecision: nil,
+		Charset:           nil,
+		Collation:         nil,
+		Key:               nil,
+		Extra:             nil,
+		Comment:           nil,
 	}
 	return column
 }

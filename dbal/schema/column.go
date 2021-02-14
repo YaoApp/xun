@@ -1,6 +1,10 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/yaoapp/xun/utils"
+)
 
 // HasIndex check if the column has created the index
 func (column *Column) HasIndex(name string) bool {
@@ -80,6 +84,6 @@ func (column *Column) NotNull() *Column {
 
 // AutoIncrement set the numeric column AutoIncrement attribute is true
 func (column *Column) AutoIncrement() *Column {
-	column.Extra = "AutoIncrement"
+	utils.Set(column.Extra, "AutoIncrement")
 	return column
 }

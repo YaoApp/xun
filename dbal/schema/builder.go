@@ -54,10 +54,25 @@ func NewGrammar(driver string) grammar.Grammar {
 	return mysql.New()
 }
 
-// Table get the table blueprint instance
+// Table create the table blueprint instance
 func (builder *Builder) table(name string) *Table {
 	table := NewTable(name, builder)
 	return table
+}
+
+// HasTable determine if the given table exists.
+func (builder *Builder) HasTable(name string) bool {
+	return builder.Grammar.Exists(name, builder.Conn.Write)
+}
+
+// Get a table on the schema.
+func (builder *Builder) Get(name string) (Blueprint, error) {
+	table := builder.table(name)
+	err := builder.Grammar.Get(&table.Table, builder.Conn.Write)
+	if err != nil {
+		return nil, err
+	}
+	return table, nil
 }
 
 // MustGet a table on the schema.
@@ -65,16 +80,6 @@ func (builder *Builder) MustGet(name string) Blueprint {
 	table, err := builder.Get(name)
 	utils.PanicIF(err)
 	return table
-}
-
-// Get a table on the schema.
-func (builder *Builder) Get(name string) (Blueprint, error) {
-	return builder.table(name), nil
-}
-
-// HasTable determine if the given table exists.
-func (builder *Builder) HasTable(name string) bool {
-	return builder.Grammar.Exists(name, builder.Conn.Write)
 }
 
 // Create a new table on the schema.

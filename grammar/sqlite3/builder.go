@@ -50,12 +50,12 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision > 0 && Column.Scale > 0 {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, Column.Precision, Column.Scale)
-	} else if Column.DatetimePrecision > 0 {
-		typ = fmt.Sprintf("%s(%d)", typ, Column.DatetimePrecision)
-	} else if Column.Length > 0 {
-		typ = fmt.Sprintf("%s(%d)", typ, Column.Length)
+	if Column.Precision != nil && Column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.GetInt(Column.Precision), utils.GetInt(Column.Scale))
+	} else if Column.DatetimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.GetInt(Column.DatetimePrecision))
+	} else if Column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.GetInt(Column.Length))
 	}
 
 	primaryKey := utils.GetIF(Column.Primary, "PRIMARY KEY", "").(string)
@@ -64,9 +64,9 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 		nullable = primaryKey
 	}
 	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
-	comment := utils.GetIF(Column.Comment != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
-	collation := utils.GetIF(Column.Collation != "", fmt.Sprintf("COLLATE %s", Column.Collation), "").(string)
-	extra := utils.GetIF(Column.Extra != "", "AUTOINCREMENT", "")
+	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
+	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.GetString(Column.Collation)), "").(string)
+	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s",
 		quoter.ID(Column.Name, db), typ, nullable, defaultValue, extra, comment, collation)

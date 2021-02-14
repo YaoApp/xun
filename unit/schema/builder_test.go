@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -24,6 +25,14 @@ func getTestBuilder() schema.Schema {
 	dsn := unit.DSN(driver)
 	builder = schema.New(driver, dsn)
 	return builder
+}
+
+func TestGet(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	table, err := builder.Get("app")
+	fmt.Printf("Table is:%#v\nERRROR:%v\n", table, err)
+	// assert.Equal(t, nil, err, "the return error should be nil")
 }
 
 func TestCreate(t *testing.T) {
