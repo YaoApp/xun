@@ -132,6 +132,10 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 			WHEN IS_NULLABLE = "NO" THEN false
 			ELSE false
 		END AS ` + "`nullable`",
+		`CASE
+		   WHEN LOCATE('unsigned', COLUMN_TYPE) THEN true
+		   ELSE false
+		END AS` + "`unsigned`",
 		"UPPER(DATA_TYPE) as `type`",
 		"CHARACTER_MAXIMUM_LENGTH as `length`",
 		"CHARACTER_OCTET_LENGTH as `octet_length`",
@@ -169,6 +173,10 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 		typ, has := grammarSQL.FlipTypes[column.Type]
 		if has {
 			column.Type = typ
+		}
+
+		if utils.StringVal(column.Extra) == "auto_increment" {
+			column.Extra = utils.StringPtr("AutoIncrement")
 		}
 	}
 	return columns, nil

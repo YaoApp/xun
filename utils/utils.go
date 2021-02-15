@@ -59,13 +59,13 @@ func MapFilp(v interface{}) (interface{}, bool) {
 	}
 }
 
-// Set set the value for the pointer
-func Set(v interface{}, value interface{}) {
-	v = &value
+// IntPtr get the int value for the pointer
+func IntPtr(value int) *int {
+	return &value
 }
 
-// GetInt get the int type pointers value
-func GetInt(v *int, defaults ...int) int {
+// IntVal get the int type pointers value
+func IntVal(v *int, defaults ...int) int {
 	if v == nil {
 		if len(defaults) > 0 {
 			return defaults[0]
@@ -75,8 +75,13 @@ func GetInt(v *int, defaults ...int) int {
 	return *v
 }
 
-// GetString get the string type pointers value
-func GetString(v *string, defaults ...string) string {
+// StringPtr get the string value for the pointer
+func StringPtr(value string) *string {
+	return &value
+}
+
+// StringVal get the string type pointers value
+func StringVal(v *string, defaults ...string) string {
 	if v == nil {
 		if len(defaults) > 0 {
 			return defaults[0]

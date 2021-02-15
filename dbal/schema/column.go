@@ -84,6 +84,6 @@ func (column *Column) NotNull() *Column {
 
 // AutoIncrement set the numeric column AutoIncrement attribute is true
 func (column *Column) AutoIncrement() *Column {
-	utils.Set(column.Extra, "AutoIncrement")
+	column.Extra = utils.StringPtr("AutoIncrement")
 	return column
 }

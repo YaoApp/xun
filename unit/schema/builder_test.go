@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
+	"github.com/yaoapp/xun/utils"
 )
 
 var builder schema.Schema
@@ -50,12 +51,19 @@ func TestGet(t *testing.T) {
 
 	// checking the table schema sturcture
 	assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
+	assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
+	assert.Equal(t, 20, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
+	assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
 	assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
+	assert.Equal(t, 20, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
+	assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
 	assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
+	assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+	assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
 	assert.Equal(t, "string", table.GetColumn("name").Type, "the name type should be string")
-	assert.Equal(t, 20, *table.GetColumn("name").Length, "the name length should be 20")
+	assert.Equal(t, 20, utils.IntVal(table.GetColumn("name").Length), "the name length should be 20")
 	assert.Equal(t, "string", table.GetColumn("unionid").Type, "the unionid type should be string")
-	assert.Equal(t, 128, *table.GetColumn("unionid").Length, "the unionid length should be 128")
+	assert.Equal(t, 128, utils.IntVal(table.GetColumn("unionid").Length), "the unionid length should be 128")
 
 	// checking the table indexes
 	assert.Equal(t, "id", table.GetIndex("PRIMARY").Columns[0].Name, "the column of PRIMARY key should be id")
