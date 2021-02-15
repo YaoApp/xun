@@ -48,22 +48,40 @@ func TestGet(t *testing.T) {
 	builder := getTestBuilder()
 	table, err := builder.Get("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
-
+	assert.True(t, table != nil, "the return table should be schema.BluePrint")
+	if table == nil {
+		return
+	}
 	// checking the table schema sturcture
-	assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
-	assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
-	assert.Equal(t, 20, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
-	assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
-	assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
-	assert.Equal(t, 20, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
-	assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
-	assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
-	assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
-	assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
-	assert.Equal(t, "string", table.GetColumn("name").Type, "the name type should be string")
-	assert.Equal(t, 20, utils.IntVal(table.GetColumn("name").Length), "the name length should be 20")
-	assert.Equal(t, "string", table.GetColumn("unionid").Type, "the unionid type should be string")
-	assert.Equal(t, 128, utils.IntVal(table.GetColumn("unionid").Length), "the unionid length should be 128")
+	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
+	if table.GetColumn("id") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
+		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
+		assert.Equal(t, 20, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
+		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
+	}
+	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
+	if table.GetColumn("counter") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
+		assert.Equal(t, 20, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
+		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
+	}
+	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
+	if table.GetColumn("latest") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
+		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+	}
+	assert.True(t, nil != table.GetColumn("name"), "the column name should be created")
+	if table.GetColumn("name") != nil {
+		assert.Equal(t, "string", table.GetColumn("name").Type, "the name type should be string")
+		assert.Equal(t, 20, utils.IntVal(table.GetColumn("name").Length), "the name length should be 20")
+	}
+	assert.True(t, nil != table.GetColumn("unionid"), "the column unionid should be created")
+	if table.GetColumn("unionid") != nil {
+		assert.Equal(t, "string", table.GetColumn("unionid").Type, "the unionid type should be string")
+		assert.Equal(t, 128, utils.IntVal(table.GetColumn("unionid").Length), "the unionid length should be 128")
+	}
 
 	// checking the table indexes
 	assert.Equal(t, "id", table.GetIndex("PRIMARY").Columns[0].Name, "the column of PRIMARY key should be id")

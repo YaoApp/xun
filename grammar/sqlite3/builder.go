@@ -43,8 +43,8 @@ func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quote
 	return fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quoter.ID(old, db), quoter.ID(new, db))
 }
 
-// SQLCreateColumn return the add column sql for table create
-func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
+// SQLAddColumn return the add column sql for table create
+func (builder Builder) SQLAddColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
 	// `id` bigint(20) unsigned NOT NULL,
 	typ, has := types[Column.Type]
 	if !has {
@@ -58,6 +58,7 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}
 
+	unsigned := utils.GetIF(Column.IsUnsigned, "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(Column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
 	if primaryKey != "" {
@@ -67,9 +68,12 @@ func (builder Builder) SQLCreateColumn(db *sqlx.DB, Column *grammar.Column, type
 	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
+	if extra == "AUTOINCREMENT" {
+		unsigned = ""
+	}
 	sql := fmt.Sprintf(
-		"%s %s %s %s %s %s %s",
-		quoter.ID(Column.Name, db), typ, nullable, defaultValue, extra, comment, collation)
+		"%s %s %s %s %s %s %s %s",
+		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
