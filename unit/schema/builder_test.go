@@ -81,22 +81,30 @@ func TestRename(t *testing.T) {
 
 func TestAlter(t *testing.T) {
 	defer unit.Catch()
-	TestCreate(t)
 	builder := getTestBuilder()
+	TestCreate(t)
 	err := builder.Alter("table_test_builder", func(table schema.Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
-		table.DropIndex("unionid")
+		table.DropIndex("unionid_unique")
 		table.DropColumn("name")
 		table.RenameColumn("unionid", "uid").Unique()
+		table.CreateIndex("nickname_index", "nickname")
+		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
+
+	// cheking the schema structure
+	table, err := builder.Get("table_test_builder")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	checkTableAlter(t, table)
 	builder.Drop("table_test_builder")
 }
 
 func TestMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
+	builder.DropIfExists("table_test_builder")
 	table := builder.MustCreate("table_test_builder", func(table schema.Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
@@ -160,12 +168,19 @@ func TestMustAlter(t *testing.T) {
 	table := builder.MustAlter("table_test_builder", func(table schema.Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
-		table.DropIndex("unionid")
+		table.DropIndex("unionid_unique")
 		table.DropColumn("name")
 		table.RenameColumn("unionid", "uid").Unique()
+		table.CreateIndex("nickname_index", "nickname")
+		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
+
+	// cheking the schema structure
+	table, err := builder.Get("table_test_builder")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	checkTableAlter(t, table)
 	builder.Drop("table_test_builder")
 }
 
@@ -178,6 +193,76 @@ func getTestBuilder() schema.Schema {
 	dsn := unit.DSN(driver)
 	builder = schema.New(driver, dsn)
 	return builder
+}
+
+func checkTableAlter(t *testing.T, table schema.Blueprint) {
+	// checking the table schema sturcture
+	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
+	if table.GetColumn("id") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
+		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
+		assert.Equal(t, 20, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
+		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
+	}
+	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
+	if table.GetColumn("counter") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
+		assert.Equal(t, 20, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
+		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
+	}
+	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
+	if table.GetColumn("latest") != nil {
+		assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
+		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+	}
+	assert.True(t, nil != table.GetColumn("nickname"), "the column nickname should be created")
+	if table.GetColumn("nickname") != nil {
+		assert.Equal(t, "string", table.GetColumn("nickname").Type, "the name type should be string")
+		assert.Equal(t, 50, utils.IntVal(table.GetColumn("nickname").Length), "the nickname length should be 50")
+	}
+	assert.True(t, nil != table.GetColumn("uid"), "the column uid should be created")
+	if table.GetColumn("uid") != nil {
+		assert.Equal(t, "string", table.GetColumn("uid").Type, "the unionid type should be string")
+		assert.Equal(t, 200, utils.IntVal(table.GetColumn("uid").Length), "the unionid length should be 200")
+	}
+
+	// checking the table indexes
+	assert.True(t, nil != table.GetIndex("PRIMARY"), "the index PRIMARY should be created")
+	if table.GetIndex("PRIMARY") != nil {
+		assert.Equal(t, "id", table.GetIndex("PRIMARY").Columns[0].Name, "the column of PRIMARY key should be id")
+		assert.Equal(t, "primary", table.GetIndex("PRIMARY").Type, "the PRIMARY key type should be primary")
+	}
+
+	assert.Equal(t, 1, len(table.GetIndex("counter_index").Columns), "the counter_index  should has 1 column")
+	assert.Equal(t, "counter", table.GetIndex("counter_index").Columns[0].Name, "the column of counter_index key should be counter")
+	assert.Equal(t, "index", table.GetIndex("counter_index").Type, "the counter_index key type should be index")
+
+	assert.Equal(t, 1, len(table.GetIndex("re_latest_index").Columns), "the re_latest_index should has 1 column")
+	assert.Equal(t, "latest", table.GetIndex("re_latest_index").Columns[0].Name, "the column of re_latest_index key should be latest")
+	assert.Equal(t, "index", table.GetIndex("re_latest_index").Type, "the re_latest_index key type should be index")
+
+	assert.Equal(t, 1, len(table.GetIndex("nickname_index").Columns), "the nickname_index  should has 1 column")
+	assert.Equal(t, "nickname", table.GetIndex("nickname_index").Columns[0].Name, "the column of nickname_index key should be name")
+	assert.Equal(t, "index", table.GetIndex("nickname_index").Type, "the nickname_index key type should be index")
+
+	assert.Equal(t, 1, len(table.GetIndex("uid_unique").Columns), "the uid_unique should has 1 column")
+	assert.Equal(t, "uid", table.GetIndex("uid_unique").Columns[0].Name, "the column of uid_unique key should be unionid")
+	assert.Equal(t, "unique", table.GetIndex("uid_unique").Type, "the uid_unique key type should be unique")
+
+	nameLatest := table.GetIndex("name_latest")
+	assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest  should has one column")
+	assert.Equal(t, "unique", nameLatest.Type, "the name_latest key type should be unique")
+	if len(nameLatest.Columns) == 1 {
+		assert.Equal(t, "latest", nameLatest.Columns[0].Name, "the second column of the index name_latest should be latest")
+	}
+
+	nameCounter := table.GetIndex("name_counter")
+	assert.Equal(t, 1, len(nameCounter.Columns), "the index name_counter should has one column")
+	assert.Equal(t, "index", nameCounter.Type, "the name_counter key type should be unique")
+	if len(nameCounter.Columns) == 2 {
+		assert.Equal(t, "counter", nameCounter.Columns[0].Name, "the second column of the index name_counter should be counter")
+	}
 }
 
 func checkTable(t *testing.T, table schema.Blueprint) {

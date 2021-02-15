@@ -105,7 +105,7 @@ func (table *Table) DropIndexCommand(name string) {
 
 // RenameIndexCommand add a new command that renaming a index
 func (table *Table) RenameIndexCommand(old string, new string) {
-	table.AddCommand("RenameColumn", old, new)
+	table.AddCommand("RenameIndex", old, new)
 }
 
 // onChange call this when the table changed
