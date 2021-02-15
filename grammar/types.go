@@ -89,6 +89,7 @@ type Index struct {
 	ColumnName   string  `db:"column_name"`
 	Name         string  `db:"index_name"`
 	SEQ          int     `db:"seq_in_index"`
+	SeqColumn    int     `db:"seq_in_column"`
 	Collation    string  `db:"collation"`
 	Nullable     bool    `db:"nullable"`
 	Unique       bool    `db:"unique"`

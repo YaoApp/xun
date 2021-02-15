@@ -3,6 +3,8 @@ package sql
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -289,4 +291,69 @@ func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
 	sql = sql + strings.Join(stmts, ",\n")
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	return nil
+}
+
+// ParseType parse type and flip to DBAL
+func (grammarSQL SQL) ParseType(column *grammar.Column) {
+	typeinfo := strings.Split(strings.ToUpper(column.Type), " ")
+	re := regexp.MustCompile(`([A-Z]+)[\(]*([0-9,]*)[\)]*`)
+	matched := re.FindStringSubmatch(typeinfo[0])
+	if len(matched) == 3 {
+		typeName := matched[1]
+		typeArgs := strings.Trim(matched[2], " ")
+		args := []string{}
+		if typeArgs != "" {
+			args = strings.Split(strings.Trim(matched[2], " "), ",")
+		}
+		typ, has := grammarSQL.FlipTypes[typeName]
+		if has {
+			column.Type = typ
+		}
+		switch column.Type {
+		case "bigInteger", "integer":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Precision = utils.IntPtr(precision)
+				}
+			} else if column.IsUnsigned {
+				column.Precision = utils.IntPtr(20)
+			} else {
+				column.Precision = utils.IntPtr(19)
+			}
+			break
+		case "timestamp":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.DatetimePrecision = utils.IntPtr(precision)
+				}
+			}
+			break
+		case "float":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Precision = utils.IntPtr(precision)
+				}
+
+				if len(args) > 1 {
+					scale, err := strconv.Atoi(args[1])
+					if err == nil {
+						column.Scale = utils.IntPtr(scale)
+					}
+				}
+			}
+			break
+		case "string", "text":
+			if len(args) > 0 {
+				length, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Length = utils.IntPtr(length)
+				}
+			}
+			break
+		}
+	}
+	// utils.Println(column)
 }

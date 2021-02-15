@@ -3,15 +3,12 @@ package sqlite3
 import (
 	"errors"
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/logger"
-	"github.com/yaoapp/xun/utils"
 )
 
 // Create a new table on the schema
@@ -113,6 +110,75 @@ func (grammarSQL SQLite3) Get(table *grammar.Table, db *sqlx.DB) error {
 	return nil
 }
 
+// GetIndexListing get a table indexes structure
+func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Index, error) {
+	selectColumns := []string{
+		"m.`tbl_name` AS `table_name`",
+		"il.`name` AS `index_name`",
+		"ii.`name` AS `column_name`",
+		`CASE 
+			WHEN il.origin = 'pk' then 'primary' 
+			WHEN il.[unique] = 1  THEN 'unique'
+			ELSE 'index'
+		END as index_type`,
+		`CASE
+			WHEN il.[unique] = 1 THEN 1
+			WHEN il.[unique] = 0 THEN 0
+			ELSE 0
+		END AS ` + "`unique`",
+		"il.`seq`  AS `seq_in_index`",
+		"ii.`seqno` AS  `seq_in_column`",
+	}
+
+	sql := fmt.Sprintf(`
+			SELECT %s
+				FROM sqlite_master AS m,
+				pragma_index_list(m.name) AS il,
+				pragma_index_info(il.name) AS ii
+			WHERE 
+				m.type = 'table'
+				and m.tbl_name = %s
+			GROUP BY
+				m.tbl_name,
+				il.name,
+				ii.name,
+				il.origin,
+				il.partial,
+				il.seq
+			UNION
+			SELECT 
+				%s as table_name, 
+				'PRIMARY' as index_name, 
+				ti.name as column_name,
+				"primary" as index_type,
+				1 as `+"`unique`"+`,
+				0 as `+"`seq_in_index`"+`,
+				0 as `+"`seq_in_column`"+`
+			FROM pragma_table_info(%s) AS ti WHERE ti.pk=1
+			ORDER BY seq_in_index,index_name,seq_in_column
+		`,
+		strings.Join(selectColumns, ","),
+		grammarSQL.Quoter.VAL(tableName, db),
+		grammarSQL.Quoter.VAL(tableName, db),
+		grammarSQL.Quoter.VAL(tableName, db),
+	)
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	indexes := []*grammar.Index{}
+	err := db.Select(&indexes, sql)
+	if err != nil {
+		return nil, err
+	}
+
+	// counting the type of indexes
+	for _, index := range indexes {
+		index.Nullable = true
+		index.DBName = dbName
+		index.Type = index.IndexType
+		// utils.Println(index)
+	}
+	return indexes, nil
+}
+
 // GetColumnListing get a table columns structure
 func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Column, error) {
 	selectColumns := []string{
@@ -138,15 +204,6 @@ func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *
 			WHEN p.pk = 1 and INSTR(m.sql, 'AUTOINCREMENT' ) THEN "AutoIncrement"
 			ELSE ""
 		END AS ` + "`extra`",
-		// "CHARACTER_MAXIMUM_LENGTH as `length`",
-		// "CHARACTER_OCTET_LENGTH as `octet_length`",
-		// "NUMERIC_PRECISION as `precision`",
-		// "NUMERIC_SCALE as `scale`",
-		// "DATETIME_PRECISION as `datetime_precision`",
-		// "CHARACTER_SET_NAME as `charset`",
-		// "COLLATION_NAME as `collation`",
-		// "COLUMN_KEY as `key`",
-		// "COLUMN_COMMENT as `comment`",
 	}
 	sql := fmt.Sprintf(`
 			SELECT %s
@@ -167,79 +224,7 @@ func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *
 	// Cast the database data type to DBAL data type
 	for _, column := range columns {
 		grammarSQL.ParseType(column)
+		column.DBName = dbName
 	}
 	return columns, nil
-}
-
-// ParseType parse type and flip to DBAL
-func (grammarSQL SQLite3) ParseType(column *grammar.Column) {
-	typeinfo := strings.Split(strings.ToUpper(column.Type), " ")
-	re := regexp.MustCompile(`([A-Z]+)[\(]*([0-9,]*)[\)]*`)
-	matched := re.FindStringSubmatch(typeinfo[0])
-	if len(matched) == 3 {
-		typeName := matched[1]
-		typeArgs := strings.Trim(matched[2], " ")
-		args := []string{}
-		if typeArgs != "" {
-			args = strings.Split(strings.Trim(matched[2], " "), ",")
-		}
-		typ, has := grammarSQL.FlipTypes[typeName]
-		if has {
-			column.Type = typ
-		}
-		switch column.Type {
-		case "bigInteger", "integer":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
-			} else if column.IsUnsigned {
-				column.Precision = utils.IntPtr(19)
-			} else {
-				column.Precision = utils.IntPtr(20)
-			}
-			break
-		case "timestamp":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.DatetimePrecision = utils.IntPtr(precision)
-				}
-			}
-			break
-		case "float":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
-
-				if len(args) > 1 {
-					scale, err := strconv.Atoi(args[1])
-					if err == nil {
-						column.Scale = utils.IntPtr(scale)
-					}
-				}
-			}
-			break
-		case "string", "text":
-			if len(args) > 0 {
-				length, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Length = utils.IntPtr(length)
-				}
-			}
-			break
-		}
-	}
-
-	// fmt.Printf(
-	// 	"ParseType %s: %s %d (%d,%d) %d\n",
-	// 	column.Name, column.Type,
-	// 	utils.IntVal(column.Length),
-	// 	utils.IntVal(column.Precision),
-	// 	utils.IntVal(column.Scale),
-	// 	utils.IntVal(column.DatetimePrecision),
-	// )
 }
