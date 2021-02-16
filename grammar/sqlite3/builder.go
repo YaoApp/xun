@@ -57,20 +57,24 @@ func (builder Builder) SQLAddColumn(db *sqlx.DB, Column *grammar.Column, types m
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}
-
+	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
 	unsigned := utils.GetIF(Column.IsUnsigned, "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(Column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
+	if defaultValue == "" && nullable == "NOT NULL" {
+		nullable = "NULL"
+	}
+
 	if primaryKey != "" {
 		nullable = primaryKey
 	}
-	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
 	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
 	if extra == "AUTOINCREMENT" {
 		unsigned = ""
 	}
+
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s %s",
 		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)

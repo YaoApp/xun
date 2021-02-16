@@ -228,3 +228,108 @@ func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *
 	}
 	return columns, nil
 }
+
+// Alter a table on the schema
+func (grammarSQL SQLite3) Alter(table *grammar.Table, db *sqlx.DB) error {
+
+	err := grammarSQL.Get(table, db)
+	if err != nil {
+		return err
+	}
+
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.Name, db))
+	stmts := []string{}
+	errs := []error{}
+
+	// Commands
+	// The commands must be:
+	//    AddColumn(column *Column)    for adding a column
+	//    ModifyColumn(column *Column) for modifying a colu
+	//    RenameColumn(old string,new string)  for renaming a column
+	//    DropColumn(name string)  for dropping a column
+	//    CreateIndex(index *Index) for creating a index
+	//    DropIndex(name string) for  dropping a index
+	//    RenameIndex(old string,new string)  for renaming a index
+	for _, command := range table.Commands {
+		switch command.Name {
+		case "AddColumn", "ModifyColumn":
+			column := command.Params[0].(*grammar.Column)
+			stmt := ""
+			if table.HasColumn(column.Name) {
+				logger.Warn(logger.CREATE, "sqlite3 not support ModifyColumn operation").Write()
+				break
+			}
+			stmt = sql + "ADD COLUMN " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
+			}
+			break
+		case "RenameColumn":
+			old := command.Params[0].(string)
+			new := command.Params[1].(string)
+			stmt := fmt.Sprintf("%s RENAME COLUMN %s TO %s",
+				sql,
+				grammarSQL.Quoter.ID(old, db),
+				grammarSQL.Quoter.ID(new, db),
+			)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
+			}
+			break
+		case "DropColumn":
+			logger.Warn(logger.CREATE, "sqlite3 not support DropColumn operation").Write()
+			break
+		case "CreateIndex":
+			index := command.Params[0].(*grammar.Index)
+			stmt := grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
+			}
+			break
+		case "DropIndex":
+			name := command.Params[0].(string)
+			stmt := fmt.Sprintf("DROP INDEX IF EXISTS %s", grammarSQL.Quoter.ID(name, db))
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
+			}
+			break
+		case "RenameIndex":
+			logger.Warn(logger.CREATE, "sqlite3 not support RenameIndex operation").Write()
+			break
+		}
+	}
+
+	defer logger.Debug(logger.CREATE, strings.Join(stmts, "\n")).TimeCost(time.Now())
+	// Return Errors
+	if len(errs) > 0 {
+		message := ""
+		for _, err := range errs {
+			message = message + err.Error() + "\n"
+		}
+		return errors.New(message)
+	}
+
+	return nil
+}
+
+// ExecSQL execute sql then update table structure
+func (grammarSQL SQLite3) ExecSQL(db *sqlx.DB, table *grammar.Table, sql string) error {
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	// update table structure
+	err = grammarSQL.Get(table, db)
+	if err != nil {
+		return err
+	}
+	return nil
+}

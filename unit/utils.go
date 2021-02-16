@@ -22,6 +22,16 @@ var dsns map[string]string = map[string]string{
 	"sqlsvr":  os.Getenv("XUN_UNIT_SQLSVR_DSN"),
 }
 
+// Is the DSN should be the name given
+func Is(name string) bool {
+	return os.Getenv("XUN_UNIT_DSN") == name
+}
+
+// Not the DSN should not be the  name given
+func Not(name string) bool {
+	return os.Getenv("XUN_UNIT_DSN") != name
+}
+
 // Use create a capsule intance using DSN
 func Use(driver string) *capsule.Manager {
 	dsn := DSN(driver)

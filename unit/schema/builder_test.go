@@ -82,6 +82,7 @@ func TestRename(t *testing.T) {
 func TestAlter(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
+	builder.DropIfExists("table_test_builder")
 	TestCreate(t)
 	err := builder.Alter("table_test_builder", func(table schema.Blueprint) {
 		table.String("nickname", 50)
@@ -93,7 +94,9 @@ func TestAlter(t *testing.T) {
 		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
-
+	if err != nil {
+		return
+	}
 	// cheking the schema structure
 	table, err := builder.Get("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
@@ -224,7 +227,9 @@ func checkTableAlter(t *testing.T, table schema.Blueprint) {
 	assert.True(t, nil != table.GetColumn("uid"), "the column uid should be created")
 	if table.GetColumn("uid") != nil {
 		assert.Equal(t, "string", table.GetColumn("uid").Type, "the unionid type should be string")
-		assert.Equal(t, 200, utils.IntVal(table.GetColumn("uid").Length), "the unionid length should be 200")
+		if unit.Not("sqlite3") {
+			assert.Equal(t, 200, utils.IntVal(table.GetColumn("uid").Length), "the unionid length should be 200")
+		}
 	}
 
 	// checking the table indexes
@@ -238,9 +243,11 @@ func checkTableAlter(t *testing.T, table schema.Blueprint) {
 	assert.Equal(t, "counter", table.GetIndex("counter_index").Columns[0].Name, "the column of counter_index key should be counter")
 	assert.Equal(t, "index", table.GetIndex("counter_index").Type, "the counter_index key type should be index")
 
-	assert.Equal(t, 1, len(table.GetIndex("re_latest_index").Columns), "the re_latest_index should has 1 column")
-	assert.Equal(t, "latest", table.GetIndex("re_latest_index").Columns[0].Name, "the column of re_latest_index key should be latest")
-	assert.Equal(t, "index", table.GetIndex("re_latest_index").Type, "the re_latest_index key type should be index")
+	if unit.Not("sqlite3") {
+		assert.Equal(t, 1, len(table.GetIndex("re_latest_index").Columns), "the re_latest_index should has 1 column")
+		assert.Equal(t, "latest", table.GetIndex("re_latest_index").Columns[0].Name, "the column of re_latest_index key should be latest")
+		assert.Equal(t, "index", table.GetIndex("re_latest_index").Type, "the re_latest_index key type should be index")
+	}
 
 	assert.Equal(t, 1, len(table.GetIndex("nickname_index").Columns), "the nickname_index  should has 1 column")
 	assert.Equal(t, "nickname", table.GetIndex("nickname_index").Columns[0].Name, "the column of nickname_index key should be name")
@@ -251,17 +258,21 @@ func checkTableAlter(t *testing.T, table schema.Blueprint) {
 	assert.Equal(t, "unique", table.GetIndex("uid_unique").Type, "the uid_unique key type should be unique")
 
 	nameLatest := table.GetIndex("name_latest")
-	assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest  should has one column")
-	assert.Equal(t, "unique", nameLatest.Type, "the name_latest key type should be unique")
-	if len(nameLatest.Columns) == 1 {
-		assert.Equal(t, "latest", nameLatest.Columns[0].Name, "the second column of the index name_latest should be latest")
+	if unit.Not("sqlite3") {
+		assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest  should has one column")
+		assert.Equal(t, "unique", nameLatest.Type, "the name_latest key type should be unique")
+		if len(nameLatest.Columns) == 1 {
+			assert.Equal(t, "latest", nameLatest.Columns[0].Name, "the second column of the index name_latest should be latest")
+		}
 	}
 
 	nameCounter := table.GetIndex("name_counter")
-	assert.Equal(t, 1, len(nameCounter.Columns), "the index name_counter should has one column")
-	assert.Equal(t, "index", nameCounter.Type, "the name_counter key type should be unique")
-	if len(nameCounter.Columns) == 2 {
-		assert.Equal(t, "counter", nameCounter.Columns[0].Name, "the second column of the index name_counter should be counter")
+	if unit.Not("sqlite3") {
+		assert.Equal(t, 1, len(nameCounter.Columns), "the index name_counter should has one column")
+		assert.Equal(t, "index", nameCounter.Type, "the name_counter key type should be unique")
+		if len(nameCounter.Columns) == 2 {
+			assert.Equal(t, "counter", nameCounter.Columns[0].Name, "the second column of the index name_counter should be counter")
+		}
 	}
 }
 
