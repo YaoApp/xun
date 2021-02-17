@@ -8,13 +8,26 @@ services:
 jobs:
   fast_finish: true
   include:
-    - go: 1.15.x
+    - name: MySQL5.7-1.15.x
+      go: 1.15.x
       env:
         - GO111MODULE=on
+        - XUN_UNIT_DSN=mysql
+        - XUN_UNIT_MYSQL_DSN=root:123456@tcp(127.0.0.1:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local
+        - XUN_MODE=test
+        - XUN_UNIT_LOG=/mysql5.7.log
+      before_install:
+        - unit/service.sh mysql5.7 # Start MySQL 5.7 service
+    - name: SQLite3-1.15.x
+      go: 1.15.x
+      env:
+        - GO111MODULE=on
+        - XUN_UNIT_DSN=sqlite3
+        - XUN_UNIT_SQLITE3_DSN=file:///sqlite-unittest.db
+        - XUN_MODE=test
+        - XUN_UNIT_LOG=/sqlite3.log
 git:
   depth: 10
-before_install:
-  - unit/service.sh mysql5.7 # Start MySQL 5.7 service
 install:
   - if [[ "${GO111MODULE}" = "on" ]]; then go mod download; fi
   - if [[ "${GO111MODULE}" = "on" ]]; then export PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; fi
@@ -26,7 +39,7 @@ script:
   - make vet
   - make fmt-check
   - make misspell-check
-  - docker exec mysql5.7 mysql -uroot -p123456 -e "SHOW DATABASES"
+  - make test
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
