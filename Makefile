@@ -27,6 +27,9 @@ test:
 		elif grep -q "setup failed" tmp.out; then \
 			rm tmp.out; \
 			exit 1; \
+		elif grep -q "runtime error" tmp.out; then \
+			rm tmp.out; \
+			exit 1; \
 		fi; \
 		if [ -f profile.out ]; then \
 			cat tmp.out | grep -E "ok " >> coverage.report.out; \

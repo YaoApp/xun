@@ -11,21 +11,13 @@ jobs:
     - name: MySQL5.7-1.15.x
       go: 1.15.x
       env:
-        - GO111MODULE=on
-        - XUN_UNIT_DSN=mysql
-        - XUN_UNIT_MYSQL_DSN=root:123456@tcp(127.0.0.1:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local
-        - XUN_MODE=test
-        - XUN_UNIT_LOG=/mysql5.7.log
+        - XUN_UNIT_DSN=mysql XUN_UNIT_LOG=/mysql5.7.log XUN_UNIT_MYSQL_DSN="root:123456@tcp(127.0.0.1:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local" GO111MODULE=on XUN_MODE=test
       before_install:
         - unit/service.sh mysql5.7 # Start MySQL 5.7 service
     - name: SQLite3-1.15.x
       go: 1.15.x
       env:
-        - GO111MODULE=on
-        - XUN_UNIT_DSN=sqlite3
-        - XUN_UNIT_SQLITE3_DSN=/sqlite-unittest.db
-        - XUN_MODE=test
-        - XUN_UNIT_LOG=/sqlite3.log
+        - XUN_UNIT_DSN=sqlite3  XUN_UNIT_LOG=/sqlite3.log XUN_UNIT_SQLITE3_DSN="/sqlite-unittest.db" GO111MODULE=on XUN_MODE=test
 git:
   depth: 10
 install:
@@ -36,6 +28,7 @@ install:
 go_import_path: github.com/yaoapp/xun
 
 script:
+  - export
   - make vet
   - make fmt-check
   - make misspell-check
