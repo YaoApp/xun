@@ -1,11 +1,13 @@
+os: linux
+dist: xenial
 language: go
 
-matrix:
+jobs:
   fast_finish: true
   include:
-  - go: 1.15.x
-   env:
-      - GO111MODULE=on
+    - go: 1.15.x
+      env:
+        - GO111MODULE=on
 git:
   depth: 10
 
