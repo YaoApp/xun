@@ -1,0 +1,23 @@
+language: go
+
+jobs:
+  - go: 1.15.x
+   env:
+      - GO111MODULE=on
+git:
+  depth: 10
+
+install:
+  - if [[ "${GO111MODULE}" = "on" ]]; then go mod download; fi
+  - if [[ "${GO111MODULE}" = "on" ]]; then export PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; fi
+  - if [[ "${GO111MODULE}" = "on" ]]; then make tools; fi
+
+go_import_path: github.com/yaoapp/xun
+
+script:
+  - make vet
+  - make fmt-check
+  - make misspell-check
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
