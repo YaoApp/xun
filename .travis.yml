@@ -17,7 +17,7 @@ jobs:
     - name: SQLite3-1.15.x
       go: 1.15.x
       env:
-        - XUN_UNIT_DSN=sqlite3  XUN_UNIT_LOG=/sqlite3.log XUN_UNIT_SQLITE3_DSN="file:///sqlite-unittest.db" GO111MODULE=on XUN_MODE=test
+        - XUN_UNIT_DSN=sqlite3  XUN_UNIT_LOG=/sqlite3.log XUN_UNIT_SQLITE3_DSN="./unit/sqlite-unittest.db" GO111MODULE=on XUN_MODE=test
 git:
   depth: 10
 install:
