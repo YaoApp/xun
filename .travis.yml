@@ -1,6 +1,8 @@
 language: go
 
-jobs:
+matrix:
+  fast_finish: true
+  include:
   - go: 1.15.x
    env:
       - GO111MODULE=on
