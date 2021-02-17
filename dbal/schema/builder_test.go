@@ -198,7 +198,7 @@ func getTestBuilder() Schema {
 }
 
 func checkTableAlter(t *testing.T, table Blueprint) {
-	// checking the table schema sturcture
+	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
 		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
@@ -276,7 +276,7 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 }
 
 func checkTable(t *testing.T, table Blueprint) {
-	// checking the table schema sturcture
+	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
 		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
