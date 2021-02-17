@@ -23,7 +23,7 @@ jobs:
       env:
         - GO111MODULE=on
         - XUN_UNIT_DSN=sqlite3
-        - XUN_UNIT_SQLITE3_DSN=file:///sqlite-unittest.db
+        - XUN_UNIT_SQLITE3_DSN=/sqlite-unittest.db
         - XUN_MODE=test
         - XUN_UNIT_LOG=/sqlite3.log
 git:
