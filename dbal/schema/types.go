@@ -13,13 +13,14 @@ type Schema interface {
 	Drop(string) error
 	Alter(string, func(table Blueprint)) error
 	HasTable(string) bool
+	Rename(string, string) error
+	DropIfExists(string) error
+
 	MustGet(string) Blueprint
 	MustCreate(string, func(table Blueprint)) Blueprint
 	MustDrop(string)
 	MustAlter(string, func(table Blueprint)) Blueprint
-	Rename(string, string) error
 	MustRename(string, string) Blueprint
-	DropIfExists(string) error
 	MustDropIfExists(string)
 }
 
@@ -28,17 +29,20 @@ type Blueprint interface {
 	GetName() string
 	GetColumns() map[string]*Column
 	GetIndexes() map[string]*Index
+
 	GetColumn(name string) *Column
-	GetIndex(name string) *Index
 	HasColumn(name ...string) bool
-	DropColumn(name ...string)
 	RenameColumn(old string, new string) *Column
+	DropColumn(name ...string)
+
+	GetIndex(name string) *Index
 	HasIndex(name ...string) bool
 	CreatePrimary(columnName string)
 	CreateIndex(key string, columnNames ...string)
 	CreateUnique(key string, columnNames ...string)
-	DropIndex(key ...string)
 	RenameIndex(old string, new string) *Index
+	DropIndex(key ...string)
+
 	String(name string, length int) *Column
 	BigInteger(name string) *Column
 	UnsignedBigInteger(name string) *Column

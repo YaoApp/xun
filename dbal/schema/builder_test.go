@@ -5,12 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
 	"github.com/yaoapp/xun/utils"
 )
 
-var builder schema.Schema
+var builder Schema
 
 func init() {
 	unit.SetLogger()
@@ -19,7 +18,7 @@ func init() {
 func TestCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	err := builder.Create("table_test_builder", func(table schema.Blueprint) {
+	err := builder.Create("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -37,7 +36,7 @@ func TestGet(t *testing.T) {
 	builder := getTestBuilder()
 	table, err := builder.Get("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
-	assert.True(t, table != nil, "the return table should be schema.BluePrint")
+	assert.True(t, table != nil, "the return table should be BluePrint")
 	if table == nil {
 		return
 	}
@@ -84,7 +83,7 @@ func TestAlter(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
 	TestCreate(t)
-	err := builder.Alter("table_test_builder", func(table schema.Blueprint) {
+	err := builder.Alter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -108,7 +107,7 @@ func TestMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
-	table := builder.MustCreate("table_test_builder", func(table schema.Blueprint) {
+	table := builder.MustCreate("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -125,7 +124,7 @@ func TestMustGet(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	table := builder.MustGet("table_test_builder")
-	assert.True(t, table != nil, "the return table should be schema.BluePrint")
+	assert.True(t, table != nil, "the return table should be BluePrint")
 	if table == nil {
 		return
 	}
@@ -168,7 +167,7 @@ func TestMustAlter(t *testing.T) {
 	defer unit.Catch()
 	TestCreate(t)
 	builder := getTestBuilder()
-	table := builder.MustAlter("table_test_builder", func(table schema.Blueprint) {
+	table := builder.MustAlter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -187,18 +186,18 @@ func TestMustAlter(t *testing.T) {
 	builder.Drop("table_test_builder")
 }
 
-func getTestBuilder() schema.Schema {
+func getTestBuilder() Schema {
 	defer unit.Catch()
 	if builder != nil {
 		return builder
 	}
 	driver := os.Getenv("XUN_UNIT_DSN")
 	dsn := unit.DSN(driver)
-	builder = schema.New(driver, dsn)
+	builder = New(driver, dsn)
 	return builder
 }
 
-func checkTableAlter(t *testing.T, table schema.Blueprint) {
+func checkTableAlter(t *testing.T, table Blueprint) {
 	// checking the table schema sturcture
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
@@ -276,7 +275,7 @@ func checkTableAlter(t *testing.T, table schema.Blueprint) {
 	}
 }
 
-func checkTable(t *testing.T, table schema.Blueprint) {
+func checkTable(t *testing.T, table Blueprint) {
 	// checking the table schema sturcture
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {

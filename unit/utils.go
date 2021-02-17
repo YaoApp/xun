@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 
 	"github.com/fatih/color"
-	"github.com/yaoapp/xun/capsule"
 	"github.com/yaoapp/xun/logger"
 )
 
@@ -30,12 +29,6 @@ func Is(name string) bool {
 // Not the DSN should not be the  name given
 func Not(name string) bool {
 	return os.Getenv("XUN_UNIT_DSN") != name
-}
-
-// Use create a capsule intance using DSN
-func Use(driver string) *capsule.Manager {
-	dsn := DSN(driver)
-	return capsule.AddConn("primary", driver, dsn)
 }
 
 // DSN get the dsn from evn
