@@ -1,8 +1,9 @@
 #!/bin/bash
 StartMySQL5.7() {
     docker pull mysql:5.7.25
-    docker run --name=mysql5.7 -d -p 3308:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7.25
-    Waiting "MySQL 5.7" "ready for connections" 30
+    docker run --name=mysql5.7 -d -p 3308:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7.25 --default-authentication-plugin=mysql_native_password
+    Waiting "MySQL 5.7"  "Version: '5.7.25'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)" 30
+    docker logs mysql5.7
     docker exec mysql5.7 mysql -uroot -p123456 -e "CREATE DATABASE xun CHARACTER SET utf8 COLLATE utf8_general_ci"
     docker exec mysql5.7 mysql -uroot -p123456 -e "CREATE USER xun@'%' IDENTIFIED BY '123456'"
     docker exec mysql5.7 mysql -uroot -p123456 -e "GRANT SELECT ON xun.* TO 'xun'@'%'";
@@ -36,7 +37,7 @@ Waiting() {
             exit 1
         fi
     done
-    echo "done"
+    echo " done"
 }
 
 command=$1
