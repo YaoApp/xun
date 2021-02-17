@@ -14,7 +14,6 @@ XUN_UNIT_DSN ?= "mysql"
 .PHONY: test
 test:
 	echo "mode: count" > coverage.out
-	echo "driver: ${XUN_UNIT_DSN}" > coverage.report.out
 	for d in $(TESTFOLDER); do \
 		$(GO) test -tags $(TESTTAGS) -v -covermode=count -coverprofile=profile.out $$d > tmp.out; \
 		cat tmp.out; \
@@ -32,10 +31,8 @@ test:
 			exit 1; \
 		fi; \
 		if [ -f profile.out ]; then \
-			cat tmp.out | grep -E "ok " >> coverage.report.out; \
 			cat profile.out | grep -v "mode:" >> coverage.out; \
 			rm profile.out; \
-			rm tmp.out; \
 		fi; \
 	done
 
