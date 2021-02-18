@@ -54,9 +54,9 @@ func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
 }
 
 // New Create a new mysql grammar inteface
-func New() grammar.Grammar {
+func New(dsn string) grammar.Grammar {
 	pg := Postgres{
-		SQL: sql.NewSQL(),
+		SQL: sql.NewSQL(dsn),
 	}
 	pg.Driver = "postgres"
 	pg.Quoter = Quoter{}
@@ -66,6 +66,9 @@ func New() grammar.Grammar {
 		"unique":  "UNIQUE INDEX",
 		"index":   "INDEX",
 	}
+
+	// update schema name
+	pg.SchemaName()
 
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(pg.Types)

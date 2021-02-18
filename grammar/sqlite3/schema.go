@@ -3,6 +3,8 @@ package sqlite3
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -10,6 +12,24 @@ import (
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/logger"
 )
+
+// DBName Get the database name of the connection
+func (grammarSQL *SQLite3) DBName() string {
+	uinfo, err := url.Parse(grammarSQL.DSN)
+	if err != nil {
+		return "memory"
+	}
+	filename := filepath.Base(uinfo.Path)
+	grammarSQL.DB = strings.TrimSuffix(filename, filepath.Ext(filename))
+	return grammarSQL.DB
+}
+
+// SchemaName Get the schema name of the connection
+func (grammarSQL *SQLite3) SchemaName() string {
+	schema := grammarSQL.DBName()
+	grammarSQL.Schema = schema
+	return grammarSQL.Schema
+}
 
 // Create a new table on the schema
 func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {

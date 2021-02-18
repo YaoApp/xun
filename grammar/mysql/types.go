@@ -10,8 +10,8 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// Mysql the mysql Grammar
-type Mysql struct {
+// MySQL the MySQL Grammar
+type MySQL struct {
 	sql.SQL
 }
 
@@ -48,10 +48,10 @@ func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
 	return "'" + input + "'"
 }
 
-// New Create a new mysql grammar inteface
-func New() grammar.Grammar {
-	my := Mysql{
-		SQL: sql.NewSQL(),
+// New Create a new MySQL grammar inteface
+func New(dsn string) grammar.Grammar {
+	my := MySQL{
+		SQL: sql.NewSQL(dsn),
 	}
 	my.Driver = "mysql"
 	my.Quoter = Quoter{}
@@ -61,5 +61,8 @@ func New() grammar.Grammar {
 	if ok {
 		my.FlipTypes = flipTypes.(map[string]string)
 	}
+
+	my.DBName()
+	my.SchemaName()
 	return &my
 }

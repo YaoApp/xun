@@ -11,7 +11,7 @@ import (
 type Manager struct {
 	Pool        *Pool
 	Connections *sync.Map // map[string]*Connection
-	Config      *dbal.DBConfig
+	Option      *dbal.Option
 }
 
 // Pool the connection pool

@@ -54,14 +54,16 @@ type Blueprint interface {
 type Connection struct {
 	Write       *sqlx.DB
 	WriteConfig *dbal.Config
-	Config      *dbal.DBConfig
+	Option      *dbal.Option
 }
 
 // Builder the table schema builder struct
 type Builder struct {
-	Conn    *Connection
-	Grammar grammar.Grammar
-	Mode    string
+	Conn       *Connection
+	Grammar    grammar.Grammar
+	Mode       string
+	DBName     string
+	SchemaName string
 }
 
 // Table the table struct

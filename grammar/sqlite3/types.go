@@ -17,9 +17,9 @@ type Builder struct {
 }
 
 // New Create a new mysql grammar inteface
-func New() grammar.Grammar {
+func New(dsn string) grammar.Grammar {
 	sqlite := SQLite3{
-		SQL: sql.NewSQL(),
+		SQL: sql.NewSQL(dsn),
 	}
 	sqlite.Driver = "sqlite3"
 	sqlite.Builder = Builder{}

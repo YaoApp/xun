@@ -1,13 +1,16 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/yaoapp/xun/grammar"
 )
 
 // NewTable create a new blueprint intance
 func NewTable(name string, builder *Builder) *Table {
+	tableName := fmt.Sprintf("%s%s", builder.Conn.Option.Prefix, name)
 	table := &Table{
-		Table:     grammar.NewTable(name, builder.Conn.WriteConfig.DBName()),
+		Table:     grammar.NewTable(tableName, builder.SchemaName, builder.DBName),
 		Builder:   builder,
 		ColumnMap: map[string]*Column{},
 		IndexMap:  map[string]*Index{},

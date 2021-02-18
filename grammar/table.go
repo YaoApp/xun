@@ -1,16 +1,17 @@
 package grammar
 
 // NewTable create a grammar table
-func NewTable(name string, dbname string) Table {
+func NewTable(name string, schemaName string, dbName string) Table {
 	return Table{
-		DBName:    dbname,
-		Name:      name,
-		Primary:   nil,
-		Columns:   []*Column{},
-		ColumnMap: map[string]*Column{},
-		Indexes:   []*Index{},
-		IndexMap:  map[string]*Index{},
-		Commands:  []*Command{},
+		DBName:     dbName,
+		SchemaName: schemaName,
+		Name:       name,
+		Primary:    nil,
+		Columns:    []*Column{},
+		ColumnMap:  map[string]*Column{},
+		Indexes:    []*Index{},
+		IndexMap:   map[string]*Index{},
+		Commands:   []*Command{},
 	}
 }
 

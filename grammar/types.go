@@ -8,6 +8,9 @@ import (
 
 // Grammar the Grammar inteface
 type Grammar interface {
+	DBName() string
+	SchemaName() string
+
 	Exists(name string, db *sqlx.DB) bool
 	Get(table *Table, db *sqlx.DB) error
 	Create(table *Table, db *sqlx.DB) error
@@ -18,12 +21,6 @@ type Grammar interface {
 	GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*Column, error)
 }
 
-// Quoter the database quoting query text intrface
-type Quoter interface {
-	ID(name string, db *sqlx.DB) string
-	VAL(v interface{}, db *sqlx.DB) string // operates on both string and []byte and int or other types.
-}
-
 // SQLBuilder the database sql gender interface
 type SQLBuilder interface {
 	SQLAddColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
@@ -32,9 +29,16 @@ type SQLBuilder interface {
 	SQLRenameTable(db *sqlx.DB, old string, new string, quoter Quoter) string
 }
 
+// Quoter the database quoting query text intrface
+type Quoter interface {
+	ID(name string, db *sqlx.DB) string
+	VAL(v interface{}, db *sqlx.DB) string // operates on both string and []byte and int or other types.
+}
+
 // Table the table struct
 type Table struct {
 	DBName        string    `db:"db_name"`
+	SchemaName    string    `db:"schema_name"`
 	Name          string    `db:"table_name"`
 	Comment       string    `db:"table_comment"`
 	Type          string    `db:"table_type"`

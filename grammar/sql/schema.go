@@ -3,6 +3,8 @@ package sql
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +15,23 @@ import (
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
+
+// DBName Get the database name of the connection
+func (grammarSQL *SQL) DBName() string {
+	uinfo, err := url.Parse(grammarSQL.DSN)
+	if err != nil {
+		return "unknown"
+	}
+	grammarSQL.DB = filepath.Base(uinfo.Path)
+	return grammarSQL.DB
+}
+
+// SchemaName Get the schema name of the connection
+func (grammarSQL *SQL) SchemaName() string {
+	schema := grammarSQL.DBName()
+	grammarSQL.Schema = schema
+	return grammarSQL.Schema
+}
 
 // Exists the Exists
 func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {

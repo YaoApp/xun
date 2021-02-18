@@ -14,11 +14,14 @@ type SQL struct {
 	IndexTypes map[string]string
 	Quoter     grammar.Quoter
 	Builder    grammar.SQLBuilder
+	DSN        string
+	DB         string
+	Schema     string
 }
 
 // New Create a new mysql grammar inteface
-func New() grammar.Grammar {
-	sql := NewSQL()
+func New(dsn string) grammar.Grammar {
+	sql := NewSQL(dsn)
 	flipTypes, ok := utils.MapFilp(sql.Types)
 	if ok {
 		sql.FlipTypes = flipTypes.(map[string]string)
@@ -27,9 +30,10 @@ func New() grammar.Grammar {
 }
 
 // NewSQL create a new SQL instance
-func NewSQL() SQL {
-	return SQL{
+func NewSQL(dsn string) SQL {
+	sql := &SQL{
 		Driver:  "sql",
+		DSN:     dsn,
 		Mode:    "production",
 		Quoter:  Quoter{},
 		Builder: &Builder{},
@@ -67,4 +71,7 @@ func NewSQL() SQL {
 			"year":          "YEAR",
 		},
 	}
+	sql.DBName()
+	sql.SchemaName()
+	return *sql
 }

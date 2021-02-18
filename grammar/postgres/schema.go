@@ -3,6 +3,7 @@ package postgres
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -11,6 +12,19 @@ import (
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
+
+// SchemaName Get the schema name of the connection
+func (grammarSQL *Postgres) SchemaName() string {
+	uinfo, err := url.Parse(grammarSQL.DSN)
+	if err != nil {
+		return "unknown"
+	}
+	schema := uinfo.Query().Get("search_path")
+	if schema == "" {
+		schema = "public"
+	}
+	return grammarSQL.Schema
+}
 
 // Create a new table on the schema
 func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {

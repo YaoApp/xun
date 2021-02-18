@@ -23,5 +23,5 @@ type Connection struct {
 	WriteConfig *dbal.Config
 	Read        *sqlx.DB
 	ReadConfig  *dbal.Config
-	Config      *dbal.DBConfig
+	Option      *dbal.Option
 }

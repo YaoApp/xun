@@ -26,7 +26,7 @@ func New(driver string, dsn string) Schema {
 			Driver: driver,
 			Name:   "main",
 		},
-		Config: &dbal.DBConfig{},
+		Option: &dbal.Option{},
 	}
 	return Use(conn)
 }
@@ -38,24 +38,28 @@ func Use(conn *Connection) Schema {
 
 // NewBuilder create a new schema builder instance
 func NewBuilder(conn *Connection) *Builder {
-	return &Builder{
-		Conn:    conn,
-		Grammar: NewGrammar(conn.WriteConfig.Driver),
-		Mode:    "production",
+	grammar := NewGrammar(conn.WriteConfig.Driver, conn.WriteConfig.DSN)
+	builder := Builder{
+		Mode:       "production",
+		Conn:       conn,
+		Grammar:    grammar,
+		DBName:     grammar.DBName(),
+		SchemaName: grammar.SchemaName(),
 	}
+	return &builder
 }
 
 // NewGrammar create a new grammar instance
-func NewGrammar(driver string) grammar.Grammar {
+func NewGrammar(driver string, dsn string) grammar.Grammar {
 	switch driver {
 	case "mysql":
-		return mysql.New()
+		return mysql.New(dsn)
 	case "sqlite3":
-		return sqlite3.New()
+		return sqlite3.New(dsn)
 	case "postgres":
-		return postgres.New()
+		return postgres.New(dsn)
 	}
-	return mysql.New()
+	return mysql.New(dsn)
 }
 
 // Table create the table blueprint instance

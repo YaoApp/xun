@@ -22,14 +22,14 @@ func New() *Manager {
 	return &Manager{
 		Pool:        &Pool{},
 		Connections: &sync.Map{},
-		Config:      &dbal.DBConfig{},
+		Option:      &dbal.Option{},
 	}
 }
 
-// NewWithConfig Create a database manager instance using the given config.
-func NewWithConfig(config dbal.DBConfig) *Manager {
+// NewWithOption Create a database manager instance using the given option.
+func NewWithOption(option dbal.Option) *Manager {
 	manager := New()
-	manager.SetConfig(config)
+	manager.SetOption(option)
 	return manager
 }
 
@@ -55,9 +55,9 @@ func (manager *Manager) AddReadConn(name string, driver string, datasource strin
 	return manager
 }
 
-// SetConfig set the database manager as the given value
-func (manager *Manager) SetConfig(config dbal.DBConfig) {
-	manager.Config = &config
+// SetOption set the database manager as the given value
+func (manager *Manager) SetOption(option dbal.Option) {
+	manager.Option = &option
 }
 
 // AddConnection Register a connection with the manager.
@@ -150,7 +150,7 @@ func (manager *Manager) Schema() schema.Schema {
 	write := manager.GetPrimary()
 	return schema.Use(&schema.Connection{
 		Write:       &write.DB,
-		Config:      manager.Config,
+		Option:      manager.Option,
 		WriteConfig: write.Config,
 	})
 }
@@ -175,6 +175,6 @@ func (manager *Manager) Query() query.Query {
 			WriteConfig: write.Config,
 			Read:        &read.DB,
 			ReadConfig:  read.Config,
-			Config:      manager.Config,
+			Option:      manager.Option,
 		})
 }
