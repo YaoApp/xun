@@ -3,10 +3,12 @@ package schema
 import (
 	_ "github.com/go-sql-driver/mysql" // Load mysql driver
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"           // Load postgres driver
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/grammar"
 	"github.com/yaoapp/xun/grammar/mysql"
+	"github.com/yaoapp/xun/grammar/postgres"
 	"github.com/yaoapp/xun/grammar/sqlite3"
 	"github.com/yaoapp/xun/utils"
 )
@@ -50,6 +52,8 @@ func NewGrammar(driver string) grammar.Grammar {
 		return mysql.New()
 	case "sqlite3":
 		return sqlite3.New()
+	case "postgres":
+		return postgres.New()
 	}
 	return mysql.New()
 }

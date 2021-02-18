@@ -9,6 +9,7 @@ require (
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519 // indirect
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/json-iterator/go v1.1.10
+	github.com/lib/pq v1.9.0 
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/stretchr/testify v1.7.0

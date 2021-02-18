@@ -14,11 +14,11 @@ import (
 
 // DSN the dsns for testing
 var dsns map[string]string = map[string]string{
-	"mysql":   os.Getenv("XUN_UNIT_MYSQL_DSN"),
-	"sqlite3": os.Getenv("XUN_UNIT_SQLITE3_DSN"),
-	"pgsql":   os.Getenv("XUN_UNIT_POSTGRE_DSN"),
-	"oracle":  os.Getenv("XUN_UNIT_ORACLE_DSN"),
-	"sqlsvr":  os.Getenv("XUN_UNIT_SQLSVR_DSN"),
+	"mysql":    os.Getenv("XUN_UNIT_MYSQL_DSN"),
+	"sqlite3":  os.Getenv("XUN_UNIT_SQLITE3_DSN"),
+	"postgres": os.Getenv("XUN_UNIT_POSTGRES_DSN"),
+	"oracle":   os.Getenv("XUN_UNIT_ORACLE_DSN"),
+	"sqlsvr":   os.Getenv("XUN_UNIT_SQLSVR_DSN"),
 }
 
 // Is the DSN should be the name given
