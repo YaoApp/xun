@@ -23,6 +23,7 @@ func (grammarSQL *Postgres) SchemaName() string {
 	if schema == "" {
 		schema = "public"
 	}
+	grammarSQL.Schema = schema
 	return grammarSQL.Schema
 }
 
