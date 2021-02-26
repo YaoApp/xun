@@ -73,14 +73,14 @@ func New(dsn string) grammar.Grammar {
 	// overwrite types
 	types := pg.SQL.Types
 	types["bigInteger"] = "BIGINT"
-	types["string"] = "VARYING"
+	types["string"] = "CHARACTER VARYING"
 	pg.Types = types
 
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(pg.Types)
 	if ok {
 		pg.FlipTypes = flipTypes.(map[string]string)
-		pg.FlipTypes["CHARACTER VARYING"] = "string"
+		// pg.FlipTypes["CHARACTER VARYING"] = "string"
 	}
 	return &pg
 }

@@ -136,6 +136,207 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 	return nil
 }
 
+// Alter a table on the schema
+func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
+
+	err := grammarSQL.Get(table, db)
+	if err != nil {
+		return err
+	}
+
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.Name, db))
+	stmts := []string{}
+	errs := []error{}
+
+	// Commands
+	// The commands must be:
+	//    AddColumn(column *Column)    for adding a column
+	//    ModifyColumn(column *Column) for modifying a colu
+	//    RenameColumn(old string,new string)  for renaming a column
+	//    DropColumn(name string)  for dropping a column
+	//    CreateIndex(index *Index) for creating a index
+	//    DropIndex(name string) for  dropping a index
+	//    RenameIndex(old string,new string)  for renaming a index
+	for _, command := range table.Commands {
+		switch command.Name {
+		case "AddColumn", "ModifyColumn":
+			column := command.Params[0].(*grammar.Column)
+			stmt := ""
+			if table.HasColumn(column.Name) {
+				stmt = "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
+			} else {
+				stmt = "ADD COLUMN " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+			}
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		case "RenameColumn":
+			old := command.Params[0].(string)
+			new := command.Params[1].(string)
+			column, has := table.ColumnMap[old]
+			if !has {
+				return errors.New("the column " + old + " not exists")
+			}
+			column.Name = new
+			stmt := fmt.Sprintf("RENAME COLUMN %s TO %s",
+				grammarSQL.Quoter.ID(old, db),
+				grammarSQL.Quoter.ID(new, db),
+			)
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		case "DropColumn":
+			name := command.Params[0].(string)
+			stmt := fmt.Sprintf("DROP COLUMN %s", grammarSQL.Quoter.ID(name, db))
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		case "CreateIndex":
+			index := command.Params[0].(*grammar.Index)
+			stmt := grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		case "DropIndex":
+			name := command.Params[0].(string)
+			stmt := fmt.Sprintf(
+				"DROP INDEX %s",
+				grammarSQL.Quoter.ID(name, db),
+				// grammarSQL.Quoter.ID(table.Name, db),
+			)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		case "RenameIndex":
+			old := command.Params[0].(string)
+			new := command.Params[1].(string)
+			stmt := fmt.Sprintf(
+				"ALTER INDEX IF EXISTS %s RENAME TO %s",
+				grammarSQL.Quoter.ID(old, db),
+				grammarSQL.Quoter.ID(new, db),
+				// grammarSQL.Quoter.ID(table.Name, db),
+			)
+			stmts = append(stmts, stmt)
+			err := grammarSQL.ExecSQL(db, table, stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			break
+		}
+	}
+
+	defer logger.Debug(logger.CREATE, strings.Join(stmts, "\n")).TimeCost(time.Now())
+
+	// Return Errors
+	if len(errs) > 0 {
+		message := ""
+		for _, err := range errs {
+			message = message + err.Error() + "\n"
+		}
+		return errors.New(message)
+	}
+
+	return nil
+}
+
+// ExecSQL execute sql then update table structure
+func (grammarSQL Postgres) ExecSQL(db *sqlx.DB, table *grammar.Table, sql string) error {
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	// update table structure
+	err = grammarSQL.Get(table, db)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SQLAlterColumnType return the add column sql for table alter
+func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *grammar.Column) string {
+	// `id` bigint(20) unsigned NOT NULL,
+	types := grammarSQL.Types
+	quoter := grammarSQL.Quoter
+
+	typ, has := types[Column.Type]
+	if !has {
+		typ = "VARCHAR"
+	}
+	if Column.Precision != nil && Column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
+	} else if Column.DatetimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DatetimePrecision))
+	} else if Column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
+	}
+
+	if Column.IsUnsigned {
+		typ = "BIGINT"
+	}
+
+	if utils.StringVal(Column.Extra) != "" {
+		if typ == "BIGINT" {
+			typ = "BIGSERIAL"
+		} else {
+			typ = "SERIAL"
+		}
+	}
+	sql := fmt.Sprintf(
+		"%s SET DATA TYPE %s ",
+		quoter.ID(Column.Name, db), typ)
+
+	sql = strings.Trim(sql, " ")
+	return sql
+}
+
+// SQLAlterIndex  return the add index sql for table alter
+func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *grammar.Index) string {
+	indexTypes := grammarSQL.IndexTypes
+	quoter := grammarSQL.Quoter
+	typ, has := indexTypes[index.Type]
+	if !has {
+		typ = "KEY"
+	}
+
+	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
+	columns := []string{}
+	for _, Column := range index.Columns {
+		columns = append(columns, quoter.ID(Column.Name, db))
+	}
+
+	comment := ""
+	if index.Comment != nil {
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
+	}
+	name := quoter.ID(index.Name, db)
+	sql := fmt.Sprintf(
+		"CREATE %s %s ON %s (%s)",
+		typ, name, quoter.ID(index.TableName, db), strings.Join(columns, ","))
+
+	if typ == "PRIMARY KEY" {
+		sql = fmt.Sprintf(
+			"%s (%s) %s",
+			typ, strings.Join(columns, ","), comment)
+	}
+	return sql
+}
+
 // GetIndexListing get a table indexes structure
 func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Index, error) {
 	selectColumns := []string{
