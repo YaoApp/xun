@@ -14,6 +14,12 @@ jobs:
         - XUN_UNIT_DSN=mysql XUN_UNIT_LOG=/mysql5.7.log XUN_UNIT_MYSQL_DSN="root:123456@tcp(127.0.0.1:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local" GO111MODULE=on XUN_MODE=test
       before_install:
         - unit/service.sh mysql5.7 # Start MySQL 5.7 service
+    - name: Postgres9.6-1.15.x
+      go: 1.15.x
+      env:
+        - XUN_UNIT_DSN=postgres XUN_UNIT_LOG=/postgres.7.log XUN_UNIT_MYSQL_DSN="postgres://postgres:123456@127.0.0.1/xun?sslmode=disable" GO111MODULE=on XUN_MODE=test
+      before_install:
+        - unit/service.sh postgres9.6 # Start PostgresSQL 9.6 service
     - name: SQLite3-1.15.x
       go: 1.15.x
       env:

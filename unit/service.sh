@@ -2,16 +2,27 @@
 StartMySQL5.7() {
     docker pull mysql:5.7.25
     docker run --name=mysql5.7 -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7.25 --default-authentication-plugin=mysql_native_password
-    Waiting "MySQL 5.7"  "Version: '5.7.25'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)" 30
+    Waiting "mysql5.7"  "Version: '5.7.25'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)" 30
     docker logs mysql5.7
     docker exec mysql5.7 mysql -uroot -p123456 -e "CREATE DATABASE xun CHARACTER SET utf8 COLLATE utf8_general_ci"
     docker exec mysql5.7 mysql -uroot -p123456 -e "CREATE USER xun@'%' IDENTIFIED BY '123456'"
     docker exec mysql5.7 mysql -uroot -p123456 -e "GRANT SELECT ON xun.* TO 'xun'@'%'";
 }
 
+StartPostgres9.6() {
+    docker pull postgres:9.6
+    docker run --name=postgres9.6 -d -p 5432:5432 -e POSTGRES_PASSWORD=123456 postgres:9.6
+    Waiting "postgres9.6"  "PostgreSQL init process complete; ready for start up" 30
+    docker logs postgres9.6
+    docker exec postgres9.6 su - postgres -c "psql -c 'CREATE DATABASE xun'" 
+    docker exec postgres9.6 su - postgres -c "psql -c \"CREATE USER xun WITH PASSWORD '123456'\"" 
+    docker exec postgres9.6 su - postgres -c "psql -c 'GRANT ALL PRIVILEGES ON DATABASE \"xun\" to xun;'" 
+}
+
 IsReady() {
-    checkstr=$1
-    res=$(docker logs mysql5.7 2>&1 | grep "$checkstr")
+    name=$1
+    checkstr=$2
+    res=$(docker logs $1 2>&1 | grep "$checkstr")
     if [ "$res" == "" ]; then
         echo "0"
     else
@@ -24,12 +35,12 @@ Waiting() {
     checkstr=$2
     let timeout=$3
     echo -n "Starting $name ."
-    isready=$(IsReady "$checkstr")
+    isready=$(IsReady "$name" "$checkstr")
     timing=0
     while  [ "$isready" == "0" ];
     do
         sleep 1
-        isready=$(IsReady "$checkstr")
+        isready=$(IsReady "$name" "$checkstr")
         let timing=${timing}+1
         echo -n "."
         if [ $timing -eq $timeout ]; then
@@ -43,5 +54,6 @@ Waiting() {
 command=$1
 case $command in
     mysql5.7) StartMySQL5.7;;
+    postgres9.6) StartPostgres9.6;;
     *) $(echo "please input command" >&2) ;;
 esac
