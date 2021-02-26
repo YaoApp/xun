@@ -100,12 +100,12 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 
 // Get a table on the schema
 func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
-	columns, err := grammarSQL.GetColumnListing(table.DBName, table.Name, db)
+	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.Name, db)
 	if err != nil {
 		return err
 	}
 
-	indexes, err := grammarSQL.GetIndexListing(table.DBName, table.Name, db)
+	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.Name, db)
 	if err != nil {
 		return err
 	}
