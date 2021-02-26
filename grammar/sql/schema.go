@@ -106,7 +106,6 @@ func (grammarSQL SQL) GetIndexListing(dbName string, tableName string, db *sqlx.
 		END AS ` + "`unique`",
 		"`COMMENT` AS `comment`",
 		"`INDEX_TYPE` AS `index_type`",
-		"`COLUMN_NAME` AS `column_name`",
 		"`SEQ_IN_INDEX` AS `seq_in_index`",
 		"`INDEX_COMMENT` AS `index_comment`",
 	}

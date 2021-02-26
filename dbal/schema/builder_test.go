@@ -276,25 +276,40 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 }
 
 func checkTable(t *testing.T, table Blueprint) {
+
+	DefaultBigIntPrecision := 20
+	if unit.Is("postgres") {
+		DefaultBigIntPrecision = 64
+	}
+
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
 		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
 		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
-		assert.Equal(t, 20, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
-		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
+		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
+		if unit.Not("postgres") {
+			assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
+		}
 	}
 	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
 	if table.GetColumn("counter") != nil {
 		assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
-		assert.Equal(t, 20, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
-		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
+		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
+		if unit.Not("postgres") {
+			assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
+		}
 	}
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	if table.GetColumn("latest") != nil {
 		assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
-		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
-		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+		if unit.Is("postgres") {
+			assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+		}
+		if unit.Not("postgres") {
+			assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+			assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+		}
 	}
 	assert.True(t, nil != table.GetColumn("name"), "the column name should be created")
 	if table.GetColumn("name") != nil {

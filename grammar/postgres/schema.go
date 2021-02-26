@@ -139,32 +139,35 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 // GetIndexListing get a table indexes structure
 func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Index, error) {
 	selectColumns := []string{
-		"\"TABLE_SCHEMA\" AS \"db_name\"",
-		"\"TABLE_NAME\" AS \"table_name\"",
-		"\"INDEX_NAME\" AS \"index_name\"",
-		"\"COLUMN_NAME\" AS \"column_name\"",
-		"\"COLLATION\" AS \"collation\"",
-		`CASE
-			WHEN NULLABLE = 'YES' THEN true
-			WHEN NULLABLE = "NO" THEN false
-			ELSE false
-		END AS \" + "\"nullable\"`,
-		`CASE
-			WHEN NON_UNIQUE = 0 THEN true
-			WHEN NON_UNIQUE = 1 THEN false
-			ELSE 0
-		END AS \" + "\"unique\"`,
-		"\"COMMENT\" AS \"comment\"",
-		"\"INDEX_TYPE\" AS \"index_type\"",
-		"\"COLUMN_NAME\" AS \"column_name\"",
-		"\"SEQ_IN_INDEX\" AS \"seq_in_index\"",
-		"\"INDEX_COMMENT\" AS \"index_comment\"",
+		"n.nspname as db_name",
+		"t.relname as table_name",
+		"i.relname as index_name",
+		"a.attname as column_name",
+		"'' as collation",
+		"false as nullable",
+		"indisunique as unique",
+		`indisprimary as "primary"`,
+		"'' as comment",
+		"'BTREE' as index_type",
+		"a.attnum as seq_in_index",
+		"'' as index_comment",
 	}
 	sql := fmt.Sprintf(`
-			SELECT %s
-			FROM INFORMATION_SCHEMA.STATISTICS
-			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
-			ORDER BY SEQ_IN_INDEX;
+			SELECT %s 
+			FROM
+				pg_class t,pg_class i,pg_index ix,pg_attribute a,pg_type as typ,pg_namespace as n
+			WHERE 
+				t.oid = ix.indrelid
+				and n.oid = t.relnamespace
+				and i.oid = ix.indexrelid
+				and	typ.oid = a.atttypid
+				and a.attrelid = t.oid
+				and a.attnum = ANY(ix.indkey)
+				and t.relkind = 'r'
+				and n.nspname = %s
+				and t.relname = %s
+			ORDER BY
+				t.relname, i.relname,a.attnum desc
 			`,
 		strings.Join(selectColumns, ","),
 		grammarSQL.Quoter.VAL(dbName, db),
@@ -179,8 +182,9 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *
 
 	// counting the type of indexes
 	for _, index := range indexes {
-		if index.Name == "PRIMARY" {
+		if index.Primary {
 			index.Type = "primary"
+			index.Name = "PRIMARY"
 		} else if index.Unique {
 			index.Type = "unique"
 		} else {
@@ -200,13 +204,13 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 		"COLUMN_DEFAULT AS \"default\"",
 		`CASE
 			WHEN IS_NULLABLE = 'YES' THEN true
-			WHEN IS_NULLABLE = "NO" THEN false
+			WHEN IS_NULLABLE = 'NO' THEN false
 			ELSE false
-		END AS \" + "\"nullable\"`,
+		END AS "nullable"`,
 		`CASE
-		   WHEN LOCATE('unsigned', COLUMN_TYPE) THEN true
-		   ELSE false
-		END AS\" + "\"unsigned\"`,
+			WHEN (UDT_NAME ~ 'unsigned')  THEN true
+			ELSE false
+		END AS "unsigned"`,
 		"UPPER(DATA_TYPE) as \"type\"",
 		"CHARACTER_MAXIMUM_LENGTH as \"length\"",
 		"CHARACTER_OCTET_LENGTH as \"octet_length\"",
@@ -215,19 +219,19 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 		"DATETIME_PRECISION as \"datetime_precision\"",
 		"CHARACTER_SET_NAME as \"charset\"",
 		"COLLATION_NAME as \"collation\"",
-		"COLUMN_KEY as \"key\"",
-		`CASE
-			WHEN COLUMN_KEY = 'PRI' THEN true
-			ELSE false
-		END AS \" + "\"primary\"`,
-		"EXTRA as \"extra\"",
-		"COLUMN_COMMENT as \"comment\"",
+		"'' as \"key\"",
+		`false AS "primary"`,
+		`CASE 
+		 	WHEN (COLUMN_DEFAULT ~ 'nextval\(.*_seq') THEN 'auto_increment'
+		 	ELSE ''
+		END as "extra"`,
+		"'' as \"comment\"",
 	}
 	sql := fmt.Sprintf(`
 			SELECT %s
 			FROM INFORMATION_SCHEMA.COLUMNS
-			WHERE  TABLE_CATALOG = %s AND TABLE_NAME = %s;
-			`,
+			WHERE  TABLE_SCHEMA = %s AND TABLE_NAME = %s;
+		`,
 		strings.Join(selectColumns, ","),
 		grammarSQL.Quoter.VAL(dbName, db),
 		grammarSQL.Quoter.VAL(tableName, db),

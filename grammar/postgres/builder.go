@@ -39,7 +39,11 @@ func (builder Builder) SQLAddColumn(db *sqlx.DB, Column *grammar.Column, types m
 	collation := utils.GetIF(utils.StringVal(Column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := ""
 	if utils.StringVal(Column.Extra) != "" {
-		typ = "SERIAL"
+		if typ == "BIGINT" {
+			typ = "BIGSERIAL"
+		} else {
+			typ = "SERIAL"
+		}
 		nullable = ""
 		defaultValue = ""
 	}

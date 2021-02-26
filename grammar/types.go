@@ -97,6 +97,7 @@ type Index struct {
 	Collation    string  `db:"collation"`
 	Nullable     bool    `db:"nullable"`
 	Unique       bool    `db:"unique"`
+	Primary      bool    `db:"primary"`
 	SubPart      int     `db:"sub_part"`
 	Type         string  `db:"type"`
 	IndexType    string  `db:"index_type"`
