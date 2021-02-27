@@ -9,13 +9,10 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// SQLTableExists return the SQL for checking table exists.
-func (builder Builder) SQLTableExists(db *sqlx.DB, name string, quoter grammar.Quoter) string {
-	return fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", quoter.VAL(name, db))
-}
-
 // SQLAddIndex  return the add index sql for table create
-func (builder Builder) SQLAddIndex(db *sqlx.DB, index *grammar.Index, indexTypes map[string]string, quoter grammar.Quoter) string {
+func (grammarSQL SQLite3) SQLAddIndex(db *sqlx.DB, index *grammar.Index) string {
+	quoter := grammarSQL.Quoter
+	indexTypes := grammarSQL.IndexTypes
 	typ, has := indexTypes[index.Type]
 	if !has {
 		typ = "KEY"
@@ -38,13 +35,12 @@ func (builder Builder) SQLAddIndex(db *sqlx.DB, index *grammar.Index, indexTypes
 	return sql
 }
 
-// SQLRenameTable return the SQL for the renaming table.
-func (builder Builder) SQLRenameTable(db *sqlx.DB, old string, new string, quoter grammar.Quoter) string {
-	return fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quoter.ID(old, db), quoter.ID(new, db))
-}
-
 // SQLAddColumn return the add column sql for table create
-func (builder Builder) SQLAddColumn(db *sqlx.DB, Column *grammar.Column, types map[string]string, quoter grammar.Quoter) string {
+func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *grammar.Column) string {
+
+	quoter := grammarSQL.Quoter
+	types := grammarSQL.Types
+
 	// `id` bigint(20) unsigned NOT NULL,
 	typ, has := types[Column.Type]
 	if !has {

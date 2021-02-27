@@ -21,14 +21,6 @@ type Grammar interface {
 	GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*Column, error)
 }
 
-// SQLBuilder the database sql gender interface
-type SQLBuilder interface {
-	SQLAddColumn(db *sqlx.DB, Column *Column, types map[string]string, quoter Quoter) string
-	SQLAddIndex(db *sqlx.DB, index *Index, indexTypes map[string]string, quoter Quoter) string
-	SQLTableExists(db *sqlx.DB, name string, quoter Quoter) string
-	SQLRenameTable(db *sqlx.DB, old string, new string, quoter Quoter) string
-}
-
 // Quoter the database quoting query text intrface
 type Quoter interface {
 	ID(name string, db *sqlx.DB) string

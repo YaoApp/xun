@@ -51,7 +51,7 @@ func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
 // New Create a new MySQL grammar inteface
 func New(dsn string) grammar.Grammar {
 	my := MySQL{
-		SQL: sql.NewSQL(dsn),
+		SQL: sql.NewSQL(dsn, sql.Quoter{}),
 	}
 	my.Driver = "mysql"
 	my.Quoter = Quoter{}

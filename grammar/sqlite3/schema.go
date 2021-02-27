@@ -31,6 +31,21 @@ func (grammarSQL *SQLite3) SchemaName() string {
 	return grammarSQL.Schema
 }
 
+// Exists the Exists
+func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {
+	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.Quoter.VAL(name, db))
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	row := db.QueryRowx(sql)
+	if row.Err() != nil {
+		panic(row.Err())
+	}
+	res, err := row.SliceScan()
+	if err != nil {
+		return false
+	}
+	return name == fmt.Sprintf("%s", res[0])
+}
+
 // Create a new table on the schema
 func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.Name, db)
@@ -63,7 +78,7 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			grammarSQL.SQLAddColumn(db, Column),
 		)
 	}
 	sql = sql + strings.Join(stmts, ",\n")
@@ -80,7 +95,7 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	indexStmts := []string{}
 	for _, index := range indexes {
 		indexStmts = append(indexStmts,
-			grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+			grammarSQL.SQLAddIndex(db, index),
 		)
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
@@ -90,6 +105,14 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 	}
 
 	return nil
+}
+
+// Rename a table on the schema.
+func (grammarSQL SQLite3) Rename(old string, new string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
+	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	_, err := db.Exec(sql)
+	return err
 }
 
 // Get a table on the schema
@@ -279,7 +302,7 @@ func (grammarSQL SQLite3) Alter(table *grammar.Table, db *sqlx.DB) error {
 				logger.Warn(logger.CREATE, "sqlite3 not support ModifyColumn operation").Write()
 				break
 			}
-			stmt = sql + "ADD COLUMN " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+			stmt = sql + "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {
@@ -305,7 +328,7 @@ func (grammarSQL SQLite3) Alter(table *grammar.Table, db *sqlx.DB) error {
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*grammar.Index)
-			stmt := grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter)
+			stmt := grammarSQL.SQLAddIndex(db, index)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {

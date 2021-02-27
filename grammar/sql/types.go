@@ -13,15 +13,15 @@ type SQL struct {
 	FlipTypes  map[string]string
 	IndexTypes map[string]string
 	Quoter     grammar.Quoter
-	Builder    grammar.SQLBuilder
 	DSN        string
 	DB         string
 	Schema     string
+	grammar.Grammar
 }
 
 // New Create a new mysql grammar inteface
 func New(dsn string) grammar.Grammar {
-	sql := NewSQL(dsn)
+	sql := NewSQL(dsn, Quoter{})
 	flipTypes, ok := utils.MapFilp(sql.Types)
 	if ok {
 		sql.FlipTypes = flipTypes.(map[string]string)
@@ -30,13 +30,12 @@ func New(dsn string) grammar.Grammar {
 }
 
 // NewSQL create a new SQL instance
-func NewSQL(dsn string) SQL {
+func NewSQL(dsn string, quoter grammar.Quoter) SQL {
 	sql := &SQL{
-		Driver:  "sql",
-		DSN:     dsn,
-		Mode:    "production",
-		Quoter:  Quoter{},
-		Builder: &Builder{},
+		Driver: "sql",
+		DSN:    dsn,
+		Mode:   "production",
+		Quoter: quoter,
 		IndexTypes: map[string]string{
 			"primary": "PRIMARY KEY",
 			"unique":  "UNIQUE KEY",

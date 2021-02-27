@@ -27,6 +27,21 @@ func (grammarSQL *Postgres) SchemaName() string {
 	return grammarSQL.Schema
 }
 
+// Exists the Exists
+func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
+	sql := fmt.Sprintf("SELECT table_name AS name FROM information_schema.tables WHERE table_name = %s", grammarSQL.Quoter.VAL(name, db))
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	row := db.QueryRowx(sql)
+	if row.Err() != nil {
+		panic(row.Err())
+	}
+	res, err := row.SliceScan()
+	if err != nil {
+		return false
+	}
+	return name == fmt.Sprintf("%s", res[0])
+}
+
 // Create a new table on the schema
 func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.Name, db)
@@ -59,14 +74,14 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			grammarSQL.SQLAddColumn(db, Column),
 		)
 	}
 	// Primary key
 	for _, index := range indexes {
 		if index.Type == "primary" {
 			stmts = append(stmts,
-				grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+				grammarSQL.SQLAddIndex(db, index),
 			)
 		}
 	}
@@ -87,7 +102,7 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 			continue
 		}
 		indexStmts = append(indexStmts,
-			grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+			grammarSQL.SQLAddIndex(db, index),
 		)
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
@@ -97,6 +112,14 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 	}
 
 	return nil
+}
+
+// Rename a table on the schema.
+func (grammarSQL Postgres) Rename(old string, new string, db *sqlx.DB) error {
+	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
+	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	_, err := db.Exec(sql)
+	return err
 }
 
 // Get a table on the schema
@@ -166,7 +189,7 @@ func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
 			if table.HasColumn(column.Name) {
 				stmt = "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
 			} else {
-				stmt = "ADD COLUMN " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+				stmt = "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
 			}
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
@@ -203,7 +226,7 @@ func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*grammar.Index)
-			stmt := grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter)
+			stmt := grammarSQL.SQLAddIndex(db, index)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {

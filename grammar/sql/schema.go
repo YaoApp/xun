@@ -35,7 +35,7 @@ func (grammarSQL *SQL) SchemaName() string {
 
 // Exists the Exists
 func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
-	sql := grammarSQL.Builder.SQLTableExists(db, name, grammarSQL.Quoter)
+	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.Quoter.VAL(name, db))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)
 	if row.Err() != nil {
@@ -233,14 +233,14 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLAddColumn(db, Column, grammarSQL.Types, grammarSQL.Quoter),
+			grammarSQL.SQLAddColumn(db, Column),
 		)
 	}
 
 	// indexes
 	for _, index := range indexes {
 		stmts = append(stmts,
-			grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter),
+			grammarSQL.SQLAddIndex(db, index),
 		)
 	}
 
@@ -276,7 +276,7 @@ func (grammarSQL SQL) DropIfExists(name string, db *sqlx.DB) error {
 
 // Rename a table on the schema.
 func (grammarSQL SQL) Rename(old string, new string, db *sqlx.DB) error {
-	sql := grammarSQL.Builder.SQLRenameTable(db, old, new, grammarSQL.Quoter)
+	sql := fmt.Sprintf("ALTER TABLE %s RENAME %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
@@ -309,9 +309,9 @@ func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
 			column := command.Params[0].(*grammar.Column)
 			stmt := ""
 			if table.HasColumn(column.Name) {
-				stmt = "MODIFY " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+				stmt = "MODIFY " + grammarSQL.SQLAddColumn(db, column)
 			} else {
-				stmt = "ADD " + grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter)
+				stmt = "ADD " + grammarSQL.SQLAddColumn(db, column)
 			}
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
@@ -329,7 +329,7 @@ func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
 			column.Name = new
 			stmt := fmt.Sprintf("CHANGE COLUMN %s %s",
 				grammarSQL.Quoter.ID(old, db),
-				grammarSQL.Builder.SQLAddColumn(db, column, grammarSQL.Types, grammarSQL.Quoter),
+				grammarSQL.SQLAddColumn(db, column),
 			)
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
@@ -348,7 +348,7 @@ func (grammarSQL SQL) Alter(table *grammar.Table, db *sqlx.DB) error {
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*grammar.Index)
-			stmt := "ADD " + grammarSQL.Builder.SQLAddIndex(db, index, grammarSQL.IndexTypes, grammarSQL.Quoter)
+			stmt := "ADD " + grammarSQL.SQLAddIndex(db, index)
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {

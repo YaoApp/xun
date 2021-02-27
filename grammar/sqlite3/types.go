@@ -11,18 +11,12 @@ type SQLite3 struct {
 	sql.SQL
 }
 
-// Builder sqlite SQL builder
-type Builder struct {
-	sql.Builder
-}
-
 // New Create a new mysql grammar inteface
 func New(dsn string) grammar.Grammar {
 	sqlite := SQLite3{
-		SQL: sql.NewSQL(dsn),
+		SQL: sql.NewSQL(dsn, sql.Quoter{}),
 	}
 	sqlite.Driver = "sqlite3"
-	sqlite.Builder = Builder{}
 	sqlite.IndexTypes = map[string]string{
 		"unique": "UNIQUE INDEX",
 		"index":  "INDEX",

@@ -15,11 +15,6 @@ type Postgres struct {
 	sql.SQL
 }
 
-// Builder sqlite SQL builder
-type Builder struct {
-	sql.Builder
-}
-
 // Quoter the database quoting query text SQL type
 type Quoter struct{}
 
@@ -56,11 +51,9 @@ func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
 // New Create a new mysql grammar inteface
 func New(dsn string) grammar.Grammar {
 	pg := Postgres{
-		SQL: sql.NewSQL(dsn),
+		SQL: sql.NewSQL(dsn, Quoter{}),
 	}
 	pg.Driver = "postgres"
-	pg.Quoter = Quoter{}
-	pg.Builder = Builder{}
 	pg.IndexTypes = map[string]string{
 		"primary": "PRIMARY KEY",
 		"unique":  "UNIQUE INDEX",
