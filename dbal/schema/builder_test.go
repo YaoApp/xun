@@ -246,10 +246,9 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 	}
 
 	// checking the table indexes
-	assert.True(t, nil != table.GetIndex("PRIMARY"), "the index PRIMARY should be created")
-	if table.GetIndex("PRIMARY") != nil {
-		assert.Equal(t, "id", table.GetIndex("PRIMARY").Columns[0].Name, "the column of PRIMARY key should be id")
-		assert.Equal(t, "primary", table.GetIndex("PRIMARY").Type, "the PRIMARY key type should be primary")
+	assert.True(t, nil != table.GetPrimary(), "the index PRIMARY should be created")
+	if table.GetPrimary() != nil {
+		assert.Equal(t, "id", table.GetPrimary().Columns[0].Name, "the column of PRIMARY key should be id")
 	}
 
 	assert.Equal(t, 1, len(table.GetIndex("counter_index").Columns), "the counter_index  should has 1 column")
@@ -359,10 +358,9 @@ func checkTable(t *testing.T, table Blueprint) {
 	}
 
 	// checking the table indexes
-	assert.True(t, nil != table.GetIndex("PRIMARY"), "the index PRIMARY should be created")
-	if table.GetIndex("PRIMARY") != nil {
-		assert.Equal(t, "id", table.GetIndex("PRIMARY").Columns[0].Name, "the column of PRIMARY key should be id")
-		assert.Equal(t, "primary", table.GetIndex("PRIMARY").Type, "the PRIMARY key type should be primary")
+	assert.True(t, nil != table.GetPrimary(), "the index PRIMARY should be created")
+	if table.GetPrimary() != nil {
+		assert.Equal(t, "id", table.GetPrimary().Columns[0].Name, "the column of PRIMARY key should be id")
 	}
 
 	assert.Equal(t, 1, len(table.GetIndex("counter_index").Columns), "the counter_index  should has 1 column")

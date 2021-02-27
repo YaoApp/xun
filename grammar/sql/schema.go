@@ -60,6 +60,8 @@ func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
 		return err
 	}
 
+	primaryKeyName := ""
+
 	// attaching columns
 	for _, column := range columns {
 		column.Indexes = []*grammar.Index{}
@@ -81,6 +83,26 @@ func (grammarSQL SQL) Get(table *grammar.Table, db *sqlx.DB) error {
 		}
 		index := table.IndexMap[idx.Name]
 		index.Columns = append(index.Columns, column)
+		if index.Type == "primary" {
+			primaryKeyName = idx.Name
+		}
+	}
+
+	// attaching primary
+	if _, has := table.IndexMap[primaryKeyName]; has {
+		idx := table.IndexMap[primaryKeyName]
+		table.Primary = &grammar.Primary{
+			Name:      idx.Name,
+			TableName: idx.TableName,
+			DBName:    idx.DBName,
+			Table:     idx.Table,
+			Columns:   idx.Columns,
+		}
+		delete(table.IndexMap, idx.Name)
+		for _, column := range table.Primary.Columns {
+			column.Primary = true
+			column.Indexes = []*grammar.Index{}
+		}
 	}
 
 	return nil
@@ -207,6 +229,8 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.Name, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
+
+	var primary *grammar.Primary = nil
 	columns := []*grammar.Column{}
 	indexes := []*grammar.Index{}
 
@@ -219,6 +243,7 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	//    CreateIndex(index *Index) for creating a index
 	//    DropIndex( name string) for  dropping a index
 	//    RenameIndex(old string,new string)  for renaming a index
+	//    CreatePrimary for creating the primary key
 	for _, command := range table.Commands {
 		switch command.Name {
 		case "AddColumn":
@@ -227,6 +252,9 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 		case "CreateIndex":
 			indexes = append(indexes, command.Params[0].(*grammar.Index))
 			break
+		case "CreatePrimary":
+			primary = command.Params[0].(*grammar.Primary)
+			break
 		}
 	}
 
@@ -234,6 +262,13 @@ func (grammarSQL SQL) Create(table *grammar.Table, db *sqlx.DB) error {
 	for _, Column := range columns {
 		stmts = append(stmts,
 			grammarSQL.SQLAddColumn(db, Column),
+		)
+	}
+
+	// Primary key
+	if primary != nil {
+		stmts = append(stmts,
+			grammarSQL.SQLAddPrimary(db, primary),
 		)
 	}
 

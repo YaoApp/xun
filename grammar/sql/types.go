@@ -37,9 +37,8 @@ func NewSQL(dsn string, quoter grammar.Quoter) SQL {
 		Mode:   "production",
 		Quoter: quoter,
 		IndexTypes: map[string]string{
-			"primary": "PRIMARY KEY",
-			"unique":  "UNIQUE KEY",
-			"index":   "KEY",
+			"unique": "UNIQUE KEY",
+			"index":  "KEY",
 		},
 		FlipTypes: map[string]string{},
 		Types: map[string]string{

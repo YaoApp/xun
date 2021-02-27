@@ -18,9 +18,8 @@ func New(dsn string) grammar.Grammar {
 	}
 	pg.Driver = "postgres"
 	pg.IndexTypes = map[string]string{
-		"primary": "PRIMARY KEY",
-		"unique":  "UNIQUE INDEX",
-		"index":   "INDEX",
+		"unique": "UNIQUE INDEX",
+		"index":  "INDEX",
 	}
 
 	// update schema name

@@ -35,13 +35,21 @@ type Blueprint interface {
 	RenameColumn(old string, new string) *Column
 	DropColumn(name ...string)
 
+	GetPrimary() *Primary
+	CreatePrimary(columnName ...string)
+	CreatePrimaryWithName(name string, columnName ...string)
+	DropPrimary()
+
 	GetIndex(name string) *Index
 	HasIndex(name ...string) bool
-	CreatePrimary(columnName string)
 	CreateIndex(key string, columnNames ...string)
 	CreateUnique(key string, columnNames ...string)
 	RenameIndex(old string, new string) *Index
 	DropIndex(key ...string)
+
+	CreateUniqueConstraint(name string, columnNames ...string)
+	GetUniqueConstraint(name string)
+	DropUniqueConstraint(name string)
 
 	String(name string, length int) *Column
 	BigInteger(name string) *Column
@@ -70,6 +78,7 @@ type Builder struct {
 type Table struct {
 	grammar.Table
 	Builder   *Builder
+	Primary   *Primary
 	ColumnMap map[string]*Column
 	IndexMap  map[string]*Index
 }
@@ -80,8 +89,14 @@ type Column struct {
 	Table *Table
 }
 
-// Index  the table index struct
+// Index the table index struct
 type Index struct {
 	grammar.Index
+	Table *Table
+}
+
+// Primary the table primary key
+type Primary struct {
+	grammar.Primary
 	Table *Table
 }

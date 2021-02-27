@@ -27,6 +27,18 @@ func (table *Table) NewIndex(name string, columns ...*Column) Index {
 	return index
 }
 
+// NewPrimary create a new primary intstance
+func (table *Table) NewPrimary(name string, columns ...*Column) Primary {
+	primary := Primary{
+		DBName:    table.DBName,
+		TableName: table.Name,
+		Table:     table,
+		Name:      name,
+		Columns:   columns,
+	}
+	return primary
+}
+
 // PushIndex push an index instance to the table indexes
 func (table *Table) PushIndex(index *Index) *Table {
 	table.IndexMap[index.Name] = index

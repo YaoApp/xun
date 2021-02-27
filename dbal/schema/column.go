@@ -22,30 +22,18 @@ func (column *Column) Unique() *Column {
 	if column.HasIndex(name) {
 		return column
 	}
-	index := column.Table.NewIndex(name, column)
-	index.Type = "unique"
-	if column.Table.HasIndex(name) {
-		column.Table.DropIndexCommand(name)
-	}
-	column.Table.CreateIndexCommand(&index.Index)
+	column.Table.CreateUnique(name, column.Name)
 	return column
 }
 
 // Primary set as primary key
 func (column *Column) Primary() *Column {
-	name := fmt.Sprintf("%s_%s", column.Name, "primary")
-	if column.HasIndex(name) {
+	if column.Column.Primary {
 		return column
 	}
-	index := column.Table.NewIndex(name, column)
-	index.Type = "primary"
+
 	column.Column.Primary = true
-	if column.Table.HasIndex(name) {
-		column.Table.DropIndexCommand(name)
-	}
-	column.Table.CreateIndexCommand(&index.Index)
-	column.Table.Primary = &column.Column
-	column.NotNull()
+	column.Table.CreatePrimary(column.Name)
 	return column
 }
 
@@ -55,12 +43,7 @@ func (column *Column) Index() *Column {
 	if column.HasIndex(name) {
 		return column
 	}
-	index := column.Table.NewIndex(name, column)
-	index.Type = "index"
-	if column.Table.HasIndex(name) {
-		column.Table.DropIndexCommand(name)
-	}
-	column.Table.CreateIndexCommand(&index.Index)
+	column.Table.CreateIndex(name, column.Name)
 	return column
 }
 

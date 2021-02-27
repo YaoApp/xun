@@ -64,6 +64,7 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *grammar.Column) stri
 	if primaryKey != "" {
 		nullable = primaryKey
 	}
+
 	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
@@ -76,5 +77,23 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *grammar.Column) stri
 		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
+	return sql
+}
+
+// SQLAddPrimary return the add primary key sql for table create
+func (grammarSQL SQLite3) SQLAddPrimary(db *sqlx.DB, primary *grammar.Primary) string {
+
+	quoter := grammarSQL.Quoter
+
+	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
+	columns := []string{}
+	for _, Column := range primary.Columns {
+		columns = append(columns, quoter.ID(Column.Name, db))
+	}
+
+	sql := fmt.Sprintf(
+		"PRIMARY KEY (%s)",
+		strings.Join(columns, ","))
+
 	return sql
 }

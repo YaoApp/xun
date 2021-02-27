@@ -48,6 +48,7 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
+	var primary *grammar.Primary = nil
 	columns := []*grammar.Column{}
 	indexes := []*grammar.Index{}
 
@@ -68,6 +69,9 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 		case "CreateIndex":
 			indexes = append(indexes, command.Params[0].(*grammar.Index))
 			break
+		case "CreatePrimary":
+			primary = command.Params[0].(*grammar.Primary)
+			break
 		}
 	}
 
@@ -78,12 +82,10 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 		)
 	}
 	// Primary key
-	for _, index := range indexes {
-		if index.Type == "primary" {
-			stmts = append(stmts,
-				grammarSQL.SQLAddIndex(db, index),
-			)
-		}
+	if primary != nil {
+		stmts = append(stmts,
+			grammarSQL.SQLAddPrimary(db, primary),
+		)
 	}
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf("\n)")
@@ -128,11 +130,12 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-
 	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.Name, db)
 	if err != nil {
 		return err
 	}
+
+	primaryKeyName := ""
 
 	// attaching columns
 	for _, column := range columns {
@@ -155,6 +158,26 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 		}
 		index := table.IndexMap[idx.Name]
 		index.Columns = append(index.Columns, column)
+		if index.Type == "primary" {
+			primaryKeyName = idx.Name
+		}
+	}
+
+	// attaching primary
+	if _, has := table.IndexMap[primaryKeyName]; has {
+		idx := table.IndexMap[primaryKeyName]
+		table.Primary = &grammar.Primary{
+			Name:      idx.Name,
+			TableName: idx.TableName,
+			DBName:    idx.DBName,
+			Table:     idx.Table,
+			Columns:   idx.Columns,
+		}
+		delete(table.IndexMap, idx.Name)
+		for _, column := range table.Primary.Columns {
+			column.Primary = true
+			column.Indexes = []*grammar.Index{}
+		}
 	}
 
 	return nil

@@ -101,6 +101,16 @@ func (table *Table) CreateIndexCommand(index *grammar.Index) {
 	table.AddCommand("CreateIndex", index)
 }
 
+// CreatePrimaryCommand add a new command that creating the primary key
+func (table *Table) CreatePrimaryCommand(primary *grammar.Primary) {
+	table.AddCommand("CreatePrimary", primary)
+}
+
+// DropPrimaryCommand add a new command drop the primary key
+func (table *Table) DropPrimaryCommand() {
+	table.AddCommand("DropPrimary")
+}
+
 // DropIndexCommand add a new command that dropping a index
 func (table *Table) DropIndexCommand(name string) {
 	table.AddCommand("DropIndex", name)

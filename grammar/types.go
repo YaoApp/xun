@@ -43,7 +43,7 @@ type Table struct {
 	RowLength     int       `db:"avg_row_length"`
 	IndexLength   int       `db:"index_length"`
 	AutoIncrement int       `db:"auto_increment"`
-	Primary       *Column
+	Primary       *Primary
 	ColumnMap     map[string]*Column
 	IndexMap      map[string]*Index
 	Columns       []*Column
@@ -74,8 +74,6 @@ type Column struct {
 	Primary           bool        `db:"primary"`
 	Table             *Table
 	Indexes           []*Index
-	Dropped           bool
-	Newname           string
 }
 
 // Index the talbe index
@@ -97,8 +95,15 @@ type Index struct {
 	IndexComment *string `db:"index_comment"`
 	Table        *Table
 	Columns      []*Column
-	Dropped      bool
-	Newname      string
+}
+
+// Primary the table primary key
+type Primary struct {
+	DBName    string `db:"db_name"`
+	TableName string `db:"table_name"`
+	Name      string `db:"primary_name"`
+	Table     *Table
+	Columns   []*Column
 }
 
 // Command The Command that should be run for the table.

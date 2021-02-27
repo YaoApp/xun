@@ -68,3 +68,21 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *grammar.Index) string {
 
 	return sql
 }
+
+// SQLAddPrimary return the add primary key sql for table create
+func (grammarSQL SQL) SQLAddPrimary(db *sqlx.DB, primary *grammar.Primary) string {
+
+	quoter := grammarSQL.Quoter
+
+	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
+	columns := []string{}
+	for _, Column := range primary.Columns {
+		columns = append(columns, quoter.ID(Column.Name, db))
+	}
+
+	sql := fmt.Sprintf(
+		"PRIMARY KEY %s (%s)",
+		quoter.ID(primary.Name, db), strings.Join(columns, ","))
+
+	return sql
+}

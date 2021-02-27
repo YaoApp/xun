@@ -48,10 +48,12 @@ func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {
 
 // Create a new table on the schema
 func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
+
 	name := grammarSQL.Quoter.ID(table.Name, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
+	var primary *grammar.Primary = nil
 	columns := []*grammar.Column{}
 	indexes := []*grammar.Index{}
 
@@ -72,6 +74,8 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 		case "CreateIndex":
 			indexes = append(indexes, command.Params[0].(*grammar.Index))
 			break
+		case "CreatePrimary":
+			primary = command.Params[0].(*grammar.Primary)
 		}
 	}
 
@@ -81,6 +85,14 @@ func (grammarSQL SQLite3) Create(table *grammar.Table, db *sqlx.DB) error {
 			grammarSQL.SQLAddColumn(db, Column),
 		)
 	}
+
+	// Primary key
+	if primary != nil && len(primary.Columns) > 1 {
+		stmts = append(stmts,
+			grammarSQL.SQLAddPrimary(db, primary),
+		)
+	}
+
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf("\n)")
 
@@ -127,6 +139,8 @@ func (grammarSQL SQLite3) Get(table *grammar.Table, db *sqlx.DB) error {
 		return err
 	}
 
+	primaryKeyName := ""
+
 	// attaching columns
 	for _, column := range columns {
 		column.Indexes = []*grammar.Index{}
@@ -148,6 +162,27 @@ func (grammarSQL SQLite3) Get(table *grammar.Table, db *sqlx.DB) error {
 		}
 		index := table.IndexMap[idx.Name]
 		index.Columns = append(index.Columns, column)
+
+		if index.Type == "primary" {
+			primaryKeyName = idx.Name
+		}
+	}
+
+	// attaching primary
+	if _, has := table.IndexMap[primaryKeyName]; has {
+		idx := table.IndexMap[primaryKeyName]
+		table.Primary = &grammar.Primary{
+			Name:      idx.Name,
+			TableName: idx.TableName,
+			DBName:    idx.DBName,
+			Table:     idx.Table,
+			Columns:   idx.Columns,
+		}
+		delete(table.IndexMap, idx.Name)
+		for _, column := range table.Primary.Columns {
+			column.Primary = true
+			column.Indexes = []*grammar.Index{}
+		}
 	}
 
 	return nil
