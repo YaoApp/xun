@@ -12,11 +12,11 @@ type SQL struct {
 	Types      map[string]string
 	FlipTypes  map[string]string
 	IndexTypes map[string]string
-	Quoter     grammar.Quoter
 	DSN        string
 	DB         string
 	Schema     string
 	grammar.Grammar
+	grammar.Quoter
 }
 
 // New Create a new mysql grammar inteface
