@@ -12,13 +12,13 @@ func (table *Table) GetPrimary() *Primary {
 	return table.Primary
 }
 
-// CreatePrimary Indicate that the given column should be a primary index.
-func (table *Table) CreatePrimary(columnNames ...string) {
-	table.CreatePrimaryWithName("PRIMARY", columnNames...)
+// AddPrimary Indicate that the given column should be a primary index.
+func (table *Table) AddPrimary(columnNames ...string) {
+	table.AddPrimaryWithName("PRIMARY", columnNames...)
 }
 
-// CreatePrimaryWithName Indicate that the given column should be a primary index.
-func (table *Table) CreatePrimaryWithName(name string, columnNames ...string) {
+// AddPrimaryWithName Indicate that the given column should be a primary index.
+func (table *Table) AddPrimaryWithName(name string, columnNames ...string) {
 	columns := []*dbal.Column{}
 	for _, columnName := range columnNames {
 		column := table.GetColumn(columnName)
@@ -26,17 +26,20 @@ func (table *Table) CreatePrimaryWithName(name string, columnNames ...string) {
 		column.Column.Primary = true
 		columns = append(columns, column.Column)
 	}
-	primary := Primary{
+	primary := &Primary{
 		Primary: table.NewPrimary(name, columns...),
 		Table:   table,
 	}
-	table.CreatePrimaryCommand(primary.Primary)
-	table.onChange("CreatePrimary", primary)
+
+	table.Primary = primary
+	table.CreatePrimaryCommand(primary.Primary, nil, func() {
+		table.Primary = nil
+	})
 }
 
 // DropPrimary Indicate that dropping the primary index
 func (table *Table) DropPrimary() {
-	table.DropPrimaryCommand()
-	table.onChange("DropPrimary", table.Primary)
-	table.Primary = nil
+	table.DropPrimaryCommand(func() {
+		table.Primary = nil
+	}, nil)
 }

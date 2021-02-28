@@ -81,6 +81,7 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 			Table:  table,
 		}
 	}
+
 	// attaching indexes
 	for _, index := range table.Table.Indexes {
 		name := index.Name
@@ -89,6 +90,15 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 			Table: table,
 		}
 	}
+
+	// attaching primary
+	if table.Table.Primary != nil {
+		table.Primary = &Primary{
+			Primary: table.Table.Primary,
+			Table:   table,
+		}
+	}
+
 	return table, nil
 }
 
@@ -117,16 +127,16 @@ func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) 
 
 // Alter a table on the schema.
 func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
-	table := builder.table(name)
+	table := builder.MustGet(name)
 	callback(table)
-	return builder.Grammar.Alter(table.Table, builder.Conn.Write)
+	return builder.Grammar.Alter(table.GetTable().Table, builder.Conn.Write)
 }
 
 // MustAlter a table on the schema.
 func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) Blueprint {
-	table := builder.table(name)
+	table := builder.MustGet(name)
 	callback(table)
-	err := builder.Grammar.Alter(table.Table, builder.Conn.Write)
+	err := builder.Grammar.Alter(table.GetTable().Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }

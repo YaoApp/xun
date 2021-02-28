@@ -1,7 +1,7 @@
 package schema
 
-// CreateUniqueConstraint add a unique coustraint
-func (table *Table) CreateUniqueConstraint(name string, columnNames ...string) {
+// AddUniqueConstraint add a unique coustraint
+func (table *Table) AddUniqueConstraint(name string, columnNames ...string) {
 }
 
 // GetUniqueConstraint Returns the unique constraint with the given name.

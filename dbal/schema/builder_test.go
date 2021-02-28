@@ -28,8 +28,8 @@ func TestCreate(t *testing.T) {
 		table.BigInteger("latest").Index()
 		table.String("name", 20).Index()
 		table.String("unionid", 128).Unique()
-		table.CreateUnique("name_latest", "name", "latest")
-		table.CreateIndex("name_counter", "name", "counter")
+		table.AddUnique("name_latest", "name", "latest")
+		table.AddIndex("name_counter", "name", "counter")
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
 	assert.Equal(t, nil, err, "the return error should be nil")
@@ -93,7 +93,7 @@ func TestAlter(t *testing.T) {
 		table.DropIndex("unionid_unique")
 		table.DropColumn("name")
 		table.RenameColumn("unionid", "uid").Unique()
-		table.CreateIndex("nickname_index", "nickname")
+		table.AddIndex("nickname_index", "nickname")
 		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
@@ -104,7 +104,7 @@ func TestAlter(t *testing.T) {
 	table, err := builder.Get("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlter(t, table)
-	builder.Drop("table_test_builder")
+	// builder.Drop("table_test_builder")
 }
 
 func TestMustCreate(t *testing.T) {
@@ -117,8 +117,8 @@ func TestMustCreate(t *testing.T) {
 		table.BigInteger("latest").Index()
 		table.String("name", 20).Index()
 		table.String("unionid", 128).Unique()
-		table.CreateUnique("name_latest", "name", "latest")
-		table.CreateIndex("name_counter", "name", "counter")
+		table.AddUnique("name_latest", "name", "latest")
+		table.AddIndex("name_counter", "name", "counter")
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
@@ -177,7 +177,7 @@ func TestMustAlter(t *testing.T) {
 		table.DropIndex("unionid_unique")
 		table.DropColumn("name")
 		table.RenameColumn("unionid", "uid").Unique()
-		table.CreateIndex("nickname_index", "nickname")
+		table.AddIndex("nickname_index", "nickname")
 		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
@@ -293,9 +293,9 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 
 	nameLatest := table.GetIndex("name_latest")
 	if unit.Is("postgres") {
-		assert.Equal(t, 0, len(nameLatest.Columns), "the index name_latest should has none")
+		assert.Nil(t, nameLatest, "the index name_latest should has none")
 	} else if unit.Not("sqlite3") {
-		assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest  should has one column")
+		assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest should has one column")
 		assert.Equal(t, "unique", nameLatest.Type, "the name_latest key type should be unique")
 		if len(nameLatest.Columns) == 1 {
 			assert.Equal(t, "latest", nameLatest.Columns[0].Name, "the second column of the index name_latest should be latest")
@@ -304,7 +304,7 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 
 	nameCounter := table.GetIndex("name_counter")
 	if unit.Is("postgres") {
-		assert.Equal(t, 0, len(nameCounter.Columns), "the index name_counter should has none")
+		assert.Nil(t, nameCounter, "the index name_counter should has none")
 	} else if unit.Not("sqlite3") {
 		assert.Equal(t, 1, len(nameCounter.Columns), "the index name_counter should has one column")
 		assert.Equal(t, "index", nameCounter.Type, "the name_counter key type should be unique")

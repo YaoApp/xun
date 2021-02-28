@@ -23,7 +23,7 @@ type Option struct {
 type Table struct {
 	DBName        string    `db:"db_name"`
 	SchemaName    string    `db:"schema_name"`
-	Name          string    `db:"table_name"`
+	TableName     string    `db:"table_name"`
 	Comment       string    `db:"table_comment"`
 	Type          string    `db:"table_type"`
 	Engine        string    `db:"engine"`
@@ -100,6 +100,8 @@ type Primary struct {
 
 // Command The Command that should be run for the table.
 type Command struct {
-	Name   string        // The command name
-	Params []interface{} // The command parameters
+	Name    string        // The command name
+	Params  []interface{} // The command parameters
+	Success func()        // Success callback function
+	Fail    func()        // Fail callback function
 }

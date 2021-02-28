@@ -28,6 +28,8 @@ type Table struct {
 	*Primary
 	ColumnMap map[string]*Column
 	IndexMap  map[string]*Index
+	Name      string
+	Prefix    string
 }
 
 // Column the table column struct

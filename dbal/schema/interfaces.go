@@ -20,31 +20,55 @@ type Schema interface {
 
 // Blueprint the table operating interface
 type Blueprint interface {
+
+	// defined in table.go
 	GetName() string
+	GetPrefix() string
+	GetFullName() string
+
 	GetColumns() map[string]*Column
 	GetIndexes() map[string]*Index
 
+	GetTable() *Table
+
+	// defined in column.go
+	NewColumn(name string) *Column
+	PushColumn(column *Column) *Table
 	GetColumn(name string) *Column
+	Column(name string) *Column
 	HasColumn(name ...string) bool
+	PutColumn(column *Column) *Table
+	AddColumn(column *Column) *Table
+	ChangeColumn(column *Column) *Table
 	RenameColumn(old string, new string) *Column
 	DropColumn(name ...string)
 
+	// defined in primry.go
 	GetPrimary() *Primary
-	CreatePrimary(columnName ...string)
-	CreatePrimaryWithName(name string, columnName ...string)
+	AddPrimary(columnName ...string)
+	AddPrimaryWithName(name string, columnName ...string)
 	DropPrimary()
 
+	// defined in index.go
+	NewIndex(name string, columns ...*Column) *Index
+	PushIndex(index *Index) *Table
 	GetIndex(name string) *Index
+	Index(name string) *Index
 	HasIndex(name ...string) bool
-	CreateIndex(key string, columnNames ...string)
-	CreateUnique(key string, columnNames ...string)
+	PutIndex(key string, columnNames ...string) *Table
+	PutUnique(key string, columnNames ...string) *Table
+	AddIndex(key string, columnNames ...string) *Table
+	AddUnique(key string, columnNames ...string) *Table
+	ChangeIndex(key string, columnNames ...string) *Table
 	RenameIndex(old string, new string) *Index
 	DropIndex(key ...string)
 
-	CreateUniqueConstraint(name string, columnNames ...string)
+	// defined in constraint.go
+	AddUniqueConstraint(name string, columnNames ...string)
 	GetUniqueConstraint(name string)
 	DropUniqueConstraint(name string)
 
+	// defined in blueprint.go
 	String(name string, length int) *Column
 	BigInteger(name string) *Column
 	UnsignedBigInteger(name string) *Column

@@ -29,18 +29,19 @@ func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {
 // Create a new table on the schema
 func (grammarSQL SQLite3) Create(table *dbal.Table, db *sqlx.DB) error {
 
-	name := grammarSQL.Quoter.ID(table.Name, db)
+	name := grammarSQL.Quoter.ID(table.TableName, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
 	var primary *dbal.Primary = nil
 	columns := []*dbal.Column{}
 	indexes := []*dbal.Index{}
+	cbCommands := []*dbal.Command{}
 
 	// Commands
 	// The commands must be:
 	//    AddColumn(column *Column)    for adding a column
-	//    ModifyColumn(column *Column) for modifying a colu
+	//    ChangeColumn(column *Column) for modifying a colu
 	//    RenameColumn(old string,new string)  for renaming a column
 	//    DropColumn(name string)  for dropping a column
 	//    CreateIndex(index *Index) for creating a index
@@ -50,12 +51,15 @@ func (grammarSQL SQLite3) Create(table *dbal.Table, db *sqlx.DB) error {
 		switch command.Name {
 		case "AddColumn":
 			columns = append(columns, command.Params[0].(*dbal.Column))
+			cbCommands = append(cbCommands, command)
 			break
 		case "CreateIndex":
 			indexes = append(indexes, command.Params[0].(*dbal.Index))
+			cbCommands = append(cbCommands, command)
 			break
 		case "CreatePrimary":
 			primary = command.Params[0].(*dbal.Primary)
+			cbCommands = append(cbCommands, command)
 		}
 	}
 
@@ -92,6 +96,11 @@ func (grammarSQL SQLite3) Create(table *dbal.Table, db *sqlx.DB) error {
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
 	_, err = db.Exec(strings.Join(indexStmts, ";\n"))
+
+	for _, cmd := range cbCommands {
+		cmd.Callback(err)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -109,12 +118,12 @@ func (grammarSQL SQLite3) Rename(old string, new string, db *sqlx.DB) error {
 
 // Get a table on the schema
 func (grammarSQL SQLite3) Get(table *dbal.Table, db *sqlx.DB) error {
-	columns, err := grammarSQL.GetColumnListing(table.DBName, table.Name, db)
+	columns, err := grammarSQL.GetColumnListing(table.DBName, table.TableName, db)
 	if err != nil {
 		return err
 	}
 
-	indexes, err := grammarSQL.GetIndexListing(table.DBName, table.Name, db)
+	indexes, err := grammarSQL.GetIndexListing(table.DBName, table.TableName, db)
 	if err != nil {
 		return err
 	}
@@ -290,19 +299,14 @@ func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *
 // Alter a table on the schema
 func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 
-	err := grammarSQL.Get(table, db)
-	if err != nil {
-		return err
-	}
-
-	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.Name, db))
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.TableName, db))
 	stmts := []string{}
 	errs := []error{}
 
 	// Commands
 	// The commands must be:
 	//    AddColumn(column *Column)    for adding a column
-	//    ModifyColumn(column *Column) for modifying a colu
+	//    ChangeColumn(column *Column) for modifying a colu
 	//    RenameColumn(old string,new string)  for renaming a column
 	//    DropColumn(name string)  for dropping a column
 	//    CreateIndex(index *Index) for creating a index
@@ -310,19 +314,19 @@ func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 	//    RenameIndex(old string,new string)  for renaming a index
 	for _, command := range table.Commands {
 		switch command.Name {
-		case "AddColumn", "ModifyColumn":
+		case "AddColumn":
 			column := command.Params[0].(*dbal.Column)
 			stmt := ""
-			if table.HasColumn(column.Name) {
-				logger.Warn(logger.CREATE, "sqlite3 not support ModifyColumn operation").Write()
-				break
-			}
 			stmt = sql + "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {
 				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
 			}
+			command.Callback(err)
+			break
+		case "ChangeColumn":
+			logger.Warn(logger.CREATE, "sqlite3 not support ChangeColumn operation").Write()
 			break
 		case "RenameColumn":
 			old := command.Params[0].(string)
@@ -337,6 +341,7 @@ func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
 			}
+			command.Callback(err)
 			break
 		case "DropColumn":
 			logger.Warn(logger.CREATE, "sqlite3 not support DropColumn operation").Write()
@@ -349,6 +354,7 @@ func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
 			}
+			command.Callback(err)
 			break
 		case "DropIndex":
 			name := command.Params[0].(string)
@@ -358,6 +364,7 @@ func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
 			}
+			command.Callback(err)
 			break
 		case "RenameIndex":
 			logger.Warn(logger.CREATE, "sqlite3 not support RenameIndex operation").Write()

@@ -6,121 +6,96 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
+// GetName get the table name
+func (table *Table) GetName() string {
+	return table.Name
+}
+
+// GetPrefix get the table prefix
+func (table *Table) GetPrefix() string {
+	return table.Prefix
+}
+
+// GetFullName get the table name with prefix
+func (table *Table) GetFullName() string {
+	return table.TableName
+}
+
 // NewTable create a new blueprint intance
 func NewTable(name string, builder *Builder) *Table {
 	tableName := fmt.Sprintf("%s%s", builder.Conn.Option.Prefix, name)
 	table := &Table{
+		Name:      name,
+		Prefix:    builder.Conn.Option.Prefix,
 		Table:     dbal.NewTable(tableName, builder.SchemaName, builder.DBName),
 		Builder:   builder,
 		ColumnMap: map[string]*Column{},
 		IndexMap:  map[string]*Index{},
 	}
-	table.onChange("NewTable", name, builder)
 	return table
 }
 
-// Column get the column instance of the table, if the column does not exist create
-func (table *Table) Column(name string) *Column {
-	column, has := table.ColumnMap[name]
-	if has {
-		return column
-	}
-	return table.NewColumn(name)
+// GetColumns Get the columns map of the table
+func (table *Table) GetColumns() map[string]*Column {
+	return table.ColumnMap
 }
 
-// NewIndex Create a new index instance
-func (table *Table) NewIndex(name string, columns ...*Column) *Index {
-	cols := []*dbal.Column{}
-	for _, column := range columns {
-		cols = append(cols, column.Column)
-	}
-	index := &Index{
-		Index: table.Table.NewIndex(name, cols...),
-		Table: table,
-	}
-
-	// mapping index
-	for _, column := range columns {
-		column.Indexes = append(column.Indexes, index.Index)
-	}
-	return index
+// GetIndexes Get the indexes map of the table
+func (table *Table) GetIndexes() map[string]*Index {
+	return table.IndexMap
 }
 
-// NewColumn Create a new column instance
-func (table *Table) NewColumn(name string) *Column {
-	column := &Column{
-		Column: table.Table.NewColumn(name),
-		Table:  table,
-	}
-	return column
-}
-
-// PushColumn add a column to the table
-func (table *Table) PushColumn(column *Column) *Column {
-	table.Table.PushColumn(column.Column)
-	table.ColumnMap[column.Name] = column
-	table.onChange("PushColumn", column)
-	return column
-}
-
-// PushIndex add an index to the table
-func (table *Table) PushIndex(index *Index) *Index {
-	table.Table.PushIndex(index.Index)
-	table.IndexMap[index.Name] = index
-	table.onChange("PushIndex", index)
-	return index
+// GetTable Get the DBAL table instance
+func (table *Table) GetTable() *Table {
+	return table
 }
 
 // AddCommand Add a new command to the table.
-func (table *Table) AddCommand(name string, params ...interface{}) {
-	table.Table.AddCommand(name, params...)
+func (table *Table) AddCommand(name string, success func(), fail func(), params ...interface{}) {
+	table.Table.AddCommand(name, success, fail, params...)
 }
 
 // AddColumnCommand add a new command that adding a column
-func (table *Table) AddColumnCommand(column *dbal.Column) {
-	table.AddCommand("AddColumn", column)
+func (table *Table) AddColumnCommand(column *dbal.Column, success func(), fail func()) {
+	table.AddCommand("AddColumn", success, fail, column)
 }
 
-// ModifyColumnCommand add a new command that modifing a column
-func (table *Table) ModifyColumnCommand(column *dbal.Column) {
-	table.AddCommand("ModifyColumn", column)
+// ChangeColumnCommand add a new command that modifing a column
+func (table *Table) ChangeColumnCommand(column *dbal.Column, success func(), fail func()) {
+	table.AddCommand("ChangeColumn", success, fail, column)
 }
 
 // RenameColumnCommand add a new command that renaming a column
-func (table *Table) RenameColumnCommand(old string, new string) {
-	table.AddCommand("RenameColumn", old, new)
+func (table *Table) RenameColumnCommand(old string, new string, success func(), fail func()) {
+	table.AddCommand("RenameColumn", success, fail, old, new)
 }
 
 // DropColumnCommand add a new command that dropping a column
-func (table *Table) DropColumnCommand(name string) {
-	table.AddCommand("DropColumn", name)
+func (table *Table) DropColumnCommand(name string, success func(), fail func()) {
+	table.AddCommand("DropColumn", success, fail, name)
 }
 
 // CreateIndexCommand add a new command that creating a index
-func (table *Table) CreateIndexCommand(index *dbal.Index) {
-	table.AddCommand("CreateIndex", index)
+func (table *Table) CreateIndexCommand(index *dbal.Index, success func(), fail func()) {
+	table.AddCommand("CreateIndex", success, fail, index)
 }
 
 // CreatePrimaryCommand add a new command that creating the primary key
-func (table *Table) CreatePrimaryCommand(primary *dbal.Primary) {
-	table.AddCommand("CreatePrimary", primary)
+func (table *Table) CreatePrimaryCommand(primary *dbal.Primary, success func(), fail func()) {
+	table.AddCommand("CreatePrimary", success, fail, primary)
 }
 
 // DropPrimaryCommand add a new command drop the primary key
-func (table *Table) DropPrimaryCommand() {
-	table.AddCommand("DropPrimary")
+func (table *Table) DropPrimaryCommand(success func(), fail func()) {
+	table.AddCommand("DropPrimary", success, fail)
 }
 
 // DropIndexCommand add a new command that dropping a index
-func (table *Table) DropIndexCommand(name string) {
-	table.AddCommand("DropIndex", name)
+func (table *Table) DropIndexCommand(name string, success func(), fail func()) {
+	table.AddCommand("DropIndex", success, fail, name)
 }
 
 // RenameIndexCommand add a new command that renaming a index
-func (table *Table) RenameIndexCommand(old string, new string) {
-	table.AddCommand("RenameIndex", old, new)
-}
-
-// onChange call this when the table changed
-func (table *Table) onChange(event string, args ...interface{}) {
+func (table *Table) RenameIndexCommand(old string, new string, success func(), fail func()) {
+	table.AddCommand("RenameIndex", success, fail, old, new)
 }

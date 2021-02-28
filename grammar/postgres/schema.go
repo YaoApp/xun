@@ -29,18 +29,18 @@ func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
 
 // Create a new table on the schema
 func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
-	name := grammarSQL.Quoter.ID(table.Name, db)
+	name := grammarSQL.Quoter.ID(table.TableName, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
 	var primary *dbal.Primary = nil
 	columns := []*dbal.Column{}
 	indexes := []*dbal.Index{}
-
+	cbCommands := []*dbal.Command{}
 	// Commands
 	// The commands must be:
 	//    AddColumn(column *Column)    for adding a column
-	//    ModifyColumn(column *Column) for modifying a colu
+	//    ChangeColumn(column *Column) for modifying a colu
 	//    RenameColumn(old string,new string)  for renaming a column
 	//    DropColumn(name string)  for dropping a column
 	//    CreateIndex(index *Index) for creating a index
@@ -50,12 +50,15 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 		switch command.Name {
 		case "AddColumn":
 			columns = append(columns, command.Params[0].(*dbal.Column))
+			cbCommands = append(cbCommands, command)
 			break
 		case "CreateIndex":
 			indexes = append(indexes, command.Params[0].(*dbal.Index))
+			cbCommands = append(cbCommands, command)
 			break
 		case "CreatePrimary":
 			primary = command.Params[0].(*dbal.Primary)
+			cbCommands = append(cbCommands, command)
 			break
 		}
 	}
@@ -94,6 +97,12 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
 	_, err = db.Exec(strings.Join(indexStmts, ";\n"))
+
+	// Callback
+	for _, cmd := range cbCommands {
+		cmd.Callback(err)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -111,11 +120,11 @@ func (grammarSQL Postgres) Rename(old string, new string, db *sqlx.DB) error {
 
 // Get a table on the schema
 func (grammarSQL Postgres) Get(table *dbal.Table, db *sqlx.DB) error {
-	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.Name, db)
+	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.TableName, db)
 	if err != nil {
 		return err
 	}
-	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.Name, db)
+	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.TableName, db)
 	if err != nil {
 		return err
 	}
@@ -171,19 +180,14 @@ func (grammarSQL Postgres) Get(table *dbal.Table, db *sqlx.DB) error {
 // Alter a table on the schema
 func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 
-	err := grammarSQL.Get(table, db)
-	if err != nil {
-		return err
-	}
-
-	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.Name, db))
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.TableName, db))
 	stmts := []string{}
 	errs := []error{}
 
 	// Commands
 	// The commands must be:
 	//    AddColumn(column *Column)    for adding a column
-	//    ModifyColumn(column *Column) for modifying a colu
+	//    ChangeColumn(column *Column) for modifying a colu
 	//    RenameColumn(old string,new string)  for renaming a column
 	//    DropColumn(name string)  for dropping a column
 	//    CreateIndex(index *Index) for creating a index
@@ -191,19 +195,25 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 	//    RenameIndex(old string,new string)  for renaming a index
 	for _, command := range table.Commands {
 		switch command.Name {
-		case "AddColumn", "ModifyColumn":
+		case "AddColumn":
 			column := command.Params[0].(*dbal.Column)
-			stmt := ""
-			if table.HasColumn(column.Name) {
-				stmt = "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
-			} else {
-				stmt = "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
-			}
+			stmt := "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
+			break
+		case "ChangeColumn":
+			column := command.Params[0].(*dbal.Column)
+			stmt := "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			command.Callback(err)
 			break
 		case "RenameColumn":
 			old := command.Params[0].(string)
@@ -222,6 +232,7 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
 			break
 		case "DropColumn":
 			name := command.Params[0].(string)
@@ -231,6 +242,7 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*dbal.Index)
@@ -246,13 +258,14 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmt := fmt.Sprintf(
 				"DROP INDEX %s",
 				grammarSQL.Quoter.ID(name, db),
-				// grammarSQL.Quoter.ID(table.Name, db),
+				// grammarSQL.Quoter.ID(table.TableName, db),
 			)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
 			break
 		case "RenameIndex":
 			old := command.Params[0].(string)
@@ -261,13 +274,14 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 				"ALTER INDEX IF EXISTS %s RENAME TO %s",
 				grammarSQL.Quoter.ID(old, db),
 				grammarSQL.Quoter.ID(new, db),
-				// grammarSQL.Quoter.ID(table.Name, db),
+				// grammarSQL.Quoter.ID(table.TableName, db),
 			)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
 			break
 		}
 	}
