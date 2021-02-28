@@ -4,13 +4,13 @@ package dbal
 var Grammars = map[string]Grammar{}
 
 // Register register the grammar driver
-func Register(name string, Grammar Grammar) {
-	Grammars[name] = Grammar
+func Register(name string, grammar Grammar) {
+	Grammars[name] = grammar
 }
 
 // NewTable create a grammar table
-func NewTable(name string, schemaName string, dbName string) Table {
-	return Table{
+func NewTable(name string, schemaName string, dbName string) *Table {
+	return &Table{
 		DBName:     dbName,
 		SchemaName: schemaName,
 		Name:       name,
@@ -24,27 +24,25 @@ func NewTable(name string, schemaName string, dbName string) Table {
 }
 
 // NewIndex create a new index intstance
-func (table *Table) NewIndex(name string, columns ...*Column) Index {
-	index := Index{
+func (table *Table) NewIndex(name string, columns ...*Column) *Index {
+	return &Index{
 		DBName:    table.DBName,
 		TableName: table.Name,
 		Table:     table,
 		Name:      name,
 		Columns:   columns,
 	}
-	return index
 }
 
 // NewPrimary create a new primary intstance
-func (table *Table) NewPrimary(name string, columns ...*Column) Primary {
-	primary := Primary{
+func (table *Table) NewPrimary(name string, columns ...*Column) *Primary {
+	return &Primary{
 		DBName:    table.DBName,
 		TableName: table.Name,
 		Table:     table,
 		Name:      name,
 		Columns:   columns,
 	}
-	return primary
 }
 
 // PushIndex push an index instance to the table indexes
@@ -55,8 +53,8 @@ func (table *Table) PushIndex(index *Index) *Table {
 }
 
 // NewColumn create a new column intstance
-func (table *Table) NewColumn(name string) Column {
-	column := Column{
+func (table *Table) NewColumn(name string) *Column {
+	return &Column{
 		DBName:            table.DBName,
 		TableName:         table.Name,
 		Table:             table,
@@ -72,7 +70,6 @@ func (table *Table) NewColumn(name string) Column {
 		Extra:             nil,
 		Comment:           nil,
 	}
-	return column
 }
 
 // PushColumn push a column instance to the table columns

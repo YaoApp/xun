@@ -32,7 +32,7 @@ func (table *Table) Column(name string) *Column {
 func (table *Table) NewIndex(name string, columns ...*Column) *Index {
 	cols := []*dbal.Column{}
 	for _, column := range columns {
-		cols = append(cols, &column.Column)
+		cols = append(cols, column.Column)
 	}
 	index := &Index{
 		Index: table.Table.NewIndex(name, cols...),
@@ -41,7 +41,7 @@ func (table *Table) NewIndex(name string, columns ...*Column) *Index {
 
 	// mapping index
 	for _, column := range columns {
-		column.Indexes = append(column.Indexes, &index.Index)
+		column.Indexes = append(column.Indexes, index.Index)
 	}
 	return index
 }
@@ -57,7 +57,7 @@ func (table *Table) NewColumn(name string) *Column {
 
 // PushColumn add a column to the table
 func (table *Table) PushColumn(column *Column) *Column {
-	table.Table.PushColumn(&column.Column)
+	table.Table.PushColumn(column.Column)
 	table.ColumnMap[column.Name] = column
 	table.onChange("PushColumn", column)
 	return column
@@ -65,7 +65,7 @@ func (table *Table) PushColumn(column *Column) *Column {
 
 // PushIndex add an index to the table
 func (table *Table) PushIndex(index *Index) *Index {
-	table.Table.PushIndex(&index.Index)
+	table.Table.PushIndex(index.Index)
 	table.IndexMap[index.Name] = index
 	table.onChange("PushIndex", index)
 	return index

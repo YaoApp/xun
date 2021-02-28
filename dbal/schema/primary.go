@@ -6,7 +6,7 @@ import "github.com/yaoapp/xun/dbal"
 func (table *Table) GetPrimary() *Primary {
 	if table.Primary == nil && table.Table.Primary != nil {
 		return &Primary{
-			Primary: *table.Table.Primary,
+			Primary: table.Table.Primary,
 		}
 	}
 	return table.Primary
@@ -24,13 +24,13 @@ func (table *Table) CreatePrimaryWithName(name string, columnNames ...string) {
 		column := table.GetColumn(columnName)
 		column.NotNull()
 		column.Column.Primary = true
-		columns = append(columns, &column.Column)
+		columns = append(columns, column.Column)
 	}
 	primary := Primary{
 		Primary: table.NewPrimary(name, columns...),
 		Table:   table,
 	}
-	table.CreatePrimaryCommand(&primary.Primary)
+	table.CreatePrimaryCommand(primary.Primary)
 	table.onChange("CreatePrimary", primary)
 }
 

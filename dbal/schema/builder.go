@@ -68,7 +68,7 @@ func (builder *Builder) HasTable(name string) bool {
 // Get a table on the schema.
 func (builder *Builder) Get(name string) (Blueprint, error) {
 	table := builder.table(name)
-	err := builder.Grammar.Get(&table.Table, builder.Conn.Write)
+	err := builder.Grammar.Get(table.Table, builder.Conn.Write)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 	for _, column := range table.Table.Columns {
 		name := column.Name
 		table.ColumnMap[name] = &Column{
-			Column: *column,
+			Column: column,
 			Table:  table,
 		}
 	}
@@ -85,7 +85,7 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 	for _, index := range table.Table.Indexes {
 		name := index.Name
 		table.IndexMap[name] = &Index{
-			Index: *index,
+			Index: index,
 			Table: table,
 		}
 	}
@@ -103,14 +103,14 @@ func (builder *Builder) MustGet(name string) Blueprint {
 func (builder *Builder) Create(name string, callback func(table Blueprint)) error {
 	table := builder.table(name)
 	callback(table)
-	return builder.Grammar.Create(&table.Table, builder.Conn.Write)
+	return builder.Grammar.Create(table.Table, builder.Conn.Write)
 }
 
 // MustCreate a new table on the schema.
 func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.table(name)
 	callback(table)
-	err := builder.Grammar.Create(&table.Table, builder.Conn.Write)
+	err := builder.Grammar.Create(table.Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }
@@ -119,14 +119,14 @@ func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) 
 func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
 	table := builder.table(name)
 	callback(table)
-	return builder.Grammar.Alter(&table.Table, builder.Conn.Write)
+	return builder.Grammar.Alter(table.Table, builder.Conn.Write)
 }
 
 // MustAlter a table on the schema.
 func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.table(name)
 	callback(table)
-	err := builder.Grammar.Alter(&table.Table, builder.Conn.Write)
+	err := builder.Grammar.Alter(table.Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }

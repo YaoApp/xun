@@ -8,7 +8,7 @@ func (table *Table) CreateIndex(key string, columnNames ...string) {
 	}
 	index := table.NewIndex(key, columns...)
 	index.Type = "index"
-	table.CreateIndexCommand(&index.Index)
+	table.CreateIndexCommand(index.Index)
 	table.onChange("CreateIndex", index)
 }
 
@@ -20,7 +20,7 @@ func (table *Table) CreateUnique(key string, columnNames ...string) {
 	}
 	index := table.NewIndex(key, columns...)
 	index.Type = "unique"
-	table.CreateIndexCommand(&index.Index)
+	table.CreateIndexCommand(index.Index)
 	table.onChange("CreateIndex", index)
 }
 

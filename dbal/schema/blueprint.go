@@ -60,11 +60,11 @@ func (table *Table) GetColumn(name string) *Column {
 // AddColumn add or modify a column to the table
 func (table *Table) AddColumn(column *Column) *Column {
 	if table.HasColumn(column.Name) {
-		table.ModifyColumnCommand(&column.Column)
+		table.ModifyColumnCommand(column.Column)
 		table.onChange("ModifyColumn", column)
 		return column
 	}
-	table.AddColumnCommand(&column.Column)
+	table.AddColumnCommand(column.Column)
 	table.onChange("AddColumn", column)
 	return column
 }

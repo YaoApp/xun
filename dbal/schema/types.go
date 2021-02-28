@@ -14,8 +14,8 @@ type Connection struct {
 
 // Builder the table schema builder struct
 type Builder struct {
-	Conn       *Connection
-	Grammar    dbal.Grammar
+	Conn *Connection
+	dbal.Grammar
 	Mode       string
 	DBName     string
 	SchemaName string
@@ -23,27 +23,27 @@ type Builder struct {
 
 // Table the table struct
 type Table struct {
-	dbal.Table
-	Builder   *Builder
-	Primary   *Primary
+	*dbal.Table
+	*Builder
+	*Primary
 	ColumnMap map[string]*Column
 	IndexMap  map[string]*Index
 }
 
 // Column the table column struct
 type Column struct {
-	dbal.Column
+	*dbal.Column
 	Table *Table
 }
 
 // Index the table index struct
 type Index struct {
-	dbal.Index
+	*dbal.Index
 	Table *Table
 }
 
 // Primary the table primary key
 type Primary struct {
-	dbal.Primary
+	*dbal.Primary
 	Table *Table
 }
