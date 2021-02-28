@@ -3,7 +3,6 @@ package schema
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/grammar"
 )
 
 // Schema The schema interface
@@ -68,7 +67,7 @@ type Connection struct {
 // Builder the table schema builder struct
 type Builder struct {
 	Conn       *Connection
-	Grammar    grammar.Grammar
+	Grammar    dbal.Grammar
 	Mode       string
 	DBName     string
 	SchemaName string
@@ -76,7 +75,7 @@ type Builder struct {
 
 // Table the table struct
 type Table struct {
-	grammar.Table
+	dbal.Table
 	Builder   *Builder
 	Primary   *Primary
 	ColumnMap map[string]*Column
@@ -85,18 +84,18 @@ type Table struct {
 
 // Column the table column struct
 type Column struct {
-	grammar.Column
+	dbal.Column
 	Table *Table
 }
 
 // Index the table index struct
 type Index struct {
-	grammar.Index
+	dbal.Index
 	Table *Table
 }
 
 // Primary the table primary key
 type Primary struct {
-	grammar.Primary
+	dbal.Primary
 	Table *Table
 }

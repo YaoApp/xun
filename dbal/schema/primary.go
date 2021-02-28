@@ -1,8 +1,6 @@
 package schema
 
-import (
-	"github.com/yaoapp/xun/grammar"
-)
+import "github.com/yaoapp/xun/dbal"
 
 // GetPrimary get the table primary key instance
 func (table *Table) GetPrimary() *Primary {
@@ -21,7 +19,7 @@ func (table *Table) CreatePrimary(columnNames ...string) {
 
 // CreatePrimaryWithName Indicate that the given column should be a primary index.
 func (table *Table) CreatePrimaryWithName(name string, columnNames ...string) {
-	columns := []*grammar.Column{}
+	columns := []*dbal.Column{}
 	for _, columnName := range columnNames {
 		column := table.GetColumn(columnName)
 		column.NotNull()

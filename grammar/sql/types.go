@@ -1,7 +1,7 @@
 package sql
 
 import (
-	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -15,13 +15,13 @@ type SQL struct {
 	DSN        string
 	DB         string
 	Schema     string
-	grammar.Grammar
-	grammar.Quoter
+	dbal.Grammar
+	dbal.Quoter
 }
 
 // New Create a new mysql grammar inteface
-func New(dsn string) grammar.Grammar {
-	sql := NewSQL(dsn, Quoter{})
+func New(dsn string) dbal.Grammar {
+	sql := NewSQL(Quoter{})
 	flipTypes, ok := utils.MapFilp(sql.Types)
 	if ok {
 		sql.FlipTypes = flipTypes.(map[string]string)
@@ -30,10 +30,9 @@ func New(dsn string) grammar.Grammar {
 }
 
 // NewSQL create a new SQL instance
-func NewSQL(dsn string, quoter grammar.Quoter) SQL {
+func NewSQL(quoter dbal.Quoter) SQL {
 	sql := &SQL{
 		Driver: "sql",
-		DSN:    dsn,
 		Mode:   "production",
 		Quoter: quoter,
 		IndexTypes: map[string]string{
@@ -69,7 +68,5 @@ func NewSQL(dsn string, quoter grammar.Quoter) SQL {
 			"year":          "YEAR",
 		},
 	}
-	sql.DBName()
-	sql.SchemaName()
 	return *sql
 }

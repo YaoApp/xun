@@ -3,14 +3,14 @@ package schema
 import (
 	"fmt"
 
-	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/dbal"
 )
 
 // NewTable create a new blueprint intance
 func NewTable(name string, builder *Builder) *Table {
 	tableName := fmt.Sprintf("%s%s", builder.Conn.Option.Prefix, name)
 	table := &Table{
-		Table:     grammar.NewTable(tableName, builder.SchemaName, builder.DBName),
+		Table:     dbal.NewTable(tableName, builder.SchemaName, builder.DBName),
 		Builder:   builder,
 		ColumnMap: map[string]*Column{},
 		IndexMap:  map[string]*Index{},
@@ -30,7 +30,7 @@ func (table *Table) Column(name string) *Column {
 
 // NewIndex Create a new index instance
 func (table *Table) NewIndex(name string, columns ...*Column) *Index {
-	cols := []*grammar.Column{}
+	cols := []*dbal.Column{}
 	for _, column := range columns {
 		cols = append(cols, &column.Column)
 	}
@@ -77,12 +77,12 @@ func (table *Table) AddCommand(name string, params ...interface{}) {
 }
 
 // AddColumnCommand add a new command that adding a column
-func (table *Table) AddColumnCommand(column *grammar.Column) {
+func (table *Table) AddColumnCommand(column *dbal.Column) {
 	table.AddCommand("AddColumn", column)
 }
 
 // ModifyColumnCommand add a new command that modifing a column
-func (table *Table) ModifyColumnCommand(column *grammar.Column) {
+func (table *Table) ModifyColumnCommand(column *dbal.Column) {
 	table.AddCommand("ModifyColumn", column)
 }
 
@@ -97,12 +97,12 @@ func (table *Table) DropColumnCommand(name string) {
 }
 
 // CreateIndexCommand add a new command that creating a index
-func (table *Table) CreateIndexCommand(index *grammar.Index) {
+func (table *Table) CreateIndexCommand(index *dbal.Index) {
 	table.AddCommand("CreateIndex", index)
 }
 
 // CreatePrimaryCommand add a new command that creating the primary key
-func (table *Table) CreatePrimaryCommand(primary *grammar.Primary) {
+func (table *Table) CreatePrimaryCommand(primary *dbal.Primary) {
 	table.AddCommand("CreatePrimary", primary)
 }
 

@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *grammar.Column) string {
+func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
@@ -42,7 +42,7 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *grammar.Column) string {
 }
 
 // SQLAddIndex  return the add index sql for table create
-func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *grammar.Index) string {
+func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 	indexTypes := grammarSQL.IndexTypes
 	quoter := grammarSQL.Quoter
 
@@ -70,7 +70,7 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *grammar.Index) string {
 }
 
 // SQLAddPrimary return the add primary key sql for table create
-func (grammarSQL SQL) SQLAddPrimary(db *sqlx.DB, primary *grammar.Primary) string {
+func (grammarSQL SQL) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) string {
 
 	quoter := grammarSQL.Quoter
 

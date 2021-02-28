@@ -1,15 +1,10 @@
 package schema
 
 import (
-	_ "github.com/go-sql-driver/mysql" // Load mysql driver
+	"errors"
+
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"           // Load postgres driver
-	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/grammar"
-	"github.com/yaoapp/xun/grammar/mysql"
-	"github.com/yaoapp/xun/grammar/postgres"
-	"github.com/yaoapp/xun/grammar/sqlite3"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -43,23 +38,20 @@ func NewBuilder(conn *Connection) *Builder {
 		Mode:       "production",
 		Conn:       conn,
 		Grammar:    grammar,
-		DBName:     grammar.DBName(),
-		SchemaName: grammar.SchemaName(),
+		DBName:     grammar.GetDBName(),
+		SchemaName: grammar.GetSchemaName(),
 	}
 	return &builder
 }
 
 // NewGrammar create a new grammar instance
-func NewGrammar(driver string, dsn string) grammar.Grammar {
-	switch driver {
-	case "mysql":
-		return mysql.New(dsn)
-	case "sqlite3":
-		return sqlite3.New(dsn)
-	case "postgres":
-		return postgres.New(dsn)
+func NewGrammar(driver string, dsn string) dbal.Grammar {
+	grammar, has := dbal.Grammars[driver]
+	if !has {
+		panic(errors.New("the " + driver + "driver not import!"))
 	}
-	return mysql.New(dsn)
+	grammar.Config(dsn)
+	return grammar
 }
 
 // Table create the table blueprint instance

@@ -1,4 +1,12 @@
-package grammar
+package dbal
+
+// Grammars loaded grammar driver
+var Grammars = map[string]Grammar{}
+
+// Register register the grammar driver
+func Register(name string, Grammar Grammar) {
+	Grammars[name] = Grammar
+}
 
 // NewTable create a grammar table
 func NewTable(name string, schemaName string, dbName string) Table {

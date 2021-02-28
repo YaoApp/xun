@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun/unit"
 	"github.com/yaoapp/xun/utils"
+
+	_ "github.com/yaoapp/xun/grammar/mysql"    // Load the MySQL Grammar
+	_ "github.com/yaoapp/xun/grammar/postgres" // Load the Postgres Grammar
+	_ "github.com/yaoapp/xun/grammar/sqlite3"  // Load the SQLite3 Grammar
 )
 
 var builder Schema

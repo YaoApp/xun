@@ -3,29 +3,14 @@ package postgres
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun/grammar"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
-
-// SchemaName Get the schema name of the connection
-func (grammarSQL *Postgres) SchemaName() string {
-	uinfo, err := url.Parse(grammarSQL.DSN)
-	if err != nil {
-		return "unknown"
-	}
-	schema := uinfo.Query().Get("search_path")
-	if schema == "" {
-		schema = "public"
-	}
-	grammarSQL.Schema = schema
-	return grammarSQL.Schema
-}
 
 // Exists the Exists
 func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
@@ -43,14 +28,14 @@ func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
 }
 
 // Create a new table on the schema
-func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
+func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.Name, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
-	var primary *grammar.Primary = nil
-	columns := []*grammar.Column{}
-	indexes := []*grammar.Index{}
+	var primary *dbal.Primary = nil
+	columns := []*dbal.Column{}
+	indexes := []*dbal.Index{}
 
 	// Commands
 	// The commands must be:
@@ -64,13 +49,13 @@ func (grammarSQL Postgres) Create(table *grammar.Table, db *sqlx.DB) error {
 	for _, command := range table.Commands {
 		switch command.Name {
 		case "AddColumn":
-			columns = append(columns, command.Params[0].(*grammar.Column))
+			columns = append(columns, command.Params[0].(*dbal.Column))
 			break
 		case "CreateIndex":
-			indexes = append(indexes, command.Params[0].(*grammar.Index))
+			indexes = append(indexes, command.Params[0].(*dbal.Index))
 			break
 		case "CreatePrimary":
-			primary = command.Params[0].(*grammar.Primary)
+			primary = command.Params[0].(*dbal.Primary)
 			break
 		}
 	}
@@ -125,7 +110,7 @@ func (grammarSQL Postgres) Rename(old string, new string, db *sqlx.DB) error {
 }
 
 // Get a table on the schema
-func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
+func (grammarSQL Postgres) Get(table *dbal.Table, db *sqlx.DB) error {
 	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.Name, db)
 	if err != nil {
 		return err
@@ -139,7 +124,7 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 
 	// attaching columns
 	for _, column := range columns {
-		column.Indexes = []*grammar.Index{}
+		column.Indexes = []*dbal.Index{}
 		table.PushColumn(column)
 	}
 
@@ -152,7 +137,7 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 		column := table.ColumnMap[idx.ColumnName]
 		if !table.HasIndex(idx.Name) {
 			index := *idx
-			index.Columns = []*grammar.Column{}
+			index.Columns = []*dbal.Column{}
 			column.Indexes = append(column.Indexes, &index)
 			table.PushIndex(&index)
 		}
@@ -166,7 +151,7 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 	// attaching primary
 	if _, has := table.IndexMap[primaryKeyName]; has {
 		idx := table.IndexMap[primaryKeyName]
-		table.Primary = &grammar.Primary{
+		table.Primary = &dbal.Primary{
 			Name:      idx.Name,
 			TableName: idx.TableName,
 			DBName:    idx.DBName,
@@ -176,7 +161,7 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 		delete(table.IndexMap, idx.Name)
 		for _, column := range table.Primary.Columns {
 			column.Primary = true
-			column.Indexes = []*grammar.Index{}
+			column.Indexes = []*dbal.Index{}
 		}
 	}
 
@@ -184,7 +169,7 @@ func (grammarSQL Postgres) Get(table *grammar.Table, db *sqlx.DB) error {
 }
 
 // Alter a table on the schema
-func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
+func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 
 	err := grammarSQL.Get(table, db)
 	if err != nil {
@@ -207,7 +192,7 @@ func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
 	for _, command := range table.Commands {
 		switch command.Name {
 		case "AddColumn", "ModifyColumn":
-			column := command.Params[0].(*grammar.Column)
+			column := command.Params[0].(*dbal.Column)
 			stmt := ""
 			if table.HasColumn(column.Name) {
 				stmt = "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
@@ -248,7 +233,7 @@ func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
 			}
 			break
 		case "CreateIndex":
-			index := command.Params[0].(*grammar.Index)
+			index := command.Params[0].(*dbal.Index)
 			stmt := grammarSQL.SQLAddIndex(db, index)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(db, table, stmt)
@@ -302,7 +287,7 @@ func (grammarSQL Postgres) Alter(table *grammar.Table, db *sqlx.DB) error {
 }
 
 // ExecSQL execute sql then update table structure
-func (grammarSQL Postgres) ExecSQL(db *sqlx.DB, table *grammar.Table, sql string) error {
+func (grammarSQL Postgres) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error {
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err
@@ -316,7 +301,7 @@ func (grammarSQL Postgres) ExecSQL(db *sqlx.DB, table *grammar.Table, sql string
 }
 
 // SQLAlterColumnType return the add column sql for table alter
-func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *grammar.Column) string {
+func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) string {
 	// `id` bigint(20) unsigned NOT NULL,
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
@@ -353,7 +338,7 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *grammar.Colum
 }
 
 // SQLAlterIndex  return the add index sql for table alter
-func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *grammar.Index) string {
+func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *dbal.Index) string {
 	indexTypes := grammarSQL.IndexTypes
 	quoter := grammarSQL.Quoter
 	typ, has := indexTypes[index.Type]
@@ -385,7 +370,7 @@ func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *grammar.Index) stri
 }
 
 // GetIndexListing get a table indexes structure
-func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Index, error) {
+func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *sqlx.DB) ([]*dbal.Index, error) {
 	selectColumns := []string{
 		"n.nspname as db_name",
 		"t.relname as table_name",
@@ -422,7 +407,7 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *
 		grammarSQL.Quoter.VAL(tableName, db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	indexes := []*grammar.Index{}
+	indexes := []*dbal.Index{}
 	err := db.Select(&indexes, sql)
 	if err != nil {
 		return nil, err
@@ -443,7 +428,7 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string, db *
 }
 
 // GetColumnListing get a table columns structure
-func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*grammar.Column, error) {
+func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*dbal.Column, error) {
 	selectColumns := []string{
 		"TABLE_SCHEMA AS \"db_name\"",
 		"TABLE_NAME AS \"table_name\"",
@@ -485,7 +470,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 		grammarSQL.Quoter.VAL(tableName, db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	columns := []*grammar.Column{}
+	columns := []*dbal.Column{}
 	err := db.Select(&columns, sql)
 	if err != nil {
 		return nil, err
