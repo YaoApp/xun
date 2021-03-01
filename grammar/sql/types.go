@@ -42,6 +42,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 		FlipTypes: map[string]string{},
 		Types: map[string]string{
 			"bigInteger":    "BIGINT",
+			"smallInteger":  "SMALLINT",
 			"string":        "VARCHAR",
 			"binary":        "binary",
 			"boolean":       "boolean",
@@ -59,7 +60,6 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"longText":      "LONGTEXT",
 			"mediumInteger": "mediumInteger",
 			"mediumText":    "mediumText",
-			"smallInteger":  "smallInteger",
 			"text":          "text",
 			"timestamp":     "timestamp",
 			"timestampsTz":  "timestampsTz",

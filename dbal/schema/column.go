@@ -160,3 +160,21 @@ func (column *Column) AutoIncrement() *Column {
 	column.Extra = utils.StringPtr("AutoIncrement")
 	return column
 }
+
+// SetLength set the column Length attribute to the given length
+func (column *Column) SetLength(length int) *Column {
+	column.Length = &length
+	return column
+}
+
+// SetType set the column type attribute to the given type name
+func (column *Column) SetType(typ string) *Column {
+	column.Type = typ
+	return column
+}
+
+// SetComment set the column comment to the given value
+func (column *Column) SetComment(comment string) *Column {
+	column.Comment = &comment
+	return column
+}

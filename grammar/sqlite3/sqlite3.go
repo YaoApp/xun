@@ -45,14 +45,16 @@ func New() dbal.Grammar {
 	}
 
 	// overwrite types
-	types := sqlite.SQL.Types
-	types["bigInteger"] = "INTEGER"
-	sqlite.Types = types
+	sqlite.Types["bigInteger"] = "INTEGER"
+	sqlite.Types["smallInteger"] = "INTEGER"
+	sqlite.Types["integer"] = "INTEGER"
 
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(sqlite.Types)
 	if ok {
 		sqlite.FlipTypes = flipTypes.(map[string]string)
+		sqlite.FlipTypes["INTEGER"] = "integer"
 	}
+
 	return &sqlite
 }

@@ -13,13 +13,21 @@ import (
 	_ "github.com/yaoapp/xun/grammar/sqlite3"  // Load the SQLite3 Grammar
 )
 
-var builder Schema
+var testBuilder Schema
 
-func init() {
+func getTestBuilder() Schema {
+	defer unit.Catch()
 	unit.SetLogger()
+	if testBuilder != nil {
+		return testBuilder
+	}
+	driver := os.Getenv("XUN_UNIT_DSN")
+	dsn := unit.DSN(driver)
+	testBuilder = New(driver, dsn)
+	return testBuilder
 }
 
-func TestCreate(t *testing.T) {
+func TestBuilderCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	err := builder.Create("table_test_builder", func(table Blueprint) {
@@ -35,7 +43,7 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestGet(t *testing.T) {
+func TestBuilderGet(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	table, err := builder.Get("table_test_builder")
@@ -47,7 +55,7 @@ func TestGet(t *testing.T) {
 	checkTable(t, table)
 }
 
-func TestDrop(t *testing.T) {
+func TestBuilderDrop(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	err := builder.Drop("table_test_builder")
@@ -55,7 +63,7 @@ func TestDrop(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestDropIfExistsTableNotExists(t *testing.T) {
+func TestBuilderDropIfExistsTableNotExists(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	err := builder.DropIfExists("table_not_exists")
@@ -63,18 +71,18 @@ func TestDropIfExistsTableNotExists(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestDropIfExistsTableExists(t *testing.T) {
+func TestBuilderDropIfExistsTableExists(t *testing.T) {
 	defer unit.Catch()
-	TestCreate(t)
+	TestBuilderCreate(t)
 	builder := getTestBuilder()
 	err := builder.DropIfExists("table_test_builder")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestRename(t *testing.T) {
+func TestBuilderRename(t *testing.T) {
 	defer unit.Catch()
-	TestCreate(t)
+	TestBuilderCreate(t)
 	builder := getTestBuilder()
 	err := builder.Rename("table_test_builder", "table_test_builder_re")
 	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
@@ -82,11 +90,11 @@ func TestRename(t *testing.T) {
 	builder.Drop("table_test_builder_re")
 }
 
-func TestAlter(t *testing.T) {
+func TestBuilderAlter(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
-	TestCreate(t)
+	TestBuilderCreate(t)
 	err := builder.Alter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
@@ -107,7 +115,7 @@ func TestAlter(t *testing.T) {
 	// builder.Drop("table_test_builder")
 }
 
-func TestMustCreate(t *testing.T) {
+func TestBuilderMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
@@ -124,7 +132,7 @@ func TestMustCreate(t *testing.T) {
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 }
 
-func TestMustGet(t *testing.T) {
+func TestBuilderMustGet(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	table := builder.MustGet("table_test_builder")
@@ -135,31 +143,31 @@ func TestMustGet(t *testing.T) {
 	checkTable(t, table)
 }
 
-func TestMustDrop(t *testing.T) {
+func TestBuilderMustDrop(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.MustDrop("table_test_builder")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
 }
 
-func TestMustDropIfExistsTableNotExists(t *testing.T) {
+func TestBuilderMustDropIfExistsTableNotExists(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.MustDropIfExists("table_not_exists")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
 }
 
-func TestMustDropIfExistsTableExists(t *testing.T) {
+func TestBuilderMustDropIfExistsTableExists(t *testing.T) {
 	defer unit.Catch()
-	TestMustCreate(t)
+	TestBuilderMustCreate(t)
 	builder := getTestBuilder()
 	builder.MustDropIfExists("table_test_builder")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
 }
 
-func TestMustRename(t *testing.T) {
+func TestBuilderMustRename(t *testing.T) {
 	defer unit.Catch()
-	TestCreate(t)
+	TestBuilderCreate(t)
 	builder := getTestBuilder()
 	table := builder.MustRename("table_test_builder", "table_test_builder_re")
 	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
@@ -167,9 +175,9 @@ func TestMustRename(t *testing.T) {
 	builder.Drop("table_test_builder_re")
 }
 
-func TestMustAlter(t *testing.T) {
+func TestBuilderMustAlter(t *testing.T) {
 	defer unit.Catch()
-	TestCreate(t)
+	TestBuilderCreate(t)
 	builder := getTestBuilder()
 	table := builder.MustAlter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
@@ -190,27 +198,21 @@ func TestMustAlter(t *testing.T) {
 	builder.Drop("table_test_builder")
 }
 
-func getTestBuilder() Schema {
-	defer unit.Catch()
-	if builder != nil {
-		return builder
-	}
-	driver := os.Getenv("XUN_UNIT_DSN")
-	dsn := unit.DSN(driver)
-	builder = New(driver, dsn)
-	return builder
-}
-
 func checkTableAlter(t *testing.T, table Blueprint) {
 	DefaultBigIntPrecision := 20
 	if unit.Is("postgres") {
 		DefaultBigIntPrecision = 64
 	}
 
+	columnType := "bigInteger"
+	if unit.Is("sqlite3") {
+		columnType = "integer"
+	}
+
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("id").Type, "the id type should be %s", columnType)
 		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
 		if unit.Not("postgres") {
@@ -219,7 +221,7 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 	}
 	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
 	if table.GetColumn("counter") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("counter").Type, "the counter type should be %s", columnType)
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
 		if unit.Not("postgres") {
 			assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
@@ -227,7 +229,7 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 	}
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	if table.GetColumn("latest") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
 		if unit.Is("postgres") {
 			assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 64")
 		}
@@ -321,10 +323,15 @@ func checkTable(t *testing.T, table Blueprint) {
 		DefaultBigIntPrecision = 64
 	}
 
+	columnType := "bigInteger"
+	if unit.Is("sqlite3") {
+		columnType = "integer"
+	}
+
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("id").Type, "the id type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("id").Type, "the id type should be %s", columnType)
 		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
 		if unit.Not("postgres") {
@@ -333,7 +340,7 @@ func checkTable(t *testing.T, table Blueprint) {
 	}
 	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
 	if table.GetColumn("counter") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("counter").Type, "the counter type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("counter").Type, "the counter type should be %s", columnType)
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
 		if unit.Not("postgres") {
 			assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
@@ -341,7 +348,7 @@ func checkTable(t *testing.T, table Blueprint) {
 	}
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	if table.GetColumn("latest") != nil {
-		assert.Equal(t, "bigInteger", table.GetColumn("latest").Type, "the latest type should be bigInteger")
+		assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
 		if unit.Is("postgres") {
 			assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
 		}

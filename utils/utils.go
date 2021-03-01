@@ -90,3 +90,23 @@ func StringVal(v *string, defaults ...string) string {
 	}
 	return *v
 }
+
+// IntHave Contains method for a slice
+func IntHave(source []int, one int) bool {
+	for _, a := range source {
+		if a == one {
+			return true
+		}
+	}
+	return false
+}
+
+// StringHave Contains method for a slice
+func StringHave(source []string, one string) bool {
+	for _, a := range source {
+		if a == one {
+			return true
+		}
+	}
+	return false
+}

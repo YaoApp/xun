@@ -343,9 +343,15 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 			typ = "SERIAL"
 		}
 	}
+
+	// sql := fmt.Sprintf(
+	// 	"%s SET DATA TYPE %s ",
+	// 	quoter.ID(Column.Name, db), typ)
+
+	nameQuoter := quoter.ID(Column.Name, db)
 	sql := fmt.Sprintf(
-		"%s SET DATA TYPE %s ",
-		quoter.ID(Column.Name, db), typ)
+		"%s TYPE %s USING (%s::%s) ",
+		nameQuoter, typ, nameQuoter, typ)
 
 	sql = strings.Trim(sql, " ")
 	return sql
