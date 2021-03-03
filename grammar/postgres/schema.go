@@ -332,10 +332,6 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}
 
-	if Column.IsUnsigned {
-		typ = "BIGINT"
-	}
-
 	if utils.StringVal(Column.Extra) != "" {
 		if typ == "BIGINT" {
 			typ = "BIGSERIAL"

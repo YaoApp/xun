@@ -8,33 +8,157 @@ import (
 	_ "github.com/yaoapp/xun/grammar/postgres" // Load the Postgres Grammar
 	_ "github.com/yaoapp/xun/grammar/sqlite3"  // Load the SQLite3 Grammar
 	"github.com/yaoapp/xun/unit"
+	"github.com/yaoapp/xun/utils"
 )
 
 type columnFunc func(table Blueprint, name string, args ...int) *Column
 
 func TestBlueprintSmallInteger(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
-		return table.SmallInteger(name)
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.SmallInteger(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "smallInteger", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.SmallInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "smallInteger", nil)
+}
+
+func TestBlueprintUnsignedSmallInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", testCheckUnsigned)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "smallInteger", testCheckUnsigned)
+	testCheckIndexesAfterCreate(true, t, nil)
+
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "smallInteger", testCheckUnsigned)
+}
+
+func TestBlueprintSmallIncrements(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	err := builder.Create("table_test_blueprint", func(table Blueprint) {
+		if unit.Is("sqlite3") {
+			table.SmallIncrements("id").Primary()
+		} else {
+			table.SmallIncrements("id").Unique()
+		}
+		table.String("field1st", 60)
 	})
-	if unit.Is("sqlite3") {
-		testCheckColumnsAfterCreate(t, "integer", nil)
+	assert.Nil(t, err, "the create method should be return nil")
+
+	table := builder.MustGet("table_test_blueprint")
+	column := table.GetColumn("id")
+	testCheckAutoIncrementing(t, "id", column)
+
+	if unit.Is("postgres") || unit.Is("sqlite3") {
+		assert.Equal(t, "integer", column.Type, "the column type should be integer")
 	} else {
-		testCheckColumnsAfterCreate(t, "smallInteger", nil)
+		assert.Equal(t, "smallInteger", column.Type, "the column type should be smallInteger")
 	}
-	testCheckIndexesAfterCreate(t, nil)
 
-	if unit.Not("sqlite3") {
-		testAlterTable(t,
-			func(table Blueprint, name string, args ...int) *Column {
-				return table.String(name, args[0])
-			},
-			func(table Blueprint, name string, args ...int) *Column {
-				return table.SmallInteger(name)
-			},
-		)
+	// Checking the index
+	if unit.Is("sqlite3") {
+		primary := table.GetPrimary()
+		assert.Equal(t, "id", primary.Columns[0].Name, "the primary key should has the id column")
 
-		testCheckColumnsAfterAlter(t, "smallInteger", nil)
+	} else {
+		index := table.GetIndex("id_unique")
+		assert.Equal(t, "unique", index.Type, "the id_unique type should be unique")
 	}
+}
+
+func TestBlueprintBigInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "bigInteger", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "bigInteger", nil)
+}
+
+func TestBlueprintUnsignedBigInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedBigInteger(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", testCheckUnsigned)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
+	testCheckIndexesAfterCreate(true, t, nil)
+
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedBigInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
+}
+
+func TestBlueprintBigIncrements(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	err := builder.Create("table_test_blueprint", func(table Blueprint) {
+		if unit.Is("sqlite3") {
+			table.BigIncrements("id").Primary()
+		} else {
+			table.BigIncrements("id").Unique()
+		}
+		table.String("field1st", 60)
+	})
+	assert.Nil(t, err, "the create method should be return nil")
+
+	table := builder.MustGet("table_test_blueprint")
+	column := table.GetColumn("id")
+	testCheckAutoIncrementing(t, "id", column)
+
+	// Checking the index
+	if unit.Is("sqlite3") {
+		primary := table.GetPrimary()
+		assert.Equal(t, "id", primary.Columns[0].Name, "the primary key should has the id column")
+		assert.Equal(t, "integer", column.Type, "the column type should be integer")
+	} else {
+		index := table.GetIndex("id_unique")
+		assert.Equal(t, "unique", index.Type, "the id_unique type should be unique")
+		assert.Equal(t, "bigInteger", column.Type, "the column type should be bigInteger")
+	}
+}
+
+func TestBlueprintID(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	err := builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.String("field1st", 60)
+	})
+	assert.Nil(t, err, "the create method should be return nil")
+
+	table := builder.MustGet("table_test_blueprint")
+	column := table.GetColumn("id")
+	testCheckAutoIncrementing(t, "id", column)
+
+	// Checking the index
+	primary := table.GetPrimary()
+	assert.Equal(t, "id", primary.Columns[0].Name, "the primary key should has the id column")
+}
+
+func TestBlueprinString(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) })
+	testCheckColumnsAfterCreate(unit.Always, t, "string", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "string", nil)
 }
 
 // clean the test data
@@ -67,7 +191,10 @@ func testCreateTable(t *testing.T, create columnFunc) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func testAlterTable(t *testing.T, create columnFunc, alter columnFunc) {
+func testAlterTable(executable bool, t *testing.T, create columnFunc, alter columnFunc) {
+	if !executable {
+		return
+	}
 	testCreateTable(t, create)
 	builder := getTestBuilder()
 	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
@@ -85,7 +212,22 @@ func testGetTable() Blueprint {
 	return builder.MustGet("table_test_blueprint")
 }
 
-func testCheckColumnsAfterCreate(t *testing.T, typeName string, check func(name string, column *Column)) {
+func testCheckUnsigned(t *testing.T, name string, column *Column) {
+	assert.True(t, column.IsUnsigned, "the column %s IsUnsigned should be true", name)
+}
+
+func testCheckAutoIncrementing(t *testing.T, name string, column *Column) {
+	assert.NotNil(t, column, "the column %s should not be nil", name)
+	if unit.Not("postgres") {
+		assert.True(t, column.IsUnsigned, "the column %s IsUnsigned should be true", name)
+	}
+	assert.Equal(t, "AutoIncrement", utils.StringVal(column.Extra), "the column %s extra should be AutoIncrement", name)
+}
+
+func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column)) {
+	if !executable {
+		return
+	}
 	table := testGetTable()
 	columns := table.GetColumns()
 	names := []string{
@@ -97,13 +239,17 @@ func testCheckColumnsAfterCreate(t *testing.T, typeName string, check func(name 
 		if name != "id" {
 			assert.Equal(t, typeName, column.Type, "the column type should be %s", typeName)
 			if check != nil {
-				check(name, column)
+				check(t, name, column)
 			}
 		}
 	}
 }
 
-func testCheckColumnsAfterAlter(t *testing.T, typeName string, check func(name string, column *Column)) {
+func testCheckColumnsAfterAlter(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column)) {
+	if !executable {
+		return
+	}
+
 	table := testGetTable()
 	alterNames := []string{
 		"field1st", "field2nd", "field4th", "fieldWithIndex", "fieldWithUnique",
@@ -118,13 +264,16 @@ func testCheckColumnsAfterAlter(t *testing.T, typeName string, check func(name s
 		if name != "id" {
 			assert.Equal(t, typeName, column.Type, "the column type should be %s", typeName)
 			if check != nil {
-				check(name, column)
+				check(t, name, column)
 			}
 		}
 	}
 }
 
-func testCheckIndexesAfterCreate(t *testing.T, check func(name string, index *Index)) {
+func testCheckIndexesAfterCreate(executable bool, t *testing.T, check func(t *testing.T, name string, index *Index)) {
+	if !executable {
+		return
+	}
 	table := testGetTable()
 	indexes := table.GetIndexes()
 	names := []string{
@@ -163,7 +312,7 @@ func testCheckIndexesAfterCreate(t *testing.T, check func(name string, index *In
 
 	for name, index := range indexes {
 		if check != nil {
-			check(name, index)
+			check(t, name, index)
 		}
 	}
 }

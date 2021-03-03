@@ -43,6 +43,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 		Types: map[string]string{
 			"bigInteger":    "BIGINT",
 			"smallInteger":  "SMALLINT",
+			"integer":       "INT",
 			"string":        "VARCHAR",
 			"binary":        "binary",
 			"boolean":       "boolean",
@@ -54,7 +55,6 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"double":        "double",
 			"enum":          "enum",
 			"float":         "float",
-			"integer":       "integer",
 			"json":          "JSON",
 			"jsonb":         "JSONB",
 			"longText":      "LONGTEXT",

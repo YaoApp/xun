@@ -28,9 +28,6 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string
 	}
 
 	unsigned := ""
-	if Column.IsUnsigned {
-		typ = "BIGINT"
-	}
 	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
 	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
 	comment := utils.GetIF(utils.StringVal(Column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)

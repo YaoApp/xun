@@ -12,6 +12,9 @@ import (
 
 // "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local"
 
+// Always run Always
+var Always bool = true
+
 // DSN the dsns for testing
 var dsns map[string]string = map[string]string{
 	"mysql":    os.Getenv("XUN_UNIT_MYSQL_DSN"),

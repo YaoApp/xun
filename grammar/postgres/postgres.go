@@ -49,6 +49,7 @@ func New() dbal.Grammar {
 	types := pg.SQL.Types
 	types["bigInteger"] = "BIGINT"
 	types["string"] = "CHARACTER VARYING"
+	types["integer"] = "INTEGER"
 	pg.Types = types
 
 	// set fliptypes

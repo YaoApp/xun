@@ -14,8 +14,7 @@ func (table *Table) String(name string, length int) *Column {
 
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
-	column := table.NewColumn(name).
-		SetType("smallInteger")
+	column := table.NewColumn(name).SetType("smallInteger")
 	table.PutColumn(column)
 	return column
 }
@@ -32,8 +31,7 @@ func (table *Table) SmallIncrements(name string) *Column {
 
 // BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
 func (table *Table) BigInteger(name string) *Column {
-	column := table.NewColumn(name)
-	column.Type = "bigInteger"
+	column := table.NewColumn(name).SetType("bigInteger")
 	table.PutColumn(column)
 	return column
 }
