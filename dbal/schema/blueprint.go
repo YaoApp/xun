@@ -100,3 +100,18 @@ func (table *Table) Float(name string, total int, places int) *Column {
 func (table *Table) UnsignedFloat(name string, total int, places int) *Column {
 	return table.Float(name, total, places).Unsigned()
 }
+
+// Double Create a new double (8-byte) column on the table.
+func (table *Table) Double(name string, total int, places int) *Column {
+	column := table.NewColumn(name).
+		SetType("double").
+		SetPrecision(total).
+		SetScale(places)
+	table.PutColumn(column)
+	return column
+}
+
+// UnsignedDouble Create a new unsigned double (8-byte) column on the table.
+func (table *Table) UnsignedDouble(name string, total int, places int) *Column {
+	return table.Double(name, total, places).Unsigned()
+}

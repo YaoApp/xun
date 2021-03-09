@@ -317,6 +317,62 @@ func TestBlueprintUnsignedFloat(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "float", testCheckUnsigned)
 }
 
+func TestBlueprintDouble(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		total := 10
+		places := 2
+		if len(args) >= 2 {
+			total = args[0] + args[1]
+			places = args[1]
+		}
+		return table.Double(name, total, places)
+	})
+	testCheckColumnsAfterCreate(true, t, "double", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column {
+			total := 10
+			places := 2
+			if len(args) >= 2 {
+				total = args[0] + args[1]
+				places = args[1]
+			}
+			return table.Double(name, total, places)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "double", nil)
+}
+
+func TestBlueprintUnsignedDouble(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		total := 10
+		places := 2
+		if len(args) >= 2 {
+			total = args[0] + args[1]
+			places = args[1]
+		}
+		return table.UnsignedDouble(name, total, places)
+	})
+	testCheckColumnsAfterCreate(true, t, "double", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "double", testCheckUnsigned)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column {
+			total := 10
+			places := 2
+			if len(args) >= 2 {
+				total = args[0] + args[1]
+				places = args[1]
+			}
+			return table.UnsignedDouble(name, total, places)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "double", nil)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "double", testCheckUnsigned)
+}
+
 func TestBlueprinString(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) })
 	testCheckColumnsAfterCreate(unit.Always, t, "string", nil)

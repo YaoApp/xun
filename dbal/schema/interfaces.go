@@ -90,4 +90,7 @@ type Blueprint interface {
 
 	Float(name string, total int, places int) *Column
 	UnsignedFloat(name string, total int, places int) *Column
+
+	Double(name string, total int, places int) *Column
+	UnsignedDouble(name string, total int, places int) *Column
 }
