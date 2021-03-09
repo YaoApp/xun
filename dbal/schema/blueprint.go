@@ -29,6 +29,23 @@ func (table *Table) SmallIncrements(name string) *Column {
 	return table.UnsignedSmallInteger(name).AutoIncrement()
 }
 
+// Integer Create a new integer (4-byte) column on the table.
+func (table *Table) Integer(name string) *Column {
+	column := table.NewColumn(name).SetType("integer")
+	table.PutColumn(column)
+	return column
+}
+
+// UnsignedInteger Create a new auto-incrementing integer (4-byte) column on the table.
+func (table *Table) UnsignedInteger(name string) *Column {
+	return table.Integer(name).Unsigned()
+}
+
+// Increments Create a new auto-incrementing big integer (2-byte) column on the table.
+func (table *Table) Increments(name string) *Column {
+	return table.UnsignedInteger(name).AutoIncrement()
+}
+
 // BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
 func (table *Table) BigInteger(name string) *Column {
 	column := table.NewColumn(name).SetType("bigInteger")

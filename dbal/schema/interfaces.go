@@ -76,6 +76,10 @@ type Blueprint interface {
 	UnsignedSmallInteger(name string) *Column
 	SmallIncrements(name string) *Column
 
+	Integer(name string) *Column
+	UnsignedInteger(name string) *Column
+	Increments(name string) *Column
+
 	BigInteger(name string) *Column
 	UnsignedBigInteger(name string) *Column
 	BigIncrements(name string) *Column
