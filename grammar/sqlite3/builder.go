@@ -68,7 +68,7 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string 
 	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
-	if extra == "AUTOINCREMENT" {
+	if extra == "AUTOINCREMENT" || typ != "INTEGER" {
 		unsigned = ""
 	}
 

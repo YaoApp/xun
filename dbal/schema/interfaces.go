@@ -84,4 +84,7 @@ type Blueprint interface {
 	UnsignedBigInteger(name string) *Column
 	BigIncrements(name string) *Column
 	ID(name string) *Column
+
+	Decimal(name string, total int, places int) *Column
+	UnsignedDecimal(name string, total int, places int) *Column
 }

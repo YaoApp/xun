@@ -178,3 +178,27 @@ func (column *Column) SetComment(comment string) *Column {
 	column.Comment = &comment
 	return column
 }
+
+// SetPrecision set the column precision to the given value
+func (column *Column) SetPrecision(precision int) *Column {
+	if precision > 65 {
+		precision = 60
+	}
+	if column.Scale != nil && *column.Scale+precision > 65 {
+		precision = 65 - *column.Scale
+	}
+	column.Precision = &precision
+	return column
+}
+
+// SetScale set the column scale to the given value
+func (column *Column) SetScale(scale int) *Column {
+	if scale > 30 {
+		scale = 30
+	}
+	if column.Precision != nil && *column.Precision+scale > 65 {
+		scale = 65 - *column.Precision
+	}
+	column.Scale = &scale
+	return column
+}

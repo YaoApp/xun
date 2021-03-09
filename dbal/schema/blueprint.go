@@ -11,6 +11,9 @@ func (table *Table) String(name string, length int) *Column {
 }
 
 // Numberic types
+// @Todo:
+//   1. tinyInteger() Create a new tiny integer (1-byte) column on the table.
+//   2. MediumInteger()  Create a new medium integer (3-byte) column on the table.
 
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
@@ -66,4 +69,19 @@ func (table *Table) BigIncrements(name string) *Column {
 // ID Alias BigIncrements. Create a new auto-incrementing big integer (8-byte) column on the table.
 func (table *Table) ID(name string) *Column {
 	return table.BigIncrements(name).Primary()
+}
+
+// Decimal Create a new decimal column on the table.
+func (table *Table) Decimal(name string, total int, places int) *Column {
+	column := table.NewColumn(name).
+		SetType("decimal").
+		SetPrecision(total).
+		SetScale(places)
+	table.PutColumn(column)
+	return column
+}
+
+// UnsignedDecimal Create a new unsigned decimal column on the table.
+func (table *Table) UnsignedDecimal(name string, total int, places int) *Column {
+	return table.Decimal(name, total, places).Unsigned()
 }
