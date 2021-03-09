@@ -45,27 +45,35 @@ type Table struct {
 
 // Column the table Column
 type Column struct {
-	DBName            string      `db:"db_name"`
-	TableName         string      `db:"table_name"`
-	Name              string      `db:"name"`
-	Position          int         `db:"position"`
-	Default           interface{} `db:"default"`
-	Nullable          bool        `db:"nullable"`
-	IsUnsigned        bool        `db:"unsigned"`
-	Type              string      `db:"type"`
-	Length            *int        `db:"length"`
-	OctetLength       *int        `db:"octet_length"`
-	Precision         *int        `db:"precision"`
-	Scale             *int        `db:"scale"`
-	DatetimePrecision *int        `db:"datetime_precision"`
-	Charset           *string     `db:"charset"`
-	Collation         *string     `db:"collation"`
-	Key               *string     `db:"key"`
-	Extra             *string     `db:"extra"`
-	Comment           *string     `db:"comment"`
-	Primary           bool        `db:"primary"`
-	Table             *Table
-	Indexes           []*Index
+	DBName                   string      `db:"db_name"`
+	TableName                string      `db:"table_name"`
+	Name                     string      `db:"name"`
+	Position                 int         `db:"position"`
+	Default                  interface{} `db:"default"`
+	Nullable                 bool        `db:"nullable"`
+	IsUnsigned               bool        `db:"unsigned"`
+	Type                     string      `db:"type"`
+	Length                   *int        `db:"length"`
+	OctetLength              *int        `db:"octet_length"`
+	Precision                *int        `db:"precision"`
+	Scale                    *int        `db:"scale"`
+	DatetimePrecision        *int        `db:"datetime_precision"`
+	Charset                  *string     `db:"charset"`
+	Collation                *string     `db:"collation"`
+	Key                      *string     `db:"key"`
+	Extra                    *string     `db:"extra"`
+	Comment                  *string     `db:"comment"`
+	Primary                  bool        `db:"primary"`
+	MaxLength                int
+	DefaultLength            int
+	MaxPrecision             int
+	DefaultPrecision         int
+	MaxScale                 int
+	DefaultScale             int
+	MaxDatetimePrecision     int
+	DefaultDatetimePrecision int
+	Table                    *Table
+	Indexes                  []*Index
 }
 
 // Index the talbe index

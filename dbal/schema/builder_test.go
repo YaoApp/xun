@@ -4,7 +4,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/unit"
 	"github.com/yaoapp/xun/utils"
 
@@ -14,6 +16,7 @@ import (
 )
 
 var testBuilder Schema
+var testBuilderInstance *Builder
 
 func getTestBuilder() Schema {
 	defer unit.Catch()
@@ -25,6 +28,32 @@ func getTestBuilder() Schema {
 	dsn := unit.DSN(driver)
 	testBuilder = New(driver, dsn)
 	return testBuilder
+}
+
+func getTestBuilderInstance() *Builder {
+	defer unit.Catch()
+	unit.SetLogger()
+	if testBuilderInstance != nil {
+		return testBuilderInstance
+	}
+	driver := os.Getenv("XUN_UNIT_DSN")
+	dsn := unit.DSN(driver)
+	db, err := sqlx.Open(driver, dsn)
+	if err != nil {
+		panic(err)
+	}
+	conn := &Connection{
+		Write: db,
+		WriteConfig: &dbal.Config{
+			DSN:    dsn,
+			Driver: driver,
+			Name:   "main",
+		},
+		Option: &dbal.Option{},
+	}
+
+	testBuilderInstance = NewBuilder(conn)
+	return testBuilderInstance
 }
 
 func TestBuilderCreate(t *testing.T) {

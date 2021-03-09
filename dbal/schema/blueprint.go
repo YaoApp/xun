@@ -2,10 +2,10 @@ package schema
 
 // String Create a new string column on the table.
 func (table *Table) String(name string, length int) *Column {
-	column := table.NewColumn(name).
-		SetLength(length).
-		SetType("string")
-
+	column := table.NewColumn(name).SetType("string")
+	column.MaxLength = 65535
+	column.DefaultLength = 200
+	column.SetLength(length)
 	table.PutColumn(column)
 	return column
 }
@@ -73,10 +73,12 @@ func (table *Table) ID(name string) *Column {
 
 // Decimal Create a new decimal (16-byte) column on the table.
 func (table *Table) Decimal(name string, total int, places int) *Column {
-	column := table.NewColumn(name).
-		SetType("decimal").
-		SetPrecision(total).
-		SetScale(places)
+	column := table.NewColumn(name).SetType("decimal")
+	column.MaxPrecision = 65
+	column.MaxScale = 30
+	column.DefaultPrecision = 10
+	column.DefaultScale = 2
+	column.SetPrecision(total).SetScale(places)
 	table.PutColumn(column)
 	return column
 }
@@ -88,10 +90,12 @@ func (table *Table) UnsignedDecimal(name string, total int, places int) *Column 
 
 // Float Create a new float (4-byte) column on the table.
 func (table *Table) Float(name string, total int, places int) *Column {
-	column := table.NewColumn(name).
-		SetType("float").
-		SetPrecision(total).
-		SetScale(places)
+	column := table.NewColumn(name).SetType("float")
+	column.MaxPrecision = 23
+	column.DefaultPrecision = 10
+	column.MaxScale = 22
+	column.DefaultScale = 2
+	column.SetPrecision(total).SetScale(places)
 	table.PutColumn(column)
 	return column
 }
@@ -103,9 +107,12 @@ func (table *Table) UnsignedFloat(name string, total int, places int) *Column {
 
 // Double Create a new double (8-byte) column on the table.
 func (table *Table) Double(name string, total int, places int) *Column {
-	column := table.NewColumn(name).
-		SetType("double").
-		SetPrecision(total).
+	column := table.NewColumn(name).SetType("double")
+	column.MaxPrecision = 53
+	column.MaxScale = 52
+	column.DefaultPrecision = 24
+	column.DefaultScale = 2
+	column.SetPrecision(total).
 		SetScale(places)
 	table.PutColumn(column)
 	return column

@@ -163,6 +163,12 @@ func (column *Column) AutoIncrement() *Column {
 
 // SetLength set the column Length attribute to the given length
 func (column *Column) SetLength(length int) *Column {
+	if column.MaxLength == 0 {
+		return column
+	}
+	if length > column.MaxLength || length == 0 {
+		length = column.DefaultLength
+	}
 	column.Length = &length
 	return column
 }
@@ -181,23 +187,34 @@ func (column *Column) SetComment(comment string) *Column {
 
 // SetPrecision set the column precision to the given value
 func (column *Column) SetPrecision(precision int) *Column {
-	if precision > 65 {
-		precision = 60
+	if column.DefaultPrecision == 0 {
+		return column
 	}
-	if column.Scale != nil && *column.Scale+precision > 65 {
-		precision = 65 - *column.Scale
+	if precision > column.MaxPrecision || precision == 0 {
+		precision = column.DefaultPrecision
 	}
+	if column.Scale != nil && *column.Scale+precision > column.MaxPrecision {
+		precision = column.MaxPrecision - *column.Scale
+	}
+
 	column.Precision = &precision
 	return column
 }
 
 // SetScale set the column scale to the given value
 func (column *Column) SetScale(scale int) *Column {
-	if scale > 30 {
-		scale = 30
+	if column.DefaultScale == 0 {
+		return column
 	}
-	if column.Precision != nil && *column.Precision+scale > 65 {
-		scale = 65 - *column.Precision
+	if scale > column.MaxScale || scale == 0 {
+		scale = column.DefaultScale
+	}
+	if column.Precision != nil && *column.Precision+scale > column.MaxPrecision {
+		scale = column.MaxPrecision - *column.Precision
+	}
+
+	if column.Precision != nil && scale > *column.Precision {
+		scale = *column.Precision
 	}
 	column.Scale = &scale
 	return column
