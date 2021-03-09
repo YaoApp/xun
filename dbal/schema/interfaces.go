@@ -69,10 +69,12 @@ type Blueprint interface {
 	DropUniqueConstraint(name string)
 
 	// defined in blueprint.go
+	// Character types
 	String(name string, length int) *Column
 	Char(name string, length int) *Column
+	Text(name string) *Column
 
-	// Numberics
+	// Numberic types
 	SmallInteger(name string) *Column
 	UnsignedSmallInteger(name string) *Column
 	SmallIncrements(name string) *Column

@@ -395,6 +395,17 @@ func TestBlueprinChar(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "char", nil)
 }
 
+func TestBlueprinText(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Text(name) })
+	testCheckColumnsAfterCreate(unit.Always, t, "text", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "text", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()
@@ -437,6 +448,33 @@ func testAlterTable(executable bool, t *testing.T, create columnFunc, alter colu
 		alter(table, "field4th", 16, 8)        // Alter field4th column
 		alter(table, "fieldWithIndex", 32, 2)  // Alter fieldWithIndex column
 		alter(table, "fieldWithUnique", 64, 4) // Alter fieldWithIndex column
+	})
+	assert.Equal(t, nil, err, "the return error should be nil")
+}
+
+func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter columnFunc) {
+	if !executable {
+		return
+	}
+	testCreateTable(t, create)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.DropIndex("fieldWithIndex_index")
+		table.DropIndex("fieldWithUnique_unique")
+		table.DropIndex("field_field2nd")
+		table.DropIndex("field2nd_field3rd")
+		alter(table, "field1st", 1, 1)         // Create new column
+		alter(table, "field2nd", 4, 4)         // Alter field2nd column
+		alter(table, "field4th", 16, 8)        // Alter field4th column
+		alter(table, "fieldWithIndex", 32, 2)  // Alter fieldWithIndex column
+		alter(table, "fieldWithUnique", 64, 4) // Alter fieldWithIndex column
+	})
+	assert.Equal(t, nil, err, "the return error should be nil")
+
+	// Add index
+	err = builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.AddUnique("field_field2nd", "field", "field2nd")
+		table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
 }

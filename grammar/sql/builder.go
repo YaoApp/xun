@@ -54,7 +54,11 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, Column := range index.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+		if Column.Type == "text" {
+			columns = append(columns, quoter.ID(Column.Name, db)+"(256)")
+		} else {
+			columns = append(columns, quoter.ID(Column.Name, db))
+		}
 	}
 
 	comment := ""

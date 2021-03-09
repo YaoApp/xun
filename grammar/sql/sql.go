@@ -49,6 +49,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"double":       "DOUBLE",
 			"string":       "VARCHAR",
 			"char":         "CHAR",
+			"text":         "TEXT",
 
 			"binary":        "binary",
 			"boolean":       "boolean",
@@ -61,12 +62,12 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"longText":      "LONGTEXT",
 			"mediumInteger": "mediumInteger",
 			"mediumText":    "mediumText",
-			"text":          "text",
-			"timestamp":     "timestamp",
-			"timestampsTz":  "timestampsTz",
-			"tinyInteger":   "tinyInteger",
-			"uuid":          "UUID",
-			"year":          "YEAR",
+
+			"timestamp":    "timestamp",
+			"timestampsTz": "timestampsTz",
+			"tinyInteger":  "tinyInteger",
+			"uuid":         "UUID",
+			"year":         "YEAR",
 		},
 	}
 	return *sql

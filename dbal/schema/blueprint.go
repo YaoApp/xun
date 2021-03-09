@@ -1,5 +1,7 @@
 package schema
 
+// Character types
+
 // String Create a new string column on the table.
 func (table *Table) String(name string, length int) *Column {
 	column := table.NewColumn(name).SetType("string")
@@ -16,6 +18,16 @@ func (table *Table) Char(name string, length int) *Column {
 	column.MaxLength = 30
 	column.DefaultLength = 10
 	column.SetLength(length)
+	table.PutColumn(column)
+	return column
+}
+
+// Text Create a new text column on the table.
+func (table *Table) Text(name string) *Column {
+	column := table.NewColumn(name).SetType("text")
+	// column.MaxLength = 65535
+	// column.DefaultLength = column.MaxLength
+	// column.SetLength(column.DefaultLength)
 	table.PutColumn(column)
 	return column
 }
