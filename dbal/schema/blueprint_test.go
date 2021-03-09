@@ -398,12 +398,36 @@ func TestBlueprinChar(t *testing.T) {
 func TestBlueprinText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Text(name) })
 	testCheckColumnsAfterCreate(unit.Always, t, "text", nil)
-	testCheckIndexesAfterCreate(true, t, nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
 	)
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "text", nil)
+}
+
+func TestBlueprinMediumText(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) })
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "mediumText", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "mediumText", nil)
+}
+
+func TestBlueprinLongText(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) })
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "longText", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "longText", nil)
 }
 
 // clean the test data

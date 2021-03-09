@@ -50,6 +50,8 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"string":       "VARCHAR",
 			"char":         "CHAR",
 			"text":         "TEXT",
+			"mediumText":   "MEDIUMTEXT",
+			"longText":     "LONGTEXT",
 
 			"binary":        "binary",
 			"boolean":       "boolean",
@@ -59,9 +61,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"enum":          "enum",
 			"json":          "JSON",
 			"jsonb":         "JSONB",
-			"longText":      "LONGTEXT",
 			"mediumInteger": "mediumInteger",
-			"mediumText":    "mediumText",
 
 			"timestamp":    "timestamp",
 			"timestampsTz": "timestampsTz",

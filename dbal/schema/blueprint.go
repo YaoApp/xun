@@ -25,9 +25,20 @@ func (table *Table) Char(name string, length int) *Column {
 // Text Create a new text column on the table.
 func (table *Table) Text(name string) *Column {
 	column := table.NewColumn(name).SetType("text")
-	// column.MaxLength = 65535
-	// column.DefaultLength = column.MaxLength
-	// column.SetLength(column.DefaultLength)
+	table.PutColumn(column)
+	return column
+}
+
+// MediumText Create a new medium text column on the table.
+func (table *Table) MediumText(name string) *Column {
+	column := table.NewColumn(name).SetType("mediumText")
+	table.PutColumn(column)
+	return column
+}
+
+// LongText Create a new long text column on the table.
+func (table *Table) LongText(name string) *Column {
+	column := table.NewColumn(name).SetType("longText")
 	table.PutColumn(column)
 	return column
 }

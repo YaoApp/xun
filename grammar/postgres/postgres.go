@@ -54,12 +54,15 @@ func New() dbal.Grammar {
 	types["float"] = "REAL"
 	types["double"] = "DOUBLE PRECISION"
 	types["char"] = "CHARACTER"
+	types["mediumText"] = "TEXT"
+	types["longText"] = "TEXT"
 	pg.Types = types
 
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(pg.Types)
 	if ok {
 		pg.FlipTypes = flipTypes.(map[string]string)
+		pg.FlipTypes["TEXT"] = "text"
 		// pg.FlipTypes["CHARACTER VARYING"] = "string"
 	}
 	return &pg

@@ -73,6 +73,8 @@ type Blueprint interface {
 	String(name string, length int) *Column
 	Char(name string, length int) *Column
 	Text(name string) *Column
+	MediumText(name string) *Column
+	LongText(name string) *Column
 
 	// Numberic types
 	SmallInteger(name string) *Column
