@@ -19,7 +19,7 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision != nil && Column.Scale != nil {
+	if Column.Precision != nil && Column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
 	} else if Column.DatetimePrecision != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DatetimePrecision))

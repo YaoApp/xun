@@ -87,4 +87,7 @@ type Blueprint interface {
 
 	Decimal(name string, total int, places int) *Column
 	UnsignedDecimal(name string, total int, places int) *Column
+
+	Float(name string, total int, places int) *Column
+	UnsignedFloat(name string, total int, places int) *Column
 }

@@ -51,6 +51,7 @@ func New() dbal.Grammar {
 	types["string"] = "CHARACTER VARYING"
 	types["integer"] = "INTEGER"
 	types["decimal"] = "NUMERIC"
+	types["float"] = "REAL"
 	pg.Types = types
 
 	// set fliptypes

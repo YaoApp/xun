@@ -71,7 +71,7 @@ func (table *Table) ID(name string) *Column {
 	return table.BigIncrements(name).Primary()
 }
 
-// Decimal Create a new decimal column on the table.
+// Decimal Create a new decimal (16-byte) column on the table.
 func (table *Table) Decimal(name string, total int, places int) *Column {
 	column := table.NewColumn(name).
 		SetType("decimal").
@@ -81,7 +81,22 @@ func (table *Table) Decimal(name string, total int, places int) *Column {
 	return column
 }
 
-// UnsignedDecimal Create a new unsigned decimal column on the table.
+// UnsignedDecimal Create a new unsigned decimal (16-byte) column on the table.
 func (table *Table) UnsignedDecimal(name string, total int, places int) *Column {
 	return table.Decimal(name, total, places).Unsigned()
+}
+
+// Float Create a new float (4-byte) column on the table.
+func (table *Table) Float(name string, total int, places int) *Column {
+	column := table.NewColumn(name).
+		SetType("float").
+		SetPrecision(total).
+		SetScale(places)
+	table.PutColumn(column)
+	return column
+}
+
+// UnsignedFloat Create a new unsigned float (4-byte) column on the table.
+func (table *Table) UnsignedFloat(name string, total int, places int) *Column {
+	return table.Float(name, total, places).Unsigned()
 }
