@@ -10,6 +10,16 @@ func (table *Table) String(name string, length int) *Column {
 	return column
 }
 
+// Char Create a new char column on the table.
+func (table *Table) Char(name string, length int) *Column {
+	column := table.NewColumn(name).SetType("char")
+	column.MaxLength = 30
+	column.DefaultLength = 10
+	column.SetLength(length)
+	table.PutColumn(column)
+	return column
+}
+
 // Numberic types
 // @Todo:
 //   1. tinyInteger() Create a new tiny integer (1-byte) column on the table.

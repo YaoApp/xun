@@ -384,6 +384,17 @@ func TestBlueprinString(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "string", nil)
 }
 
+func TestBlueprinChar(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Char(name, args[0]) })
+	testCheckColumnsAfterCreate(unit.Always, t, "char", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.Char(name, args[0]) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "char", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

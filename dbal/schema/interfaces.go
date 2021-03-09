@@ -70,6 +70,7 @@ type Blueprint interface {
 
 	// defined in blueprint.go
 	String(name string, length int) *Column
+	Char(name string, length int) *Column
 
 	// Numberics
 	SmallInteger(name string) *Column
