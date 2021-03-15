@@ -58,6 +58,8 @@ func New() dbal.Grammar {
 	types["longText"] = "TEXT"
 	types["dateTime"] = "TIMESTAMP(%d) WITHOUT TIME ZONE"
 	types["dateTimeTz"] = "TIMESTAMP(%d) WITH TIME ZONE"
+	types["time"] = "TIME(%d) WITHOUT TIME ZONE"
+	types["timeTz"] = "TIME(%d) WITH TIME ZONE"
 	pg.Types = types
 
 	// set fliptypes
@@ -67,6 +69,8 @@ func New() dbal.Grammar {
 		pg.FlipTypes["TEXT"] = "text"
 		pg.FlipTypes["TIMESTAMP WITHOUT TIME ZONE"] = "timestamp"
 		pg.FlipTypes["TIMESTAMP WITH TIME ZONE"] = "timestampTz"
+		pg.FlipTypes["TIME WITHOUT TIME ZONE"] = "time"
+		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
 		// pg.FlipTypes["CHARACTER VARYING"] = "string"
 	}
 	return &pg

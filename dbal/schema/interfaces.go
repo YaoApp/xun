@@ -81,6 +81,9 @@ type Blueprint interface {
 	DateTime(name string) *Column
 	DateTimeTz(name string) *Column
 
+	Time(name string) *Column
+	TimeTz(name string) *Column
+
 	// Numberic types
 	SmallInteger(name string) *Column
 	UnsignedSmallInteger(name string) *Column

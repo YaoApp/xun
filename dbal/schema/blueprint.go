@@ -43,7 +43,7 @@ func (table *Table) LongText(name string) *Column {
 	return column
 }
 
-// Datetime types
+// Date time types
 
 // Date Create a new date column on the table.
 func (table *Table) Date(name string) *Column {
@@ -64,6 +64,24 @@ func (table *Table) DateTime(name string) *Column {
 // DateTimeTz Create a new date-time column (with time zone) on the table.
 func (table *Table) DateTimeTz(name string) *Column {
 	column := table.NewColumn(name).SetType("dateTimeTz")
+	column.MaxDateTimePrecision = 6
+	column.DefaultDateTimePrecision = 0
+	table.PutColumn(column)
+	return column
+}
+
+// Time Create a new time column on the table.
+func (table *Table) Time(name string) *Column {
+	column := table.NewColumn(name).SetType("time")
+	column.MaxDateTimePrecision = 6
+	column.DefaultDateTimePrecision = 0
+	table.PutColumn(column)
+	return column
+}
+
+// TimeTz Create a new time column (with time zone) on the table.
+func (table *Table) TimeTz(name string) *Column {
+	column := table.NewColumn(name).SetType("timeTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	table.PutColumn(column)

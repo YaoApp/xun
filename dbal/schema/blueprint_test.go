@@ -503,6 +503,64 @@ func TestBlueprinDateTimeTzWithP(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
 }
 
+func TestBlueprinTime(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Time(name) })
+	testCheckColumnsAfterCreate(unit.Always, t, "time", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column { return table.Time(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", nil)
+}
+
+func TestBlueprinTimeWithP(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.Time(name).SetDateTimePrecision(6)
+	})
+	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "time", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.Time(name).SetDateTimePrecision(6)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
+}
+
+func TestBlueprinTimeTz(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.TimeTz(name) })
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "time", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timeTz", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column { return table.TimeTz(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", nil)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "timeTz", nil)
+}
+
+func TestBlueprinTimeTzWithP(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.TimeTz(name).SetDateTimePrecision(6)
+	})
+	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timeTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "time", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.TimeTz(name).SetDateTimePrecision(6)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", testCheckDateTimePrecision6)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "timeTz", testCheckDateTimePrecision6)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

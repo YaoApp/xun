@@ -45,6 +45,8 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"date":          "DATE",
 			"dateTime":      "DATETIME",
 			"dateTimeTz":    "DATETIME",
+			"time":          "TIME",
+			"timeTz":        "TIME",
 			"binary":        "binary",
 			"boolean":       "boolean",
 			"enum":          "enum",

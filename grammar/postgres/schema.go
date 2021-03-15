@@ -326,7 +326,7 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 	}
 	if Column.Precision != nil && Column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
-	} else if strings.Contains(typ, "TIMESTAMP(%d)") {
+	} else if strings.Contains(typ, "TIMESTAMP(%d)") || strings.Contains(typ, "TIME(%d)") {
 		DateTimePrecision := utils.IntVal(Column.DateTimePrecision, 0)
 		typ = fmt.Sprintf(typ, DateTimePrecision)
 	} else if Column.Length != nil {
