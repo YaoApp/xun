@@ -76,6 +76,11 @@ type Blueprint interface {
 	MediumText(name string) *Column
 	LongText(name string) *Column
 
+	// Date time types
+	Date(name string) *Column
+	DateTime(name string) *Column
+	DateTimeTz(name string) *Column
+
 	// Numberic types
 	SmallInteger(name string) *Column
 	UnsignedSmallInteger(name string) *Column

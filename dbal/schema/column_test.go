@@ -78,3 +78,21 @@ func TestColumnSetScale(t *testing.T) {
 	col = table.BigIncrements("col").SetScale(200)
 	assert.True(t, col.Scale == nil, "the column scale should be nil")
 }
+
+func TestColumnSetDateTimePrecision(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilderInstance()
+	table := NewTable("test", builder)
+	var col *Column
+	col = table.DateTime("col").SetDateTimePrecision(6)
+	assert.Equal(t, 6, utils.IntVal(col.DateTimePrecision), "the column DateTimePrecision should be 6")
+
+	col = table.DateTime("col").SetDateTimePrecision(12)
+	assert.Equal(t, 0, utils.IntVal(col.DateTimePrecision), "the column DateTimePrecision should be 0")
+
+	col = table.DateTime("col").SetDateTimePrecision(5)
+	assert.Equal(t, 5, utils.IntVal(col.DateTimePrecision), "the column DateTimePrecision should be 5")
+
+	col = table.Date("col").SetDateTimePrecision(5)
+	assert.True(t, col.DateTimePrecision == nil, "the column DateTimePrecision should be nil")
+}

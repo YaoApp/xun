@@ -57,7 +57,7 @@ type Column struct {
 	OctetLength              *int        `db:"octet_length"`
 	Precision                *int        `db:"precision"`
 	Scale                    *int        `db:"scale"`
-	DatetimePrecision        *int        `db:"datetime_precision"`
+	DateTimePrecision        *int        `db:"datetime_precision"`
 	Charset                  *string     `db:"charset"`
 	Collation                *string     `db:"collation"`
 	Key                      *string     `db:"key"`
@@ -70,8 +70,8 @@ type Column struct {
 	DefaultPrecision         int
 	MaxScale                 int
 	DefaultScale             int
-	MaxDatetimePrecision     int
-	DefaultDatetimePrecision int
+	MaxDateTimePrecision     int
+	DefaultDateTimePrecision int
 	Table                    *Table
 	Indexes                  []*Index
 }

@@ -21,8 +21,8 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
 	}
 	if Column.Precision != nil && Column.Scale != nil {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
-	} else if Column.DatetimePrecision != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DatetimePrecision))
+	} else if Column.DateTimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DateTimePrecision))
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}

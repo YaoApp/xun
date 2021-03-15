@@ -185,9 +185,21 @@ func (column *Column) SetComment(comment string) *Column {
 	return column
 }
 
+// SetDateTimePrecision set the column precision to the given value
+func (column *Column) SetDateTimePrecision(precision int) *Column {
+	if column.MaxDateTimePrecision == 0 {
+		return column
+	}
+	if precision > column.MaxDateTimePrecision || precision == 0 {
+		precision = column.DefaultDateTimePrecision
+	}
+	column.DateTimePrecision = &precision
+	return column
+}
+
 // SetPrecision set the column precision to the given value
 func (column *Column) SetPrecision(precision int) *Column {
-	if column.DefaultPrecision == 0 {
+	if column.MaxPrecision == 0 {
 		return column
 	}
 	if precision > column.MaxPrecision || precision == 0 {

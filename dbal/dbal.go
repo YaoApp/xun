@@ -55,7 +55,7 @@ func (table *Table) NewColumn(name string) *Column {
 		OctetLength:       nil,
 		Precision:         nil,
 		Scale:             nil,
-		DatetimePrecision: nil,
+		DateTimePrecision: nil,
 		Charset:           nil,
 		Collation:         nil,
 		Key:               nil,

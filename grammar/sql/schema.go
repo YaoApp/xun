@@ -492,7 +492,7 @@ func (grammarSQL SQL) ParseType(column *dbal.Column) {
 			if len(args) > 0 {
 				precision, err := strconv.Atoi(args[0])
 				if err == nil {
-					column.DatetimePrecision = utils.IntPtr(precision)
+					column.DateTimePrecision = utils.IntPtr(precision)
 				}
 			}
 			break

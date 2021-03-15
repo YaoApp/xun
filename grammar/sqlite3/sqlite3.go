@@ -55,6 +55,7 @@ func New() dbal.Grammar {
 	if ok {
 		sqlite.FlipTypes = flipTypes.(map[string]string)
 		sqlite.FlipTypes["INTEGER"] = "integer"
+		sqlite.FlipTypes["DATETIME"] = "dateTime"
 	}
 
 	return &sqlite
