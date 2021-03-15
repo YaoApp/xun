@@ -41,6 +41,7 @@ func New() dbal.Grammar {
 		my.FlipTypes = flipTypes.(map[string]string)
 		my.FlipTypes["DATETIME"] = "dateTime"
 		my.FlipTypes["TIME"] = "time"
+		my.FlipTypes["TIMESTAMP"] = "timestamp"
 	}
 	return &my
 }

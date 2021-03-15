@@ -33,6 +33,15 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
 	comment := utils.GetIF(utils.StringVal(Column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
 	collation := utils.GetIF(utils.StringVal(Column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
 	extra := utils.GetIF(utils.StringVal(Column.Extra) != "", "AUTO_INCREMENT", "")
+
+	if nullable == "NOT NULL" && strings.Contains(typ, "TIMESTAMP") && defaultValue == "" {
+		if Column.DateTimePrecision != nil {
+			defaultValue = fmt.Sprintf("DEFAULT CURRENT_TIMESTAMP(%d)", *Column.DateTimePrecision)
+		} else {
+			defaultValue = "DEFAULT CURRENT_TIMESTAMP"
+		}
+	}
+
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s %s",
 		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)

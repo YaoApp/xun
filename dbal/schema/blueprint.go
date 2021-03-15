@@ -88,6 +88,24 @@ func (table *Table) TimeTz(name string) *Column {
 	return column
 }
 
+// Timestamp Create a new timestamp column on the table.
+func (table *Table) Timestamp(name string) *Column {
+	column := table.NewColumn(name).SetType("timestamp")
+	column.MaxDateTimePrecision = 6
+	column.DefaultDateTimePrecision = 0
+	table.PutColumn(column)
+	return column
+}
+
+// TimestampTz Create a new timestamp (with time zone) column on the table.
+func (table *Table) TimestampTz(name string) *Column {
+	column := table.NewColumn(name).SetType("timestampTz")
+	column.MaxDateTimePrecision = 6
+	column.DefaultDateTimePrecision = 0
+	table.PutColumn(column)
+	return column
+}
+
 // Numberic types
 // @Todo:
 //   1. tinyInteger() Create a new tiny integer (1-byte) column on the table.
