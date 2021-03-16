@@ -461,9 +461,8 @@ func (grammarSQL SQL) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error 
 
 // ParseType parse type and flip to DBAL
 func (grammarSQL SQL) ParseType(column *dbal.Column) {
-	typeinfo := strings.Split(strings.ToUpper(column.Type), " ")
-	re := regexp.MustCompile(`([A-Z]+)[\(]*([0-9,]*)[\)]*`)
-	matched := re.FindStringSubmatch(typeinfo[0])
+	re := regexp.MustCompile(`([A-Z ]+)[\(]*([0-9,]*)[\)]*`)
+	matched := re.FindStringSubmatch(strings.ToUpper(column.Type))
 	if len(matched) == 3 {
 		typeName := matched[1]
 		typeArgs := strings.Trim(matched[2], " ")

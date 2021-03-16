@@ -96,3 +96,14 @@ func TestColumnSetDateTimePrecision(t *testing.T) {
 	col = table.Date("col").SetDateTimePrecision(5)
 	assert.True(t, col.DateTimePrecision == nil, "the column DateTimePrecision should be nil")
 }
+
+func TestColumnSetComment(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilderInstance()
+	table := NewTable("test", builder)
+	var col *Column
+	col = table.String("col").SetComment("This is a col")
+	assert.Equal(t, "This is a col", utils.StringVal(col.Comment), "the column Comment should be  \"This is a col\"")
+	col = table.String("col")
+	assert.True(t, col.Comment == nil, "the column Comment should be nil")
+}

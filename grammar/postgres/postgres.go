@@ -47,6 +47,7 @@ func New() dbal.Grammar {
 
 	// overwrite types
 	types := pg.SQL.Types
+	types["tinyInteger"] = "SMALLINT"
 	types["bigInteger"] = "BIGINT"
 	types["string"] = "CHARACTER VARYING"
 	types["integer"] = "INTEGER"
@@ -74,7 +75,7 @@ func New() dbal.Grammar {
 		pg.FlipTypes["TIMESTAMP WITH TIME ZONE"] = "timestampTz"
 		pg.FlipTypes["TIME WITHOUT TIME ZONE"] = "time"
 		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
-		// pg.FlipTypes["CHARACTER VARYING"] = "string"
+		pg.FlipTypes["SMALLINT"] = "smallInteger"
 	}
 	return &pg
 }

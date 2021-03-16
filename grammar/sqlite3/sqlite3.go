@@ -45,8 +45,9 @@ func New() dbal.Grammar {
 	}
 
 	// overwrite types
-	sqlite.Types["bigInteger"] = "INTEGER"
-	sqlite.Types["smallInteger"] = "INTEGER"
+	sqlite.Types["tinyInteger"] = "TINYINT"
+	sqlite.Types["bigInteger"] = "BIGINT"
+	sqlite.Types["smallInteger"] = "SMALLINT"
 	sqlite.Types["integer"] = "INTEGER"
 	sqlite.Types["char"] = "CHARACTER"
 	sqlite.Types["binary"] = "BLOB"
@@ -55,10 +56,10 @@ func New() dbal.Grammar {
 	flipTypes, ok := utils.MapFilp(sqlite.Types)
 	if ok {
 		sqlite.FlipTypes = flipTypes.(map[string]string)
-		sqlite.FlipTypes["INTEGER"] = "integer"
 		sqlite.FlipTypes["DATETIME"] = "dateTime"
 		sqlite.FlipTypes["TIME"] = "time"
 		sqlite.FlipTypes["TIMESTAMP"] = "timestamp"
+		sqlite.FlipTypes["UNSIGNED BIG INT"] = "bigInteger"
 	}
 
 	return &sqlite

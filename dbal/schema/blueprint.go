@@ -162,8 +162,32 @@ func (table *Table) TimestampTz(name string, args ...int) *Column {
 
 // Numberic types
 // @Todo:
-//   1. tinyInteger() Create a new tiny integer (1-byte) column on the table.
+//   1. tinyInteger() Create a new tiny integer (1-byte) column on the table. [done]
 //   2. MediumInteger()  Create a new medium integer (3-byte) column on the table.
+
+// TinyInteger Create a new tiny integer (1-byte) column on the table.
+func (table *Table) TinyInteger(name string) *Column {
+	column := table.NewColumn(name).SetType("tinyInteger")
+	table.PutColumn(column)
+	return column
+}
+
+// UnsignedTinyInteger Create a new auto-incrementing tiny integer (1-byte) column on the table.
+func (table *Table) UnsignedTinyInteger(name string) *Column {
+	return table.TinyInteger(name).Unsigned()
+}
+
+// TinyIncrements Create a new auto-incrementing tiny integer (1-byte) column on the table.
+func (table *Table) TinyIncrements(name string) *Column {
+	return table.UnsignedTinyInteger(name).AutoIncrement()
+}
+
+// // Boolean Create a new boolean column on the table.
+// func (table *Table) Boolean(name string) *Column {
+// 	column := table.NewColumn(name).SetType("boolean")
+// 	table.PutColumn(column)
+// 	return column
+// }
 
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
@@ -177,7 +201,7 @@ func (table *Table) UnsignedSmallInteger(name string) *Column {
 	return table.SmallInteger(name).Unsigned()
 }
 
-// SmallIncrements Create a new auto-incrementing big integer (2-byte) column on the table.
+// SmallIncrements Create a new auto-incrementing small integer (2-byte) column on the table.
 func (table *Table) SmallIncrements(name string) *Column {
 	return table.UnsignedSmallInteger(name).AutoIncrement()
 }

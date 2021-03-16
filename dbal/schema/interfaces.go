@@ -89,6 +89,10 @@ type Blueprint interface {
 	TimestampTz(name string, args ...int) *Column
 
 	// Numberic types
+	TinyInteger(name string) *Column
+	UnsignedTinyInteger(name string) *Column
+	TinyIncrements(name string) *Column
+
 	SmallInteger(name string) *Column
 	UnsignedSmallInteger(name string) *Column
 	SmallIncrements(name string) *Column
@@ -110,4 +114,7 @@ type Blueprint interface {
 
 	Double(name string, args ...int) *Column
 	UnsignedDouble(name string, args ...int) *Column
+
+	// boolean types
+	// Boolean(name string) *Column
 }

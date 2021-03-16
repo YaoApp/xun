@@ -13,12 +13,73 @@ import (
 
 type columnFunc func(table Blueprint, name string, args ...int) *Column
 
-func TestBlueprintSmallInteger(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.SmallInteger(name) })
-	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", nil)
-	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "smallInteger", nil)
+func TestBlueprintTinyInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.TinyInteger(name) })
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "tinyInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.TinyInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "tinyInteger", nil)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "smallInteger", nil)
+}
+
+func TestBlueprintUnsignedTinyInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedTinyInteger(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "tinyInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "tinyInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
 
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedTinyInteger(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "tinyInteger", testCheckUnsigned)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "smallInteger", nil)
+}
+
+func TestBlueprintTinyIncrements(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	err := builder.Create("table_test_blueprint", func(table Blueprint) {
+		if unit.Is("sqlite3") {
+			table.TinyIncrements("id").Primary()
+		} else {
+			table.TinyIncrements("id").Unique()
+		}
+		table.String("field1st", 60)
+	})
+	assert.Nil(t, err, "the create method should be return nil")
+
+	table := builder.MustGet("table_test_blueprint")
+	column := table.GetColumn("id")
+	testCheckAutoIncrementing(t, "id", column)
+
+	if unit.Is("postgres") {
+		assert.Equal(t, "smallInteger", column.Type, "the column type should be smallInteger")
+	} else if unit.Is("sqlite3") {
+		assert.Equal(t, "integer", column.Type, "the column type should be integer")
+	} else {
+		assert.Equal(t, "tinyInteger", column.Type, "the column type should be tinyInteger")
+	}
+
+	// Checking the index
+	if unit.Is("sqlite3") {
+		primary := table.GetPrimary()
+		assert.Equal(t, "id", primary.Columns[0].Name, "the primary key should has the id column")
+	} else {
+		index := table.GetIndex("id_unique")
+		assert.Equal(t, "unique", index.Type, "the id_unique type should be unique")
+	}
+}
+
+func TestBlueprintSmallInteger(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.SmallInteger(name) })
+	testCheckColumnsAfterCreate(unit.Always, t, "smallInteger", nil)
+	testCheckIndexesAfterCreate(true, t, nil)
 	testAlterTable(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.SmallInteger(name) },
@@ -28,11 +89,9 @@ func TestBlueprintSmallInteger(t *testing.T) {
 
 func TestBlueprintUnsignedSmallInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) })
-	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", testCheckUnsigned)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres") || unit.Is("sqlite3"), t, "smallInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "smallInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
-
 	testAlterTable(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) },
@@ -58,7 +117,7 @@ func TestBlueprintSmallIncrements(t *testing.T) {
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
-	if unit.Is("postgres") || unit.Is("sqlite3") {
+	if unit.Is("sqlite3") {
 		assert.Equal(t, "integer", column.Type, "the column type should be integer")
 	} else {
 		assert.Equal(t, "smallInteger", column.Type, "the column type should be smallInteger")
@@ -132,10 +191,8 @@ func TestBlueprintIncrements(t *testing.T) {
 
 func TestBlueprintBigInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) })
-	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", nil)
-	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "bigInteger", nil)
+	testCheckColumnsAfterCreate(unit.Always, t, "bigInteger", nil)
 	testCheckIndexesAfterCreate(true, t, nil)
-
 	testAlterTable(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
@@ -145,7 +202,7 @@ func TestBlueprintBigInteger(t *testing.T) {
 
 func TestBlueprintUnsignedBigInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedBigInteger(name) })
-	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "integer", testCheckUnsigned)
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "bigInteger", testCheckUnsigned)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "bigInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
@@ -761,6 +818,10 @@ func testCheckColumnsAfterAlter(executable bool, t *testing.T, typeName string, 
 	for _, name := range alterNames {
 		column := table.GetColumn(name)
 		if name != "id" {
+			if column == nil {
+				assert.False(t, column == nil, "the column %s should not be nil", name)
+				continue
+			}
 			assert.Equal(t, typeName, column.Type, "the column type should be %s", typeName)
 			if check != nil {
 				check(t, name, column)

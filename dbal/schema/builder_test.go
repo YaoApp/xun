@@ -234,14 +234,15 @@ func checkTableAlter(t *testing.T, table Blueprint) {
 	}
 
 	columnType := "bigInteger"
+	idColumnType := "bigInteger"
 	if unit.Is("sqlite3") {
-		columnType = "integer"
+		idColumnType = "integer"
 	}
 
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
-		assert.Equal(t, columnType, table.GetColumn("id").Type, "the id type should be %s", columnType)
+		assert.Equal(t, idColumnType, table.GetColumn("id").Type, "the id type should be %s", idColumnType)
 		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
 		if unit.Not("postgres") {
@@ -353,14 +354,15 @@ func checkTable(t *testing.T, table Blueprint) {
 	}
 
 	columnType := "bigInteger"
+	idColumnType := "bigInteger"
 	if unit.Is("sqlite3") {
-		columnType = "integer"
+		idColumnType = "integer"
 	}
 
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
 	if table.GetColumn("id") != nil {
-		assert.Equal(t, columnType, table.GetColumn("id").Type, "the id type should be %s", columnType)
+		assert.Equal(t, idColumnType, table.GetColumn("id").Type, "the id type should be %s", idColumnType)
 		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
 		if unit.Not("postgres") {

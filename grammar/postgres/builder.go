@@ -39,6 +39,8 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string
 	if utils.StringVal(Column.Extra) != "" {
 		if typ == "BIGINT" {
 			typ = "BIGSERIAL"
+		} else if typ == "SMALLINT" {
+			typ = "SMALLSERIAL"
 		} else {
 			typ = "SERIAL"
 		}
