@@ -26,6 +26,8 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string
 		typ = fmt.Sprintf(typ, DateTimePrecision)
 	} else if typ == "BYTEA" {
 		typ = "BYTEA"
+	} else if typ == "ENUM" {
+		typ = strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}

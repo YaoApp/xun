@@ -115,6 +115,7 @@ type Blueprint interface {
 	Double(name string, args ...int) *Column
 	UnsignedDouble(name string, args ...int) *Column
 
-	// boolean types
+	// boolean, enum types
 	Boolean(name string) *Column
+	Enum(name string, option []string) *Column
 }

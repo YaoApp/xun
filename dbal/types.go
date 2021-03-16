@@ -64,6 +64,7 @@ type Column struct {
 	Extra                    *string     `db:"extra"`
 	Comment                  *string     `db:"comment"`
 	Primary                  bool        `db:"primary"`
+	TypeName                 string      `db:"type_name"`
 	MaxLength                int
 	DefaultLength            int
 	MaxPrecision             int
@@ -72,8 +73,10 @@ type Column struct {
 	DefaultScale             int
 	MaxDateTimePrecision     int
 	DefaultDateTimePrecision int
+	Option                   []string
 	Table                    *Table
 	Indexes                  []*Index
+	Constraint               *Constraint
 }
 
 // Index the talbe index
@@ -104,6 +107,16 @@ type Primary struct {
 	Name      string `db:"primary_name"`
 	Table     *Table
 	Columns   []*Column
+}
+
+// Constraint the table constraint
+type Constraint struct {
+	SchemaName string
+	TableName  string
+	ColumnName string
+	Type       string
+	Args       []string
+	Table      *Table
 }
 
 // Command The Command that should be run for the table.

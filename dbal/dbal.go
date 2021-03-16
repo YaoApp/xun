@@ -13,6 +13,16 @@ func (table *Table) GetName() string {
 	return table.TableName
 }
 
+// NewConstraint create a new constraint intstance
+func NewConstraint(schemaName string, tableName string, columnName string) *Constraint {
+	return &Constraint{
+		TableName:  tableName,
+		SchemaName: schemaName,
+		ColumnName: columnName,
+		Args:       []string{},
+	}
+}
+
 // NewTable create a grammar table
 func NewTable(name string, schemaName string, dbName string) *Table {
 	return &Table{

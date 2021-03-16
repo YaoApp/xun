@@ -27,6 +27,27 @@ func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
 	return name == fmt.Sprintf("%s", res[0])
 }
 
+// CreateType create user defined type
+func (grammarSQL Postgres) CreateType(table *dbal.Table, db *sqlx.DB, types map[string][]string) error {
+	// Create Types
+	for name, option := range types {
+		typ := fmt.Sprintf("ENUM('%s')", strings.Join(option, "','"))
+		typeSQL := fmt.Sprintf(`
+	DO $$ BEGIN
+		CREATE TYPE %s.%s AS %s; 
+	EXCEPTION  
+		WHEN duplicate_object THEN null;
+	END $$;
+	`, table.SchemaName, name, typ)
+		defer logger.Debug(logger.CREATE, typeSQL).TimeCost(time.Now())
+		_, err := db.Exec(typeSQL)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Create a new table on the schema
 func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.TableName, db)
@@ -63,12 +84,26 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 		}
 	}
 
+	// Enum types
+	types := map[string][]string{}
+
 	// Columns
 	for _, Column := range columns {
 		stmts = append(stmts,
 			grammarSQL.SQLAddColumn(db, Column),
 		)
+		if Column.Type == "enum" {
+			typeName := strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
+			types[typeName] = Column.Option
+		}
 	}
+
+	// Create Types
+	err := grammarSQL.CreateType(table, db, types)
+	if err != nil {
+		return err
+	}
+
 	// Primary key
 	if primary != nil {
 		stmts = append(stmts,
@@ -80,7 +115,7 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 
 	// Create table
 	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	_, err := db.Exec(sql)
+	_, err = db.Exec(sql)
 	if err != nil {
 		return err
 	}
@@ -199,6 +234,15 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			column := command.Params[0].(*dbal.Column)
 			stmt := "ADD COLUMN " + grammarSQL.SQLAddColumn(db, column)
 			stmts = append(stmts, sql+stmt)
+			if column.Type == "enum" {
+				typeName := strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
+				types := map[string][]string{}
+				types[typeName] = column.Option
+				err := grammarSQL.CreateType(table, db, types)
+				if err != nil {
+					return err
+				}
+			}
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
 				errs = append(errs, err)
@@ -209,6 +253,15 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			column := command.Params[0].(*dbal.Column)
 			stmt := "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
 			stmts = append(stmts, sql+stmt)
+			if column.Type == "enum" {
+				typeName := strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
+				types := map[string][]string{}
+				types[typeName] = column.Option
+				err := grammarSQL.CreateType(table, db, types)
+				if err != nil {
+					return err
+				}
+			}
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
 				errs = append(errs, err)
@@ -331,6 +384,8 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 		typ = fmt.Sprintf(typ, DateTimePrecision)
 	} else if typ == "BYTEA" {
 		typ = "BYTEA"
+	} else if typ == "ENUM" {
+		typ = strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}
@@ -463,6 +518,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 			WHEN (UDT_NAME ~ 'unsigned')  THEN true
 			ELSE false
 		END AS "unsigned"`,
+		"UDT_NAME as \"type_name\"",
 		"UPPER(DATA_TYPE) as \"type\"",
 		"CHARACTER_MAXIMUM_LENGTH as \"length\"",
 		"CHARACTER_OCTET_LENGTH as \"octet_length\"",
@@ -494,12 +550,35 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 	if err != nil {
 		return nil, err
 	}
+	//
+
+	enumOptions := map[string][]string{}
 
 	// Cast the database data type to DBAL data type
 	for _, column := range columns {
 		typ, has := grammarSQL.FlipTypes[column.Type]
 		if has {
 			column.Type = typ
+		}
+
+		// user defined types
+		if column.Type == "USER-DEFINED" {
+
+			// enum options
+			if strings.Contains(column.TypeName, "enum__") {
+				column.Type = "enum"
+				if _, has := enumOptions[column.TypeName]; !has {
+					optionRange := []string{}
+					err := db.Select(&optionRange, fmt.Sprintf("select enum_range(null::%s.%s)", dbName, column.TypeName))
+					if err != nil {
+						return nil, err
+					}
+					optionStr := strings.TrimLeft(optionRange[0], "{")
+					optionStr = strings.TrimRight(optionStr, "}")
+					enumOptions[column.TypeName] = strings.Split(optionStr, ",")
+				}
+				column.Option = enumOptions[column.TypeName]
+			}
 		}
 
 		if utils.StringVal(column.Extra) == "auto_increment" {

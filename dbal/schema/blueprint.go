@@ -182,13 +182,6 @@ func (table *Table) TinyIncrements(name string) *Column {
 	return table.UnsignedTinyInteger(name).AutoIncrement()
 }
 
-// Boolean Create a new boolean column on the table.
-func (table *Table) Boolean(name string) *Column {
-	column := table.NewColumn(name).SetType("boolean")
-	table.PutColumn(column)
-	return column
-}
-
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
 	column := table.NewColumn(name).SetType("smallInteger")
@@ -321,4 +314,19 @@ func (table *Table) Double(name string, args ...int) *Column {
 // UnsignedDouble Create a new unsigned double (8-byte) column on the table.
 func (table *Table) UnsignedDouble(name string, args ...int) *Column {
 	return table.Double(name, args...).Unsigned()
+}
+
+// Boolean Create a new boolean column on the table.
+func (table *Table) Boolean(name string) *Column {
+	column := table.NewColumn(name).SetType("boolean")
+	table.PutColumn(column)
+	return column
+}
+
+// Enum Create a new enum column on the table.
+func (table *Table) Enum(name string, option []string) *Column {
+	column := table.NewColumn(name).SetType("enum")
+	column.Option = option
+	table.PutColumn(column)
+	return column
 }

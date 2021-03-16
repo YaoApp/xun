@@ -52,6 +52,9 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string 
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DateTimePrecision))
 	} else if typ == "BLOB" {
 		typ = "BLOB"
+	} else if typ == "ENUM" {
+		option := fmt.Sprintf("('%s')", strings.Join(Column.Option, "','"))
+		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", quoter.ID(Column.Name, db), option)
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}

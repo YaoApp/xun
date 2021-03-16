@@ -701,6 +701,21 @@ func TestBlueprinBoolean(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Is("mysql"), t, "tinyInteger", nil)
 }
 
+func TestBlueprinEnum(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.Enum(name, []string{"O1", "O2", "O3"})
+	})
+	testCheckColumnsAfterCreate(unit.Always, t, "enum", testCheckOptionO1O2O3)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.Enum(name, []string{"O1", "O2", "O3"})
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "enum", testCheckOptionO1O2O3)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()
@@ -781,6 +796,13 @@ func testGetTable() Blueprint {
 
 func testCheckUnsigned(t *testing.T, name string, column *Column) {
 	assert.True(t, column.IsUnsigned, "the column %s IsUnsigned should be true", name)
+}
+
+func testCheckOptionO1O2O3(t *testing.T, name string, column *Column) {
+	assert.Len(t, column.Option, 3, "the column %s Option should has 3 items", name)
+	for _, opt := range []string{"O1", "O2", "O3"} {
+		assert.True(t, utils.StringHave(column.Option, opt), "the column %s Option should have %s", name, opt)
+	}
 }
 
 func testCheckDateTimePrecision6(t *testing.T, name string, column *Column) {

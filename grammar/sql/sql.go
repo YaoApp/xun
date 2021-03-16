@@ -52,8 +52,8 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"timeTz":       "TIME",
 			"timestamp":    "TIMESTAMP",
 			"timestampTz":  "TIMESTAMP",
+			"enum":         "ENUM",
 
-			"enum":          "enum",
 			"json":          "JSON",
 			"jsonb":         "JSONB",
 			"mediumInteger": "mediumInteger",

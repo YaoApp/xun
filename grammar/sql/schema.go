@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -182,6 +181,7 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 		   WHEN LOCATE('unsigned', COLUMN_TYPE) THEN true
 		   ELSE false
 		END AS` + "`unsigned`",
+		"COLUMN_TYPE as `type_name`",
 		"UPPER(DATA_TYPE) as `type`",
 		"CHARACTER_MAXIMUM_LENGTH as `length`",
 		"CHARACTER_OCTET_LENGTH as `octet_length`",
@@ -219,6 +219,15 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 		typ, has := grammarSQL.FlipTypes[column.Type]
 		if has {
 			column.Type = typ
+		}
+
+		if column.Type == "enum" {
+			re := regexp.MustCompile(`enum\('(.*)'\)`)
+			matched := re.FindStringSubmatch(column.TypeName)
+			if len(matched) == 2 {
+				options := strings.Split(matched[1], "','")
+				column.Option = options
+			}
 		}
 
 		if utils.StringVal(column.Extra) == "auto_increment" {
@@ -457,68 +466,4 @@ func (grammarSQL SQL) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error 
 		return err
 	}
 	return nil
-}
-
-// ParseType parse type and flip to DBAL
-func (grammarSQL SQL) ParseType(column *dbal.Column) {
-	re := regexp.MustCompile(`([A-Z ]+)[\(]*([0-9,]*)[\)]*`)
-	matched := re.FindStringSubmatch(strings.ToUpper(column.Type))
-	if len(matched) == 3 {
-		typeName := matched[1]
-		typeArgs := strings.Trim(matched[2], " ")
-		args := []string{}
-		if typeArgs != "" {
-			args = strings.Split(strings.Trim(matched[2], " "), ",")
-		}
-		typ, has := grammarSQL.FlipTypes[typeName]
-		if has {
-			column.Type = typ
-		}
-		switch column.Type {
-		case "bigInteger", "integer":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
-			} else if column.IsUnsigned {
-				column.Precision = utils.IntPtr(20)
-			} else {
-				column.Precision = utils.IntPtr(19)
-			}
-			break
-		case "timestamp":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.DateTimePrecision = utils.IntPtr(precision)
-				}
-			}
-			break
-		case "float":
-			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
-
-				if len(args) > 1 {
-					scale, err := strconv.Atoi(args[1])
-					if err == nil {
-						column.Scale = utils.IntPtr(scale)
-					}
-				}
-			}
-			break
-		case "string", "text":
-			if len(args) > 0 {
-				length, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Length = utils.IntPtr(length)
-				}
-			}
-			break
-		}
-	}
-	// utils.Println(column)
 }

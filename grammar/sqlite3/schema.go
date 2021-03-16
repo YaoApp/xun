@@ -3,12 +3,15 @@ package sqlite3
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Exists the Exists
@@ -247,7 +250,7 @@ func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string, db *s
 }
 
 // GetColumnListing get a table columns structure
-func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*dbal.Column, error) {
+func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string, db *sqlx.DB) ([]*dbal.Column, error) {
 	selectColumns := []string{
 		"m.name AS `table_name`",
 		"p.name AS `name`",
@@ -288,10 +291,32 @@ func (grammarSQL SQLite3) GetColumnListing(dbName string, tableName string, db *
 		return nil, err
 	}
 
+	// Get the table Constraints
+	constraints, err := grammarSQL.GetConstraintListing(db, schemaName, tableName)
+	if err != nil {
+		return nil, err
+	}
+
 	// Cast the database data type to DBAL data type
 	for _, column := range columns {
 		grammarSQL.ParseType(column)
-		column.DBName = dbName
+		column.DBName = schemaName
+		constraint, has := constraints[column.Name]
+		if has {
+			column.Constraint = constraint
+
+			// enum
+			if column.Type == "text" && constraint.Type == "CHECK" && len(constraint.Args) >= 1 && strings.Contains(constraint.Args[0], "IN ('") {
+				re := regexp.MustCompile(`IN \('(.*)'\)`)
+				matched := re.FindStringSubmatch(constraint.Args[0])
+				if len(matched) == 2 {
+					options := strings.Split(matched[1], "','")
+					column.Option = options
+					column.Type = "enum"
+				}
+			}
+		}
+
 	}
 	return columns, nil
 }
@@ -385,6 +410,53 @@ func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
 	return nil
 }
 
+// GetConstraintListing get the constraints of the table
+func (grammarSQL SQLite3) GetConstraintListing(db *sqlx.DB, schemaName string, tableName string) (map[string]*dbal.Constraint, error) {
+	rows := []string{}
+	err := db.Select(&rows, "SELECT `sql` FROM sqlite_master WHERE type='table' and name=?", tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rows) < 1 {
+		return nil, fmt.Errorf("the table %s does not exists", tableName)
+	}
+
+	sql := rows[0]
+	lines := strings.Split(sql, "\n")
+	constraints := map[string]*dbal.Constraint{}
+	for _, line := range lines {
+		constraint := grammarSQL.parseConstraint(schemaName, tableName, line)
+		if constraint != nil {
+			constraints[constraint.ColumnName] = constraint
+		}
+	}
+	return constraints, nil
+}
+
+func (grammarSQL SQLite3) parseConstraint(schemaName string, tableName string, line string) *dbal.Constraint {
+	// fmt.Printf("GetConstraintListing Line: %#v\n", line)
+	if strings.Contains(line, "CHECK(") {
+		re := regexp.MustCompile("`([0-9a-zA-Z_]+)` .* CHECK\\((.*)\\)")
+		matched := re.FindStringSubmatch(line)
+		if len(matched) == 3 {
+			column := strings.Trim(matched[1], " ")
+			exp := strings.Trim(matched[2], " ")
+			constraint := dbal.NewConstraint(schemaName, tableName, column)
+			constraint.Type = "CHECK"
+			constraint.Args = append(constraint.Args, exp)
+			return constraint
+		}
+	} else if strings.Contains(line, "PRIMARY KEY") {
+
+	} else if strings.Contains(line, "UNIQUE") {
+
+	} else if strings.Contains(line, "FOREIGN KEY") {
+
+	}
+	return nil
+}
+
 // ExecSQL execute sql then update table structure
 func (grammarSQL SQLite3) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error {
 	_, err := db.Exec(sql)
@@ -397,4 +469,69 @@ func (grammarSQL SQLite3) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) er
 		return err
 	}
 	return nil
+}
+
+// ParseType parse type and flip to DBAL
+func (grammarSQL SQLite3) ParseType(column *dbal.Column) {
+
+	re := regexp.MustCompile(`([A-Z ]+)[\(]*([0-9,]*)[\)]*`)
+	matched := re.FindStringSubmatch(strings.ToUpper(column.Type))
+	if len(matched) == 3 {
+		typeName := matched[1]
+		typeArgs := strings.Trim(matched[2], " ")
+		args := []string{}
+		if typeArgs != "" {
+			args = strings.Split(strings.Trim(matched[2], " "), ",")
+		}
+		typ, has := grammarSQL.FlipTypes[typeName]
+		if has {
+			column.Type = typ
+		}
+		switch column.Type {
+		case "bigInteger", "integer":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Precision = utils.IntPtr(precision)
+				}
+			} else if column.IsUnsigned {
+				column.Precision = utils.IntPtr(20)
+			} else {
+				column.Precision = utils.IntPtr(19)
+			}
+			break
+		case "timestamp":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.DateTimePrecision = utils.IntPtr(precision)
+				}
+			}
+			break
+		case "float":
+			if len(args) > 0 {
+				precision, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Precision = utils.IntPtr(precision)
+				}
+
+				if len(args) > 1 {
+					scale, err := strconv.Atoi(args[1])
+					if err == nil {
+						column.Scale = utils.IntPtr(scale)
+					}
+				}
+			}
+			break
+		case "string", "text":
+			if len(args) > 0 {
+				length, err := strconv.Atoi(args[0])
+				if err == nil {
+					column.Length = utils.IntPtr(length)
+				}
+			}
+			break
+		}
+	}
+	// utils.Println(column)
 }
