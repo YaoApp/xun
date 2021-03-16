@@ -49,6 +49,7 @@ func New() dbal.Grammar {
 	sqlite.Types["smallInteger"] = "INTEGER"
 	sqlite.Types["integer"] = "INTEGER"
 	sqlite.Types["char"] = "CHARACTER"
+	sqlite.Types["binary"] = "BLOB"
 
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(sqlite.Types)

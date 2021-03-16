@@ -329,6 +329,8 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 	} else if strings.Contains(typ, "TIMESTAMP(%d)") || strings.Contains(typ, "TIME(%d)") {
 		DateTimePrecision := utils.IntVal(Column.DateTimePrecision, 0)
 		typ = fmt.Sprintf(typ, DateTimePrecision)
+	} else if typ == "BYTEA" {
+		typ = "BYTEA"
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	}

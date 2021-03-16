@@ -70,20 +70,23 @@ type Blueprint interface {
 
 	// defined in blueprint.go
 	// Character types
-	String(name string, length int) *Column
-	Char(name string, length int) *Column
+	String(name string, args ...int) *Column
+	Char(name string, args ...int) *Column
 	Text(name string) *Column
 	MediumText(name string) *Column
 	LongText(name string) *Column
 
+	// Binary types
+	Binary(name string, args ...int) *Column
+
 	// Date time types
 	Date(name string) *Column
-	DateTime(name string) *Column
-	DateTimeTz(name string) *Column
-	Time(name string) *Column
-	TimeTz(name string) *Column
-	Timestamp(name string) *Column
-	TimestampTz(name string) *Column
+	DateTime(name string, args ...int) *Column
+	DateTimeTz(name string, args ...int) *Column
+	Time(name string, args ...int) *Column
+	TimeTz(name string, args ...int) *Column
+	Timestamp(name string, args ...int) *Column
+	TimestampTz(name string, args ...int) *Column
 
 	// Numberic types
 	SmallInteger(name string) *Column
@@ -99,12 +102,12 @@ type Blueprint interface {
 	BigIncrements(name string) *Column
 	ID(name string) *Column
 
-	Decimal(name string, total int, places int) *Column
-	UnsignedDecimal(name string, total int, places int) *Column
+	Decimal(name string, args ...int) *Column
+	UnsignedDecimal(name string, args ...int) *Column
 
-	Float(name string, total int, places int) *Column
-	UnsignedFloat(name string, total int, places int) *Column
+	Float(name string, args ...int) *Column
+	UnsignedFloat(name string, args ...int) *Column
 
-	Double(name string, total int, places int) *Column
-	UnsignedDouble(name string, total int, places int) *Column
+	Double(name string, args ...int) *Column
+	UnsignedDouble(name string, args ...int) *Column
 }

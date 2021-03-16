@@ -430,6 +430,17 @@ func TestBlueprinLongText(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "longText", nil)
 }
 
+func TestBlueprinBinary(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name) })
+	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.Binary(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "binary", nil)
+}
+
 func TestBlueprinDate(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Date(name) })
 	testCheckColumnsAfterCreate(unit.Always, t, "date", nil)

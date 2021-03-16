@@ -3,20 +3,28 @@ package schema
 // Character types
 
 // String Create a new string column on the table.
-func (table *Table) String(name string, length int) *Column {
+func (table *Table) String(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("string")
 	column.MaxLength = 65535
 	column.DefaultLength = 200
+	length := column.DefaultLength
+	if len(args) >= 1 {
+		length = args[0]
+	}
 	column.SetLength(length)
 	table.PutColumn(column)
 	return column
 }
 
 // Char Create a new char column on the table.
-func (table *Table) Char(name string, length int) *Column {
+func (table *Table) Char(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("char")
 	column.MaxLength = 30
 	column.DefaultLength = 10
+	length := column.DefaultLength
+	if len(args) >= 1 {
+		length = args[0]
+	}
 	column.SetLength(length)
 	table.PutColumn(column)
 	return column
@@ -43,6 +51,22 @@ func (table *Table) LongText(name string) *Column {
 	return column
 }
 
+// Binary types
+
+// Binary Create a new binary column on the table.
+func (table *Table) Binary(name string, args ...int) *Column {
+	column := table.NewColumn(name).SetType("binary")
+	column.MaxLength = 65535
+	column.DefaultLength = 255
+	length := column.DefaultLength
+	if len(args) >= 1 {
+		length = args[0]
+	}
+	column.SetLength(length)
+	table.PutColumn(column)
+	return column
+}
+
 // Date time types
 
 // Date Create a new date column on the table.
@@ -53,55 +77,85 @@ func (table *Table) Date(name string) *Column {
 }
 
 // DateTime Create a new date-time column on the table.
-func (table *Table) DateTime(name string) *Column {
+func (table *Table) DateTime(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("dateTime")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
 
 // DateTimeTz Create a new date-time column (with time zone) on the table.
-func (table *Table) DateTimeTz(name string) *Column {
+func (table *Table) DateTimeTz(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("dateTimeTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
 
 // Time Create a new time column on the table.
-func (table *Table) Time(name string) *Column {
+func (table *Table) Time(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("time")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
 
 // TimeTz Create a new time column (with time zone) on the table.
-func (table *Table) TimeTz(name string) *Column {
+func (table *Table) TimeTz(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("timeTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
 
 // Timestamp Create a new timestamp column on the table.
-func (table *Table) Timestamp(name string) *Column {
+func (table *Table) Timestamp(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("timestamp")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
 
 // TimestampTz Create a new timestamp (with time zone) column on the table.
-func (table *Table) TimestampTz(name string) *Column {
+func (table *Table) TimestampTz(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("timestampTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
+	precision := column.DefaultDateTimePrecision
+	if len(args) >= 1 {
+		precision = args[0]
+	}
+	column.SetDateTimePrecision(precision)
 	table.PutColumn(column)
 	return column
 }
@@ -168,53 +222,79 @@ func (table *Table) ID(name string) *Column {
 }
 
 // Decimal Create a new decimal (16-byte) column on the table.
-func (table *Table) Decimal(name string, total int, places int) *Column {
+func (table *Table) Decimal(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("decimal")
 	column.MaxPrecision = 65
 	column.MaxScale = 30
 	column.DefaultPrecision = 10
 	column.DefaultScale = 2
+
+	total := column.DefaultPrecision
+	places := column.DefaultScale
+	if len(args) >= 1 {
+		total = args[0]
+	}
+	if len(args) >= 2 {
+		places = args[1]
+	}
 	column.SetPrecision(total).SetScale(places)
 	table.PutColumn(column)
 	return column
 }
 
 // UnsignedDecimal Create a new unsigned decimal (16-byte) column on the table.
-func (table *Table) UnsignedDecimal(name string, total int, places int) *Column {
-	return table.Decimal(name, total, places).Unsigned()
+func (table *Table) UnsignedDecimal(name string, args ...int) *Column {
+	return table.Decimal(name, args...).Unsigned()
 }
 
 // Float Create a new float (4-byte) column on the table.
-func (table *Table) Float(name string, total int, places int) *Column {
+func (table *Table) Float(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("float")
 	column.MaxPrecision = 23
 	column.DefaultPrecision = 10
 	column.MaxScale = 22
 	column.DefaultScale = 2
+
+	total := column.DefaultPrecision
+	places := column.DefaultScale
+	if len(args) >= 1 {
+		total = args[0]
+	}
+	if len(args) >= 2 {
+		places = args[1]
+	}
 	column.SetPrecision(total).SetScale(places)
 	table.PutColumn(column)
 	return column
 }
 
 // UnsignedFloat Create a new unsigned float (4-byte) column on the table.
-func (table *Table) UnsignedFloat(name string, total int, places int) *Column {
-	return table.Float(name, total, places).Unsigned()
+func (table *Table) UnsignedFloat(name string, args ...int) *Column {
+	return table.Float(name, args...).Unsigned()
 }
 
 // Double Create a new double (8-byte) column on the table.
-func (table *Table) Double(name string, total int, places int) *Column {
+func (table *Table) Double(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("double")
 	column.MaxPrecision = 53
 	column.MaxScale = 52
 	column.DefaultPrecision = 24
 	column.DefaultScale = 2
-	column.SetPrecision(total).
-		SetScale(places)
+
+	total := column.DefaultPrecision
+	places := column.DefaultScale
+	if len(args) >= 1 {
+		total = args[0]
+	}
+	if len(args) >= 2 {
+		places = args[1]
+	}
+	column.SetPrecision(total).SetScale(places)
 	table.PutColumn(column)
 	return column
 }
 
 // UnsignedDouble Create a new unsigned double (8-byte) column on the table.
-func (table *Table) UnsignedDouble(name string, total int, places int) *Column {
-	return table.Double(name, total, places).Unsigned()
+func (table *Table) UnsignedDouble(name string, args ...int) *Column {
+	return table.Double(name, args...).Unsigned()
 }

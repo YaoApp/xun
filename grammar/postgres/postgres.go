@@ -62,6 +62,7 @@ func New() dbal.Grammar {
 	types["timeTz"] = "TIME(%d) WITH TIME ZONE"
 	types["timestamp"] = "TIMESTAMP(%d) WITHOUT TIME ZONE"
 	types["timestampTz"] = "TIMESTAMP(%d) WITH TIME ZONE"
+	types["binary"] = "BYTEA"
 	pg.Types = types
 
 	// set fliptypes
