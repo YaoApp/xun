@@ -116,5 +116,5 @@ type Blueprint interface {
 	UnsignedDouble(name string, args ...int) *Column
 
 	// boolean types
-	// Boolean(name string) *Column
+	Boolean(name string) *Column
 }

@@ -686,6 +686,21 @@ func TestBlueprinTimestampTzWithP(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
 }
 
+func TestBlueprinBoolean(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Boolean(name) })
+	testCheckColumnsAfterCreate(unit.Not("mysql"), t, "boolean", nil)
+	testCheckColumnsAfterCreate(unit.Is("mysql"), t, "tinyInteger", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.Boolean(name)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("mysql"), t, "boolean", nil)
+	testCheckColumnsAfterAlter(unit.Is("mysql"), t, "tinyInteger", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

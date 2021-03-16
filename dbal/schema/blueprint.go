@@ -182,12 +182,12 @@ func (table *Table) TinyIncrements(name string) *Column {
 	return table.UnsignedTinyInteger(name).AutoIncrement()
 }
 
-// // Boolean Create a new boolean column on the table.
-// func (table *Table) Boolean(name string) *Column {
-// 	column := table.NewColumn(name).SetType("boolean")
-// 	table.PutColumn(column)
-// 	return column
-// }
+// Boolean Create a new boolean column on the table.
+func (table *Table) Boolean(name string) *Column {
+	column := table.NewColumn(name).SetType("boolean")
+	table.PutColumn(column)
+	return column
+}
 
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
