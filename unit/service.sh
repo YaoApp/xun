@@ -56,6 +56,7 @@ Waiting() {
         echo -n "."
         if [ $timing -eq $timeout ]; then
             echo " failed. timout($timeout)" >&2
+            docker logs $name >&2
             exit 1
         fi
     done
