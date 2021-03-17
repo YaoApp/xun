@@ -12,7 +12,7 @@ StartMySQL5.7() {
 StartMySQL5.6() {
     docker pull mysql:5.6.51
     docker run --name=mysql5.7 -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.6.51 --default-authentication-plugin=mysql_native_password
-    Waiting "mysql5.6"  "Version: '5.6.51-log'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)" 30
+    Waiting "mysql5.6"  "mysqld: ready for connections" 50
     docker logs mysql5.6
     docker exec mysql5.6 mysql -uroot -p123456 -e "CREATE DATABASE xun CHARACTER SET utf8 COLLATE utf8_general_ci"
     docker exec mysql5.6 mysql -uroot -p123456 -e "CREATE USER xun@'%' IDENTIFIED BY '123456'"
