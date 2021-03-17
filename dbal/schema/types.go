@@ -10,6 +10,7 @@ type Connection struct {
 	Write       *sqlx.DB
 	WriteConfig *dbal.Config
 	Option      *dbal.Option
+	Version     *dbal.Version
 }
 
 // Builder the table schema builder struct

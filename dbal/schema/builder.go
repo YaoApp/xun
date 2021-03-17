@@ -175,5 +175,25 @@ func (builder *Builder) MustRename(old string, new string) Blueprint {
 	return builder.table(new)
 }
 
-// Primary Specify the primary key(s) for the table.
-func (builder *Builder) Primary() {}
+// GetVersion get the version of the connection database
+func (builder *Builder) GetVersion() (*dbal.Version, error) {
+
+	if builder.Conn.Version != nil {
+		return builder.Conn.Version, nil
+	}
+
+	// Query Version using connection
+	version, err := builder.Grammar.GetVersion(builder.Conn.Write)
+	if err != nil {
+		return nil, err
+	}
+	builder.Conn.Version = version
+	return version, nil
+}
+
+// MustGetVersion get the version of the connection database
+func (builder *Builder) MustGetVersion() *dbal.Version {
+	version, err := builder.GetVersion()
+	utils.PanicIF(err)
+	return version
+}

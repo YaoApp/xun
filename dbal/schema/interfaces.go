@@ -1,5 +1,7 @@
 package schema
 
+import "github.com/yaoapp/xun/dbal"
+
 // Schema The schema interface
 type Schema interface {
 	Get(string) (Blueprint, error)
@@ -9,6 +11,7 @@ type Schema interface {
 	HasTable(string) bool
 	Rename(string, string) error
 	DropIfExists(string) error
+	GetVersion() (*dbal.Version, error)
 
 	MustGet(string) Blueprint
 	MustCreate(string, func(table Blueprint)) Blueprint
@@ -16,6 +19,7 @@ type Schema interface {
 	MustAlter(string, func(table Blueprint)) Blueprint
 	MustRename(string, string) Blueprint
 	MustDropIfExists(string)
+	MustGetVersion() *dbal.Version
 }
 
 // Blueprint the table operating interface
@@ -118,4 +122,8 @@ type Blueprint interface {
 	// boolean, enum types
 	Boolean(name string) *Column
 	Enum(name string, option []string) *Column
+
+	// json, jsonb types
+	// JSON(name string, option []string) *Column
+	// JSONB(name string, option []string) *Column
 }

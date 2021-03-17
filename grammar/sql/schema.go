@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
@@ -34,6 +35,30 @@ func (grammarSQL SQL) GetDBName() string {
 // GetSchemaName get the schema name of the current connection
 func (grammarSQL SQL) GetSchemaName() string {
 	return grammarSQL.Schema
+}
+
+// GetVersion get the version of the connection database
+func (grammarSQL SQL) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
+	sql := fmt.Sprintf("SELECT VERSION()")
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	rows := []string{}
+	err := db.Select(&rows, sql)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) < 1 {
+		return nil, fmt.Errorf("Can't get the version")
+	}
+
+	ver, err := semver.Make(rows[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return &dbal.Version{
+		Version: ver,
+		Driver:  grammarSQL.Driver,
+	}, nil
 }
 
 // Exists the Exists

@@ -144,6 +144,30 @@ func TestBuilderAlter(t *testing.T) {
 	// builder.Drop("table_test_builder")
 }
 
+func TestBuilderGetVersion(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	version, err := builder.GetVersion()
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err != nil {
+		return
+	}
+	if unit.Is("mysql") {
+		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
+		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
+		assert.Equal(t, 7, int(version.Minor), "the minor version should be 7")
+	} else if unit.Is("postgres") {
+		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
+		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
+		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
+	} else if unit.Is("sqlite3") {
+		assert.Equal(t, "sqlite3", version.Driver, "the driver should be sqlite3")
+		assert.Equal(t, 3, int(version.Major), "the major version should be 3")
+		assert.Equal(t, 34, int(version.Minor), "the minor version should be 34")
+	}
+	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
+}
+
 func TestBuilderMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -225,6 +249,26 @@ func TestBuilderMustAlter(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlter(t, table)
 	builder.Drop("table_test_builder")
+}
+
+func TestBuilderMustGetVersion(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	version := builder.MustGetVersion()
+	if unit.Is("mysql") {
+		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
+		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
+		assert.Equal(t, 7, int(version.Minor), "the minor version should be 7")
+	} else if unit.Is("postgres") {
+		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
+		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
+		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
+	} else if unit.Is("sqlite3") {
+		assert.Equal(t, "sqlite3", version.Driver, "the driver should be sqlite3")
+		assert.Equal(t, 3, int(version.Major), "the major version should be 3")
+		assert.Equal(t, 34, int(version.Minor), "the minor version should be 34")
+	}
+	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
 }
 
 func checkTableAlter(t *testing.T, table Blueprint) {

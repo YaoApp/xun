@@ -8,11 +8,36 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
+
+// GetVersion get the version of the connection database
+func (grammarSQL SQLite3) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
+	sql := fmt.Sprintf("SELECT SQLITE_VERSION()")
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	rows := []string{}
+	err := db.Select(&rows, sql)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) < 1 {
+		return nil, fmt.Errorf("Can't get the version")
+	}
+
+	ver, err := semver.Make(rows[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return &dbal.Version{
+		Version: ver,
+		Driver:  grammarSQL.Driver,
+	}, nil
+}
 
 // Exists the Exists
 func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {

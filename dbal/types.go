@@ -2,6 +2,8 @@ package dbal
 
 import (
 	"time"
+
+	"github.com/blang/semver/v4"
 )
 
 // Config the Connection configuration
@@ -17,6 +19,12 @@ type Option struct {
 	Prefix    string `json:"prefix,omitempty"` // Table prifix
 	Collation string `json:"collation,omitempty"`
 	Charset   string `json:"charset,omitempty"`
+}
+
+// Version the database version
+type Version struct {
+	Driver string
+	semver.Version
 }
 
 // Table the table struct

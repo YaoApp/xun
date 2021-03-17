@@ -6,6 +6,7 @@ import "github.com/jmoiron/sqlx"
 type Grammar interface {
 	Config(dsn string)
 
+	GetVersion(db *sqlx.DB) (*Version, error)
 	GetDBName() string
 	GetSchemaName() string
 
