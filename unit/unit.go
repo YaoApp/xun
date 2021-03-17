@@ -15,33 +15,42 @@ import (
 // Always run Always
 var Always bool = true
 
-// DSN the dsns for testing
-var dsns map[string]string = map[string]string{
-	"mysql":    os.Getenv("XUN_UNIT_MYSQL_DSN"),
-	"sqlite3":  os.Getenv("XUN_UNIT_SQLITE3_DSN"),
-	"postgres": os.Getenv("XUN_UNIT_POSTGRES_DSN"),
-	"oracle":   os.Getenv("XUN_UNIT_ORACLE_DSN"),
-	"sqlsvr":   os.Getenv("XUN_UNIT_SQLSVR_DSN"),
-}
-
 // Is the DSN should be the name given
 func Is(name string) bool {
-	return os.Getenv("XUN_UNIT_DSN") == name
+	return os.Getenv("XUN_UNIT_NAME") == name
 }
 
 // Not the DSN should not be the  name given
 func Not(name string) bool {
-	return os.Getenv("XUN_UNIT_DSN") != name
+	return os.Getenv("XUN_UNIT_NAME") != name
 }
 
-// DSN get the dsn from evn
-func DSN(name string) string {
-	dsn, has := dsns[name]
-	if !has || dsn == "" {
-		err := errors.New("dsn not found!" + name)
-		panic(err)
+//DriverIs the drvier should be the name given
+func DriverIs(name string) bool {
+	return os.Getenv("XUN_UNIT_DRIVER") == name
+}
+
+//DriverNot the drvier should not be the name given
+func DriverNot(name string) bool {
+	return os.Getenv("XUN_UNIT_DRIVER") != name
+}
+
+// DSN get the connection source from evn
+func DSN() string {
+	source := os.Getenv("XUN_UNIT_SOURCE")
+	if source == "" {
+		panic(errors.New("DSN does not found"))
 	}
-	return dsn
+	return source
+}
+
+// Driver get the driver name from evn
+func Driver() string {
+	driver := os.Getenv("XUN_UNIT_DRIVER")
+	if driver == "" {
+		panic(errors.New("DSN does not found"))
+	}
+	return driver
 }
 
 // SetLogger set the unit file logger

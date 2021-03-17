@@ -9,6 +9,17 @@ StartMySQL5.7() {
     docker exec mysql5.7 mysql -uroot -p123456 -e "GRANT SELECT ON xun.* TO 'xun'@'%'";
 }
 
+StartMySQL5.6() {
+    docker pull mysql:5.6.51
+    docker run --name=mysql5.7 -d -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.6.51 --default-authentication-plugin=mysql_native_password
+    Waiting "mysql5.6"  "Version: '5.6.51-log'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)" 30
+    docker logs mysql5.6
+    docker exec mysql5.6 mysql -uroot -p123456 -e "CREATE DATABASE xun CHARACTER SET utf8 COLLATE utf8_general_ci"
+    docker exec mysql5.6 mysql -uroot -p123456 -e "CREATE USER xun@'%' IDENTIFIED BY '123456'"
+    docker exec mysql5.6 mysql -uroot -p123456 -e "GRANT SELECT ON xun.* TO 'xun'@'%'";
+}
+
+
 StartPostgres9.6() {
     docker pull postgres:9.6
     docker run --name=postgres9.6 -d -p 5432:5432 -e POSTGRES_PASSWORD=123456 postgres:9.6
@@ -54,6 +65,7 @@ Waiting() {
 command=$1
 case $command in
     mysql5.7) StartMySQL5.7;;
+    mysql5.6) StartMySQL5.6;;
     postgres9.6) StartPostgres9.6;;
     *) $(echo "please input command" >&2) ;;
 esac

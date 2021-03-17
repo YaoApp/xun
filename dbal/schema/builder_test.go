@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"os"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
@@ -24,8 +23,8 @@ func getTestBuilder() Schema {
 	if testBuilder != nil {
 		return testBuilder
 	}
-	driver := os.Getenv("XUN_UNIT_DSN")
-	dsn := unit.DSN(driver)
+	driver := unit.Driver()
+	dsn := unit.DSN()
 	testBuilder = New(driver, dsn)
 	return testBuilder
 }
@@ -36,8 +35,8 @@ func getTestBuilderInstance() *Builder {
 	if testBuilderInstance != nil {
 		return testBuilderInstance
 	}
-	driver := os.Getenv("XUN_UNIT_DSN")
-	dsn := unit.DSN(driver)
+	driver := unit.Driver()
+	dsn := unit.DSN()
 	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		panic(err)
@@ -59,6 +58,7 @@ func getTestBuilderInstance() *Builder {
 func TestBuilderCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
+	builder.DropIfExists("table_test_builder")
 	err := builder.Create("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
@@ -156,6 +156,10 @@ func TestBuilderGetVersion(t *testing.T) {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 7, int(version.Minor), "the minor version should be 7")
+	} else if unit.Is("mysql5.6") {
+		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
+		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
+		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
 	} else if unit.Is("postgres") {
 		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
 		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
@@ -259,6 +263,10 @@ func TestBuilderMustGetVersion(t *testing.T) {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 7, int(version.Minor), "the minor version should be 7")
+	} else if unit.Is("mysql5.6") {
+		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
+		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
+		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
 	} else if unit.Is("postgres") {
 		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
 		assert.Equal(t, 9, int(version.Major), "the major version should be 9")

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/jmoiron/sqlx"
 )
 
 // Config the Connection configuration
@@ -25,6 +26,11 @@ type Option struct {
 type Version struct {
 	Driver string
 	semver.Version
+}
+
+// Hook the driver hook
+type Hook struct {
+	OnConnected func(Grammar, *sqlx.DB)
 }
 
 // Table the table struct

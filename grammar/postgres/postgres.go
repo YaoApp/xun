@@ -16,7 +16,7 @@ type Postgres struct {
 }
 
 func init() {
-	dbal.Register("postgres", New())
+	dbal.Register("postgres", New(), dbal.Hook{})
 }
 
 // Config set the configure using DSN

@@ -3,9 +3,13 @@ package dbal
 // Grammars loaded grammar driver
 var Grammars = map[string]Grammar{}
 
+// Hooks loaded hooks of the driver
+var Hooks = map[string]Hook{}
+
 // Register register the grammar driver
-func Register(name string, grammar Grammar) {
+func Register(name string, grammar Grammar, hook Hook) {
 	Grammars[name] = grammar
+	Hooks[name] = hook
 }
 
 // GetName get the table name
@@ -147,4 +151,14 @@ func (command *Command) Callback(err error) {
 	} else if err != nil && command.Fail != nil {
 		command.Fail()
 	}
+}
+
+// AddColumn add column to index
+func (index *Index) AddColumn(column *Column) {
+	for _, col := range index.Columns {
+		if col.Name == column.Name {
+			return
+		}
+	}
+	index.Columns = append(index.Columns, column)
 }

@@ -17,7 +17,7 @@ type SQLite3 struct {
 }
 
 func init() {
-	dbal.Register("sqlite3", New())
+	dbal.Register("sqlite3", New(), dbal.Hook{})
 }
 
 // Config set the configure using DSN

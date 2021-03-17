@@ -110,7 +110,7 @@ func (grammarSQL SQL) Get(table *dbal.Table, db *sqlx.DB) error {
 			table.PushIndex(&index)
 		}
 		index := table.IndexMap[idx.Name]
-		index.Columns = append(index.Columns, column)
+		index.AddColumn(column)
 		if index.Type == "primary" {
 			primaryKeyName = idx.Name
 		}
@@ -328,7 +328,7 @@ func (grammarSQL SQL) Create(table *dbal.Table, db *sqlx.DB) error {
 
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf(
-		"\n) %s %s %s",
+		"\n) %s %s %s ROW_FORMAT=DYNAMIC",
 		engine, charset, collation,
 	)
 	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
@@ -390,7 +390,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("AddColumn: %s", err))
 			}
 			command.Callback(err)
 			break
@@ -400,7 +400,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("ChangeColumn %s: %s", column.Name, err))
 			}
 			command.Callback(err)
 			break
@@ -409,7 +409,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			new := command.Params[1].(string)
 			column, has := table.ColumnMap[old]
 			if !has {
-				return errors.New("the column " + old + " not exists")
+				return fmt.Errorf("RenameColumn: The column %s not exists", old)
 			}
 			column.Name = new
 			stmt := fmt.Sprintf("CHANGE COLUMN %s %s",
@@ -419,7 +419,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("RenameColumn: %s", err))
 			}
 			command.Callback(err)
 			break
@@ -429,7 +429,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("DropColumn: %s", err))
 			}
 			break
 		case "CreateIndex":
@@ -438,7 +438,7 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("CreateIndex: %s", err))
 			}
 			break
 		case "DropIndex":
@@ -447,20 +447,47 @@ func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("DropIndex: %s", err))
 			}
 			command.Callback(err)
 			break
 		case "RenameIndex":
 			old := command.Params[0].(string)
 			new := command.Params[1].(string)
-			stmt := fmt.Sprintf("RENAME INDEX %s TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
+			oldIndex := table.GetIndex(old)
+			if oldIndex == nil {
+				err := fmt.Errorf("RenameIndex: The index %s not found", old)
+				errs = append(errs, err)
+				command.Callback(err)
+				break
+			}
+
+			stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.Quoter.ID(old, db))
 			stmts = append(stmts, sql+stmt)
 			err := grammarSQL.ExecSQL(db, table, sql+stmt)
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, fmt.Errorf("RenameIndex: %s", err))
+				command.Callback(err)
+				break
+			}
+
+			newIndex := oldIndex
+			newIndex.Name = new
+			stmt = "ADD " + grammarSQL.SQLAddIndex(db, newIndex)
+			stmts = append(stmts, sql+stmt)
+			err = grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("RenameIndex: %s", err))
 			}
 			command.Callback(err)
+
+			// stmt := fmt.Sprintf("RENAME INDEX %s TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
+			// stmts = append(stmts, sql+stmt)
+			// err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			// if err != nil {
+			// 	errs = append(errs, err)
+			// }
+			// command.Callback(err)
 			break
 		}
 	}

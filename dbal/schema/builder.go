@@ -34,12 +34,18 @@ func Use(conn *Connection) Schema {
 // NewBuilder create a new schema builder instance
 func NewBuilder(conn *Connection) *Builder {
 	grammar := NewGrammar(conn.WriteConfig.Driver, conn.WriteConfig.DSN)
+	hook := NewHook(conn.WriteConfig.Driver)
 	builder := Builder{
 		Mode:       "production",
 		Conn:       conn,
+		Hook:       hook,
 		Grammar:    grammar,
 		DBName:     grammar.GetDBName(),
 		SchemaName: grammar.GetSchemaName(),
+	}
+
+	if builder.Hook.OnConnected != nil {
+		builder.Hook.OnConnected(grammar, conn.Write)
 	}
 	return &builder
 }
@@ -52,6 +58,15 @@ func NewGrammar(driver string, dsn string) dbal.Grammar {
 	}
 	grammar.Config(dsn)
 	return grammar
+}
+
+// NewHook get the hook of driver
+func NewHook(driver string) dbal.Hook {
+	hook, has := dbal.Hooks[driver]
+	if !has {
+		return dbal.Hook{}
+	}
+	return hook
 }
 
 // Table create the table blueprint instance

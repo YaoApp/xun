@@ -54,6 +54,8 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
 
 // SQLAddIndex  return the add index sql for table create
 func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
+
+	maxKeyLength := 256
 	indexTypes := grammarSQL.IndexTypes
 	quoter := grammarSQL.Quoter
 
@@ -66,7 +68,7 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 	columns := []string{}
 	for _, Column := range index.Columns {
 		if Column.Type == "text" || Column.Type == "mediumText" || Column.Type == "longText" {
-			columns = append(columns, quoter.ID(Column.Name, db)+"(256)")
+			columns = append(columns, fmt.Sprintf("%s(%d)", quoter.ID(Column.Name, db), maxKeyLength))
 		} else {
 			columns = append(columns, quoter.ID(Column.Name, db))
 		}

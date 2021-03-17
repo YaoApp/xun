@@ -17,6 +17,7 @@ type Connection struct {
 type Builder struct {
 	Conn *Connection
 	dbal.Grammar
+	Hook       dbal.Hook
 	Mode       string
 	DBName     string
 	SchemaName string

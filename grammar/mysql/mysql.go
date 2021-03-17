@@ -1,8 +1,12 @@
 package mysql
 
 import (
+	"fmt"
+
+	"github.com/blang/semver/v4"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql" //Load mysql driver
+	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/grammar/sql"
 	"github.com/yaoapp/xun/utils"
@@ -14,7 +18,23 @@ type MySQL struct {
 }
 
 func init() {
-	dbal.Register("mysql", New())
+	dbal.Register("mysql", New(), dbal.Hook{
+		OnConnected: func(grammarSQL dbal.Grammar, db *sqlx.DB) {
+			version, err := grammarSQL.GetVersion(db)
+			if err != nil {
+				panic(fmt.Errorf("OnConnected: %s", err))
+			}
+			ver577, err := semver.Make("5.7.7")
+			if err != nil {
+				panic(fmt.Errorf("OnConnected: %s", err))
+			}
+			if version.LE(ver577) {
+				db.Exec("SET GLOBAL innodb_file_format=`BARRACUDA`")
+				db.Exec("SET GLOBAL innodb_file_per_table=`ON`;")
+				db.Exec("SET GLOBAL innodb_large_prefix=`ON`;")
+			}
+		},
+	})
 }
 
 // Config set the configure using DSN
