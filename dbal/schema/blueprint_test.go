@@ -929,6 +929,21 @@ func TestBlueprintNullableTimestampsWithP(t *testing.T) {
 	}
 }
 
+func TestBlueprintDropTimestamps(t *testing.T) {
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	TestBlueprintTimestamps(t)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.DropTimestamps()
+	})
+	assert.True(t, err == nil, "the alter method should be return nil")
+	table := testGetTable()
+	assert.True(t, table.GetColumn("created_at") == nil, "the column created_at should be nil")
+	assert.True(t, table.GetColumn("updated_at") == nil, "the column updated_at should be nil")
+}
+
 func TestBlueprintTimestampsTz(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_blueprint")
@@ -945,7 +960,7 @@ func TestBlueprintTimestampsTz(t *testing.T) {
 
 	if createdAt != nil {
 		if unit.DriverIs("postgres") {
-			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestamp")
+			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestampTz")
 		} else {
 			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
 		}
@@ -954,7 +969,7 @@ func TestBlueprintTimestampsTz(t *testing.T) {
 
 	if updatedAt != nil {
 		if unit.DriverIs("postgres") {
-			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestamp")
+			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestampTz")
 		} else {
 			assert.Equal(t, "timestamp", updatedAt.Type, "the column updated_at type should be timestamp")
 		}
@@ -978,7 +993,7 @@ func TestBlueprintTimestampsTzWithP(t *testing.T) {
 
 	if createdAt != nil {
 		if unit.DriverIs("postgres") {
-			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestamp")
+			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestampTz")
 		} else {
 			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
 		}
@@ -988,13 +1003,138 @@ func TestBlueprintTimestampsTzWithP(t *testing.T) {
 
 	if updatedAt != nil {
 		if unit.DriverIs("postgres") {
-			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestamp")
+			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestampTz")
 		} else {
 			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
 		}
 		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
 		assert.Equal(t, 6, utils.IntVal(updatedAt.DateTimePrecision), "the column updated_at DateTimePrecision should be 6")
 	}
+}
+
+func TestBlueprintDropTimestampsTz(t *testing.T) {
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	TestBlueprintTimestampsTz(t)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.DropTimestampsTz()
+	})
+	assert.True(t, err == nil, "the alter method should be return nil")
+	table := testGetTable()
+	assert.True(t, table.GetColumn("created_at") == nil, "the column created_at should be nil")
+	assert.True(t, table.GetColumn("updated_at") == nil, "the column updated_at should be nil")
+}
+
+func TestBlueprintSoftDeletes(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.SoftDeletes()
+	})
+
+	table := testGetTable()
+	deleteAt := table.GetColumn("deleted_at")
+	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+
+	if deleteAt != nil {
+		assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
+		assert.True(t, deleteAt.Nullable, "the column deleted_at nullable should be true")
+	}
+}
+
+func TestBlueprintSoftDeletesWithP(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.SoftDeletes(6)
+	})
+
+	table := testGetTable()
+	deleteAt := table.GetColumn("deleted_at")
+	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+
+	if deleteAt != nil {
+		assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
+		assert.True(t, deleteAt.Nullable, "the column deleted_at nullable should be true")
+	}
+}
+
+func TestBlueprintDropSoftDeletes(t *testing.T) {
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	TestBlueprintSoftDeletes(t)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.DropSoftDeletes()
+	})
+	assert.True(t, err == nil, "the alter method should be return nil")
+	table := testGetTable()
+	assert.True(t, table.GetColumn("deleted_at") == nil, "the column deleted_at should be nil")
+}
+
+func TestBlueprintSoftDeletesTz(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.SoftDeletesTz()
+	})
+
+	table := testGetTable()
+	deleteAt := table.GetColumn("deleted_at")
+	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+
+	if deleteAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", deleteAt.Type, "the column deleted_at type should be timestampTz")
+		} else {
+			assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
+		}
+		assert.True(t, deleteAt.Nullable, "the column deleted_at nullable should be true")
+	}
+
+}
+
+func TestBlueprintSoftDeletesTzWithP(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.SoftDeletesTz(6)
+	})
+
+	table := testGetTable()
+	deleteAt := table.GetColumn("deleted_at")
+	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+
+	if deleteAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", deleteAt.Type, "the column deleted_at type should be timestampTz")
+		} else {
+			assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
+		}
+		assert.True(t, deleteAt.Nullable, "the column deleted_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(deleteAt.DateTimePrecision), "the column deleted_at DateTimePrecision should be 6")
+	}
+}
+
+func TestBlueprintDropSoftDeletesTz(t *testing.T) {
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	TestBlueprintSoftDeletes(t)
+	builder := getTestBuilder()
+	err := builder.Alter("table_test_blueprint", func(table Blueprint) {
+		table.DropSoftDeletesTz()
+	})
+	assert.True(t, err == nil, "the alter method should be return nil")
+	table := testGetTable()
+	assert.True(t, table.GetColumn("deleted_at") == nil, "the column deleted_at should be nil")
 }
 
 // clean the test data

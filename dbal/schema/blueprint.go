@@ -398,3 +398,33 @@ func (table *Table) TimestampsTz(args ...int) map[string]*Column {
 		"updated_at": table.TimestampTz("updated_at", args...).Null(),
 	}
 }
+
+// DropTimestamps drop the "created_at", "updated_at" timestamp columns.
+func (table *Table) DropTimestamps() {
+	table.DropColumn("created_at", "updated_at")
+}
+
+// DropTimestampsTz drop the "created_at", "updated_at" timestamp columns.
+func (table *Table) DropTimestampsTz() {
+	table.DropTimestamps()
+}
+
+// SoftDeletes Add a "deleted_at" timestamp for the table.
+func (table *Table) SoftDeletes(args ...int) *Column {
+	return table.Timestamp("deleted_at", args...).Null()
+}
+
+// SoftDeletesTz Add a "deleted_at" timestampTz for the table.
+func (table *Table) SoftDeletesTz(args ...int) *Column {
+	return table.Timestamp("deleted_at", args...).Null()
+}
+
+// DropSoftDeletes drop the "deleted_at" timestamp columns.
+func (table *Table) DropSoftDeletes() {
+	table.DropColumn("deleted_at")
+}
+
+// DropSoftDeletesTz drop the "deleted_at" timestamp columns.
+func (table *Table) DropSoftDeletesTz() {
+	table.DropSoftDeletes()
+}
