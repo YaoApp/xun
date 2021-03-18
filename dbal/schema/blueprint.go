@@ -386,11 +386,6 @@ func (table *Table) Timestamps(args ...int) map[string]*Column {
 	}
 }
 
-// NullableTimestamps the Timestamps alias Add nullable creation and update timestamps to the table.
-func (table *Table) NullableTimestamps(args ...int) map[string]*Column {
-	return table.Timestamps(args...)
-}
-
 // TimestampsTz Add creation and update timestampTz columns to the table.
 func (table *Table) TimestampsTz(args ...int) map[string]*Column {
 	return map[string]*Column{
