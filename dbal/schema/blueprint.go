@@ -331,18 +331,16 @@ func (table *Table) Enum(name string, option []string) *Column {
 	return column
 }
 
-// // JSON Create a new json column on the table.
-// func (table *Table) JSON(name string, option []string) *Column {
-// 	column := table.NewColumn(name).SetType("json")
-// 	column.Option = option
-// 	table.PutColumn(column)
-// 	return column
-// }
+// JSON Create a new json column on the table.
+func (table *Table) JSON(name string) *Column {
+	column := table.NewColumn(name).SetType("json")
+	table.PutColumn(column)
+	return column
+}
 
-// // JSONB  Create a new jsonb column on the table.
-// func (table *Table) JSONB(name string, option []string) *Column {
-// 	column := table.NewColumn(name).SetType("jsonb")
-// 	column.Option = option
-// 	table.PutColumn(column)
-// 	return column
-// }
+// JSONB  Create a new jsonb column on the table.
+func (table *Table) JSONB(name string) *Column {
+	column := table.NewColumn(name).SetType("jsonb")
+	table.PutColumn(column)
+	return column
+}

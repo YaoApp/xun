@@ -155,9 +155,10 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 		if index.Type == "primary" {
 			continue
 		}
-		indexStmts = append(indexStmts,
-			grammarSQL.SQLAddIndex(db, index),
-		)
+		indexStmt := grammarSQL.SQLAddIndex(db, index)
+		if indexStmt != "" {
+			indexStmts = append(indexStmts, indexStmt)
+		}
 	}
 	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
 	_, err = db.Exec(strings.Join(indexStmts, ";\n"))

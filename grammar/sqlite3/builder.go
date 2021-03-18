@@ -24,8 +24,8 @@ func (grammarSQL SQLite3) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, Column := range index.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+	for _, column := range index.Columns {
+		columns = append(columns, quoter.ID(column.Name, db))
 	}
 
 	sql := fmt.Sprintf(
@@ -36,32 +36,32 @@ func (grammarSQL SQLite3) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 }
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
+func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 
 	quoter := grammarSQL.Quoter
 	types := grammarSQL.Types
 
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[Column.Type]
+	typ, has := types[column.Type]
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision != nil && Column.Scale != nil {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
-	} else if Column.DateTimePrecision != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DateTimePrecision))
+	if column.Precision != nil && column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
+	} else if column.DateTimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
 	} else if typ == "BLOB" {
 		typ = "BLOB"
 	} else if typ == "ENUM" {
-		option := fmt.Sprintf("('%s')", strings.Join(Column.Option, "','"))
-		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", quoter.ID(Column.Name, db), option)
-	} else if Column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
+		option := fmt.Sprintf("('%s')", strings.Join(column.Option, "','"))
+		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", quoter.ID(column.Name, db), option)
+	} else if column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
 	}
-	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
-	// unsigned := utils.GetIF(Column.IsUnsigned && Column.Type == "BIGINT", "UNSIGNED", "").(string)
-	primaryKey := utils.GetIF(Column.Primary, "PRIMARY KEY", "").(string)
-	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", column.Default), "").(string)
+	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
+	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
+	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
 	if defaultValue == "" && nullable == "NOT NULL" {
 		nullable = "NULL"
 	}
@@ -70,21 +70,27 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string 
 		nullable = primaryKey
 	}
 
-	comment := utils.GetIF(Column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
-	collation := utils.GetIF(Column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
-	extra := utils.GetIF(Column.Extra != nil, "AUTOINCREMENT", "")
+	// comment := utils.GetIF(column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
+	collation := utils.GetIF(column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
+	extra := utils.GetIF(column.Extra != nil, "AUTOINCREMENT", "")
 
 	if extra == "AUTOINCREMENT" {
 		typ = "INTEGER"
 	}
 
-	if Column.IsUnsigned && typ == "BIGINT" {
+	if column.IsUnsigned && typ == "BIGINT" {
 		typ = "UNSIGNED BIG INT"
 	}
 
+	// JSON type
+	if typ == "JSON" || typ == "JSONB" {
+		// comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		typ = "TEXT"
+	}
+
 	sql := fmt.Sprintf(
-		"%s %s %s %s %s %s %s",
-		quoter.ID(Column.Name, db), typ, nullable, defaultValue, extra, comment, collation)
+		"%s %s %s %s %s %s",
+		quoter.ID(column.Name, db), typ, nullable, defaultValue, extra, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -97,8 +103,8 @@ func (grammarSQL SQLite3) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) stri
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, Column := range primary.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+	for _, column := range primary.Columns {
+		columns = append(columns, quoter.ID(column.Name, db))
 	}
 
 	sql := fmt.Sprintf(

@@ -716,6 +716,36 @@ func TestBlueprinEnum(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "enum", testCheckOptionO1O2O3)
 }
 
+func TestBlueprinJSON(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.JSON(name)
+	})
+	testCheckColumnsAfterCreate(unit.DriverNot("sqlite3"), t, "json", nil)
+	testCheckColumnsAfterCreate(unit.DriverIs("sqlite3"), t, "text", nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.JSON(name)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "json", nil)
+}
+
+func TestBlueprinJSONB(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.JSONB(name)
+	})
+	testCheckColumnsAfterCreate(unit.DriverNot("sqlite3"), t, "jsonb", nil)
+	testCheckColumnsAfterCreate(unit.DriverIs("sqlite3"), t, "text", nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.JSONB(name)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "jsonb", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

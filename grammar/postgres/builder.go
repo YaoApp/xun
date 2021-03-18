@@ -67,9 +67,17 @@ func (grammarSQL Postgres) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 	}
 
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
+	// IS JSON
 	columns := []string{}
-	for _, Column := range index.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+	isJSON := false
+	for _, column := range index.Columns {
+		columns = append(columns, quoter.ID(column.Name, db))
+		if column.Type == "json" || column.Type == "jsonb" {
+			isJSON = true
+		}
+	}
+	if isJSON {
+		return ""
 	}
 
 	comment := ""
@@ -77,14 +85,16 @@ func (grammarSQL Postgres) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
 	}
 	name := quoter.ID(index.Name, db)
-	sql := fmt.Sprintf(
-		"CREATE %s %s ON %s (%s)",
-		typ, name, quoter.ID(index.TableName, db), strings.Join(columns, ","))
 
+	sql := ""
 	if typ == "PRIMARY KEY" {
 		sql = fmt.Sprintf(
 			"%s (%s) %s",
 			typ, strings.Join(columns, ","), comment)
+	} else {
+		sql = fmt.Sprintf(
+			"CREATE %s %s ON %s (%s)",
+			typ, name, quoter.ID(index.TableName, db), strings.Join(columns, ","))
 	}
 	return sql
 }

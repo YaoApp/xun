@@ -124,6 +124,6 @@ type Blueprint interface {
 	Enum(name string, option []string) *Column
 
 	// json, jsonb types
-	// JSON(name string, option []string) *Column
-	// JSONB(name string, option []string) *Column
+	JSON(name string) *Column
+	JSONB(name string) *Column
 }

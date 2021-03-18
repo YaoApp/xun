@@ -246,6 +246,13 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 			column.Type = typ
 		}
 
+		if column.Comment != nil {
+			typ = grammarSQL.GetTypeFromComment(column.Comment)
+			if typ != "" {
+				column.Type = typ
+			}
+		}
+
 		if column.Type == "enum" {
 			re := regexp.MustCompile(`enum\('(.*)'\)`)
 			matched := re.FindStringSubmatch(column.TypeName)
@@ -317,9 +324,10 @@ func (grammarSQL SQL) Create(table *dbal.Table, db *sqlx.DB) error {
 
 	// indexes
 	for _, index := range indexes {
-		stmts = append(stmts,
-			grammarSQL.SQLAddIndex(db, index),
-		)
+		indexStmt := grammarSQL.SQLAddIndex(db, index)
+		if indexStmt != "" {
+			stmts = append(stmts, indexStmt)
+		}
 	}
 
 	engine := utils.GetIF(table.Engine != "", "ENGINE "+table.Engine, "")
@@ -518,4 +526,24 @@ func (grammarSQL SQL) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error 
 		return err
 	}
 	return nil
+}
+
+// GetTypeFromComment Get the type name from comment
+func (grammarSQL SQL) GetTypeFromComment(comment *string) string {
+	if comment == nil {
+		return ""
+	}
+
+	lines := strings.Split(*comment, "|")
+	if len(lines) < 1 {
+		return ""
+	}
+
+	re := regexp.MustCompile(`^T:([a-z]+)`)
+	matched := re.FindStringSubmatch(lines[0])
+	if len(matched) == 2 {
+		return matched[1]
+	}
+
+	return ""
 }

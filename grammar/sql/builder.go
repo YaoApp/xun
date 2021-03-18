@@ -4,49 +4,62 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
+func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[Column.Type]
+	typ, has := types[column.Type]
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision != nil && Column.Scale != nil {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
-	} else if Column.DateTimePrecision != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.DateTimePrecision))
+	if column.Precision != nil && column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
+	} else if column.DateTimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
 	} else if typ == "ENUM" {
-		typ = fmt.Sprintf("ENUM('%s')", strings.Join(Column.Option, "','"))
-	} else if Column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
+		typ = fmt.Sprintf("ENUM('%s')", strings.Join(column.Option, "','"))
+	} else if column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
 	}
 
-	unsigned := utils.GetIF(Column.IsUnsigned, "UNSIGNED", "").(string)
-	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
-	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
-	comment := utils.GetIF(utils.StringVal(Column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
-	collation := utils.GetIF(utils.StringVal(Column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
-	extra := utils.GetIF(utils.StringVal(Column.Extra) != "", "AUTO_INCREMENT", "")
+	unsigned := utils.GetIF(column.IsUnsigned, "UNSIGNED", "").(string)
+	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", column.Default), "").(string)
+	comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
+	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
+	extra := utils.GetIF(utils.StringVal(column.Extra) != "", "AUTO_INCREMENT", "")
 
 	if nullable == "NOT NULL" && strings.Contains(typ, "TIMESTAMP") && defaultValue == "" {
-		if Column.DateTimePrecision != nil {
-			defaultValue = fmt.Sprintf("DEFAULT CURRENT_TIMESTAMP(%d)", *Column.DateTimePrecision)
+		if column.DateTimePrecision != nil {
+			defaultValue = fmt.Sprintf("DEFAULT CURRENT_TIMESTAMP(%d)", *column.DateTimePrecision)
 		} else {
 			defaultValue = "DEFAULT CURRENT_TIMESTAMP"
 		}
 	}
 
+	// JSON type
+	if typ == "JSON" || typ == "JSONB" {
+		mysql5_7_8, _ := semver.Make("5.7.8")
+		version, err := grammarSQL.GetVersion(db)
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		if err != nil || version.LT(mysql5_7_8) {
+			typ = "TEXT"
+		} else {
+			typ = "JSON"
+		}
+	}
+
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s %s",
-		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
+		quoter.ID(column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -66,17 +79,23 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, Column := range index.Columns {
-		if Column.Type == "text" || Column.Type == "mediumText" || Column.Type == "longText" {
-			columns = append(columns, fmt.Sprintf("%s(%d)", quoter.ID(Column.Name, db), maxKeyLength))
+	for _, column := range index.Columns {
+		if column.Type == "text" || column.Type == "mediumText" || column.Type == "longText" {
+			columns = append(columns, fmt.Sprintf("%s(%d)", quoter.ID(column.Name, db), maxKeyLength))
+		} else if column.Type == "json" || column.Type == "jsonb" { // ignore json and jsonb
+			continue
 		} else {
-			columns = append(columns, quoter.ID(Column.Name, db))
+			columns = append(columns, quoter.ID(column.Name, db))
 		}
 	}
 
 	comment := ""
 	if index.Comment != nil {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
+	}
+
+	if len(columns) == 0 {
+		return ""
 	}
 
 	sql := fmt.Sprintf(
@@ -93,8 +112,8 @@ func (grammarSQL SQL) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) string {
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, Column := range primary.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+	for _, column := range primary.Columns {
+		columns = append(columns, quoter.ID(column.Name, db))
 	}
 
 	sql := fmt.Sprintf(

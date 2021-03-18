@@ -341,7 +341,6 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string, 
 				}
 			}
 		}
-
 	}
 	return columns, nil
 }
