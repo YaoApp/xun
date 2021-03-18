@@ -103,6 +103,7 @@ func (table *Table) NewIndex(name string, columns ...*Column) *Index {
 		TableName: table.TableName,
 		Table:     table,
 		Name:      name,
+		Type:      "index",
 		Columns:   columns,
 	}
 }

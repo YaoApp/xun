@@ -136,7 +136,7 @@ type Blueprint interface {
 	MACAddress(name string) *Column
 	Year(name string) *Column
 
-	// timestamps,  timestampsTz,DropTimestamps, DropTimestampsTz, softDeletes, softDeletesTz, DropSoftDeletes, DropSoftDeletesTz
+	// timestamps, timestampsTz,DropTimestamps, DropTimestampsTz, softDeletes, softDeletesTz, DropSoftDeletes, DropSoftDeletesTz
 	Timestamps(args ...int) map[string]*Column
 	TimestampsTz(args ...int) map[string]*Column
 	DropTimestamps()
@@ -147,6 +147,6 @@ type Blueprint interface {
 	DropSoftDeletes()
 	DropSoftDeletesTz()
 
-	// morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
+	//@todo: morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
 
 }
