@@ -55,6 +55,9 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 		} else {
 			typ = "JSON"
 		}
+	} else if typ == "UUID" { // UUID
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		typ = "VARCHAR(36)"
 	}
 
 	sql := fmt.Sprintf(

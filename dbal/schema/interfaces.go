@@ -129,13 +129,12 @@ type Blueprint interface {
 	JSONB(name string) *Column
 
 	// uuid, geometry, geometryCollection, point, multiPoint, polygon, multiPolygon
+	UUID(name string) *Column
 
 	// ipAddress, macAddress, year
 
 	// timestamps, timestampsTz, nullableTimestamps,  softDeletes, softDeletesTz
 
 	// morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
-
-	// foreignId
 
 }

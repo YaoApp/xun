@@ -70,7 +70,6 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string 
 		nullable = primaryKey
 	}
 
-	// comment := utils.GetIF(column.Comment != nil, fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
 	collation := utils.GetIF(column.Collation != nil, fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := utils.GetIF(column.Extra != nil, "AUTOINCREMENT", "")
 
@@ -84,8 +83,9 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string 
 
 	// JSON type
 	if typ == "JSON" || typ == "JSONB" {
-		// comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
 		typ = "TEXT"
+	} else if typ == "UUID" { // UUID
+		typ = "VARCHAR(36)"
 	}
 
 	sql := fmt.Sprintf(

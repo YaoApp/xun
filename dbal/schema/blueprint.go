@@ -349,3 +349,10 @@ func (table *Table) JSONB(name string) *Column {
 	table.PutColumn(column)
 	return column
 }
+
+// UUID Create a new uuid column on the table.
+func (table *Table) UUID(name string) *Column {
+	column := table.NewColumn(name).SetType("uuid")
+	table.PutColumn(column)
+	return column
+}
