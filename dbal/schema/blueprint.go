@@ -377,3 +377,16 @@ func (table *Table) Year(name string) *Column {
 	table.PutColumn(column)
 	return column
 }
+
+// Timestamps Add nullable creation and update timestamps to the table.
+func (table *Table) Timestamps(args ...int) map[string]*Column {
+	return map[string]*Column{
+		"created_at": table.Timestamp("created_at", args...).Null(),
+		"updated_at": table.Timestamp("updated_at", args...).Null(),
+	}
+}
+
+// NullableTimestamps the Timestamps alias Add nullable creation and update timestamps to the table.
+func (table *Table) NullableTimestamps(args ...int) map[string]*Column {
+	return table.Timestamps(args...)
+}
