@@ -109,6 +109,7 @@ type Blueprint interface {
 	UnsignedBigInteger(name string) *Column
 	BigIncrements(name string) *Column
 	ID(name string) *Column
+	ForeignID(name string) *Column
 
 	Decimal(name string, args ...int) *Column
 	UnsignedDecimal(name string, args ...int) *Column
@@ -126,4 +127,15 @@ type Blueprint interface {
 	// json, jsonb types
 	JSON(name string) *Column
 	JSONB(name string) *Column
+
+	// uuid, geometry, geometryCollection, point, multiPoint, polygon, multiPolygon
+
+	// ipAddress, macAddress, year
+
+	// timestamps, timestampsTz, nullableTimestamps,  softDeletes, softDeletesTz
+
+	// morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
+
+	// foreignId
+
 }

@@ -238,6 +238,11 @@ func (table *Table) ID(name string) *Column {
 	return table.BigIncrements(name).Primary()
 }
 
+// ForeignID Alias UnsignedBigInteger. Create a new unsigned big integer (8-byte) column on the table.
+func (table *Table) ForeignID(name string) *Column {
+	return table.UnsignedBigInteger(name)
+}
+
 // Decimal Create a new decimal (16-byte) column on the table.
 func (table *Table) Decimal(name string, args ...int) *Column {
 	column := table.NewColumn(name).SetType("decimal")

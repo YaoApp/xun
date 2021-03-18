@@ -262,6 +262,21 @@ func TestBlueprintID(t *testing.T) {
 	assert.Equal(t, "id", primary.Columns[0].Name, "the primary key should has the id column")
 }
 
+func TestBlueprintForeignID(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.ForeignID(name) })
+	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "bigInteger", testCheckUnsigned)
+	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
+	testCheckIndexesAfterCreate(true, t, nil)
+
+	testAlterTable(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
+		func(table Blueprint, name string, args ...int) *Column { return table.ForeignID(name) },
+	)
+	testCheckColumnsAfterAlter(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
+}
+
 func TestBlueprintDecimal(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
 		total := 10
