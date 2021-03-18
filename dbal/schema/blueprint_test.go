@@ -850,6 +850,33 @@ func TestBlueprintTimestamps(t *testing.T) {
 	}
 }
 
+func TestBlueprintTimestampsWithP(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.Timestamps(6)
+	})
+
+	table := testGetTable()
+	createdAt := table.GetColumn("created_at")
+	updatedAt := table.GetColumn("updated_at")
+	assert.True(t, createdAt != nil, "the column created_at should be created")
+	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+
+	if createdAt != nil {
+		assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
+		assert.True(t, createdAt.Nullable, "the column created_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(createdAt.DateTimePrecision), "the column created_at DateTimePrecision should be 6")
+	}
+
+	if updatedAt != nil {
+		assert.Equal(t, "timestamp", updatedAt.Type, "the column updated_at type should be timestamp")
+		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(updatedAt.DateTimePrecision), "the column updated_at DateTimePrecision should be 6")
+	}
+}
+
 func TestBlueprintNullableTimestamps(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_blueprint")
@@ -872,6 +899,33 @@ func TestBlueprintNullableTimestamps(t *testing.T) {
 	if updatedAt != nil {
 		assert.Equal(t, "timestamp", updatedAt.Type, "the column updated_at type should be timestamp")
 		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
+	}
+}
+
+func TestBlueprintNullableTimestampsWithP(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.NullableTimestamps(6)
+	})
+
+	table := testGetTable()
+	createdAt := table.GetColumn("created_at")
+	updatedAt := table.GetColumn("updated_at")
+	assert.True(t, createdAt != nil, "the column created_at should be created")
+	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+
+	if createdAt != nil {
+		assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
+		assert.True(t, createdAt.Nullable, "the column created_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(createdAt.DateTimePrecision), "the column created_at DateTimePrecision should be 6")
+	}
+
+	if updatedAt != nil {
+		assert.Equal(t, "timestamp", updatedAt.Type, "the column updated_at type should be timestamp")
+		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(updatedAt.DateTimePrecision), "the column updated_at DateTimePrecision should be 6")
 	}
 }
 
