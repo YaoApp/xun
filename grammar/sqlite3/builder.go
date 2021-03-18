@@ -88,6 +88,8 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string 
 		typ = "VARCHAR(36)"
 	} else if typ == "IPADDRESS" { // ipAdderss
 		typ = "integer"
+	} else if typ == "MACADDRESS" { // macAddress 08:00:2b:01:02:03:04:05  bigint unsigned (8 bytes)
+		typ = "UNSIGNED BIG INT"
 	}
 
 	sql := fmt.Sprintf(

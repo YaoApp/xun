@@ -57,6 +57,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"jsonb":        "JSONB",
 			"uuid":         "UUID",
 			"ipAddress":    "IPADDRESS",
+			"macAddress":   "MACADDRESS",
 
 			"mediumInteger": "mediumInteger",
 			"year":          "YEAR",

@@ -363,3 +363,10 @@ func (table *Table) IPAddress(name string) *Column {
 	table.PutColumn(column)
 	return column
 }
+
+// MACAddress Create a new MAC address column on the table.
+func (table *Table) MACAddress(name string) *Column {
+	column := table.NewColumn(name).SetType("macAddress")
+	table.PutColumn(column)
+	return column
+}

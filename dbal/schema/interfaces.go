@@ -132,6 +132,7 @@ type Blueprint interface {
 	// @todo: geometry, geometryCollection, point, multiPoint, polygon, multiPolygon
 	UUID(name string) *Column
 	IPAddress(name string) *Column
+	MACAddress(name string) *Column
 
 	// timestamps, timestampsTz, nullableTimestamps,  softDeletes, softDeletesTz
 

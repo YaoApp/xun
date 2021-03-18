@@ -793,6 +793,22 @@ func TestBlueprinIPAddress(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "ipAddress", nil)
 }
 
+func TestBlueprinMACAddress(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.MACAddress(name)
+	})
+	testCheckColumnsAfterCreate(unit.DriverNot("sqlite3"), t, "macAddress", nil)
+	testCheckColumnsAfterCreate(unit.DriverIs("sqlite3"), t, "bigInteger", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 48) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.MACAddress(name)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "macAddress", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()
