@@ -929,6 +929,74 @@ func TestBlueprintNullableTimestampsWithP(t *testing.T) {
 	}
 }
 
+func TestBlueprintTimestampsTz(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.TimestampsTz()
+	})
+
+	table := testGetTable()
+	createdAt := table.GetColumn("created_at")
+	updatedAt := table.GetColumn("updated_at")
+	assert.True(t, createdAt != nil, "the column created_at should be created")
+	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+
+	if createdAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestamp")
+		} else {
+			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
+		}
+		assert.True(t, createdAt.Nullable, "the column created_at nullable should be true")
+	}
+
+	if updatedAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestamp")
+		} else {
+			assert.Equal(t, "timestamp", updatedAt.Type, "the column updated_at type should be timestamp")
+		}
+		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
+	}
+}
+
+func TestBlueprintTimestampsTzWithP(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropIfExists("table_test_blueprint")
+	builder.Create("table_test_blueprint", func(table Blueprint) {
+		table.ID("id")
+		table.TimestampsTz(6)
+	})
+
+	table := testGetTable()
+	createdAt := table.GetColumn("created_at")
+	updatedAt := table.GetColumn("updated_at")
+	assert.True(t, createdAt != nil, "the column created_at should be created")
+	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+
+	if createdAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", createdAt.Type, "the column created_at type should be timestamp")
+		} else {
+			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
+		}
+		assert.True(t, createdAt.Nullable, "the column created_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(createdAt.DateTimePrecision), "the column created_at DateTimePrecision should be 6")
+	}
+
+	if updatedAt != nil {
+		if unit.DriverIs("postgres") {
+			assert.Equal(t, "timestampTz", updatedAt.Type, "the column updated_at type should be timestamp")
+		} else {
+			assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
+		}
+		assert.True(t, updatedAt.Nullable, "the column updated_at nullable should be true")
+		assert.Equal(t, 6, utils.IntVal(updatedAt.DateTimePrecision), "the column updated_at DateTimePrecision should be 6")
+	}
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

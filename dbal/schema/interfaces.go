@@ -138,6 +138,7 @@ type Blueprint interface {
 	// timestamps, nullableTimestamps, timestampsTz,  softDeletes, softDeletesTz
 	Timestamps(args ...int) map[string]*Column
 	NullableTimestamps(args ...int) map[string]*Column
+	TimestampsTz(args ...int) map[string]*Column
 
 	// morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
 

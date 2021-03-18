@@ -390,3 +390,11 @@ func (table *Table) Timestamps(args ...int) map[string]*Column {
 func (table *Table) NullableTimestamps(args ...int) map[string]*Column {
 	return table.Timestamps(args...)
 }
+
+// TimestampsTz Add creation and update timestampTz columns to the table.
+func (table *Table) TimestampsTz(args ...int) map[string]*Column {
+	return map[string]*Column{
+		"created_at": table.TimestampTz("created_at", args...).Null(),
+		"updated_at": table.TimestampTz("updated_at", args...).Null(),
+	}
+}
