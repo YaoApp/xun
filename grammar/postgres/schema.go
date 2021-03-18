@@ -452,6 +452,8 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
 	} else if typ == "IPADDRESS" { // ipAddress
 		typ = "integer"
+	} else if typ == "YEAR" { // year
+		typ = "SMALLINT"
 	}
 
 	if utils.StringVal(Column.Extra) != "" {

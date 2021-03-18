@@ -58,9 +58,8 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			"uuid":         "UUID",
 			"ipAddress":    "IPADDRESS",
 			"macAddress":   "MACADDRESS",
-
-			"mediumInteger": "mediumInteger",
-			"year":          "YEAR",
+			"year":         "YEAR",
+			// "mediumInteger": "mediumInteger",
 		},
 	}
 	return *sql

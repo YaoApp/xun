@@ -52,6 +52,8 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string
 
 	if typ == "IPADDRESS" { // ipAddress
 		typ = "integer"
+	} else if typ == "YEAR" { // 2021 -1046 smallInt (2-byte)
+		typ = "SMALLINT"
 	}
 
 	sql := fmt.Sprintf(
@@ -73,7 +75,8 @@ func (grammarSQL Postgres) SQLAddComment(db *sqlx.DB, column *dbal.Column) strin
 			grammarSQL.VAL(column.Comment, db),
 		), "").(string)
 
-	if column.Type == "ipAddress" { // ipAddress
+	mappingTypes := []string{"ipAddress", "year"}
+	if utils.StringHave(mappingTypes, column.Type) {
 		comment = fmt.Sprintf("COMMENT on column %s.%s is %s;",
 			grammarSQL.ID(column.TableName, db),
 			grammarSQL.ID(column.Name, db),

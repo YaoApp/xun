@@ -65,6 +65,9 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
 		typ = "BIGINT"
 		unsigned = "UNSIGNED"
+	} else if typ == "YEAR" { // 2021 -1046 smallInt (2-byte)
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		typ = "SMALLINT"
 	}
 
 	sql := fmt.Sprintf(

@@ -370,3 +370,10 @@ func (table *Table) MACAddress(name string) *Column {
 	table.PutColumn(column)
 	return column
 }
+
+// Year Create a new year column on the table.
+func (table *Table) Year(name string) *Column {
+	column := table.NewColumn(name).SetType("year")
+	table.PutColumn(column)
+	return column
+}
