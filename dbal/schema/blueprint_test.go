@@ -777,6 +777,22 @@ func TestBlueprinUUID(t *testing.T) {
 	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "uuid", nil)
 }
 
+func TestBlueprinIPAddress(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
+		return table.IPAddress(name)
+	})
+	testCheckColumnsAfterCreate(unit.DriverNot("sqlite3"), t, "ipAddress", nil)
+	testCheckColumnsAfterCreate(unit.DriverIs("sqlite3"), t, "integer", nil)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name) },
+		func(table Blueprint, name string, args ...int) *Column {
+			return table.IPAddress(name)
+		},
+	)
+	testCheckColumnsAfterAlter(unit.Not("sqlite3"), t, "ipAddress", nil)
+}
+
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()

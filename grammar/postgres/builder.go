@@ -10,35 +10,35 @@ import (
 )
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string {
+func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[Column.Type]
+	typ, has := types[column.Type]
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision != nil && Column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
+	if column.Precision != nil && column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
 	} else if strings.Contains(typ, "TIMESTAMP(%d)") || strings.Contains(typ, "TIME(%d)") {
-		DateTimePrecision := utils.IntVal(Column.DateTimePrecision, 0)
+		DateTimePrecision := utils.IntVal(column.DateTimePrecision, 0)
 		typ = fmt.Sprintf(typ, DateTimePrecision)
 	} else if typ == "BYTEA" {
 		typ = "BYTEA"
 	} else if typ == "ENUM" {
-		typ = strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
-	} else if Column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
+		typ = strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
+	} else if column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
 	}
 
 	unsigned := ""
-	nullable := utils.GetIF(Column.Nullable, "NULL", "NOT NULL").(string)
-	defaultValue := utils.GetIF(Column.Default != nil, fmt.Sprintf("DEFAULT %v", Column.Default), "").(string)
-	comment := utils.GetIF(utils.StringVal(Column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(Column.Comment, db)), "").(string)
-	collation := utils.GetIF(utils.StringVal(Column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(Column.Collation)), "").(string)
+	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", column.Default), "").(string)
+	// comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
+	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := ""
-	if utils.StringVal(Column.Extra) != "" {
+	if utils.StringVal(column.Extra) != "" {
 		if typ == "BIGINT" {
 			typ = "BIGSERIAL"
 		} else if typ == "SMALLINT" {
@@ -49,12 +49,38 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, Column *dbal.Column) string
 		nullable = ""
 		defaultValue = ""
 	}
+
+	if typ == "IPADDRESS" { // ipAddress
+		typ = "integer"
+	}
+
 	sql := fmt.Sprintf(
-		"%s %s %s %s %s %s %s %s",
-		quoter.ID(Column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
+		"%s %s %s %s %s %s %s",
+		quoter.ID(column.Name, db), typ, unsigned, nullable, defaultValue, extra, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
+}
+
+// SQLAddComment return the add comment sql for table create
+func (grammarSQL Postgres) SQLAddComment(db *sqlx.DB, column *dbal.Column) string {
+	comment := utils.GetIF(
+		utils.StringVal(column.Comment) != "",
+		fmt.Sprintf(
+			"COMMENT on column %s.%s is %s;",
+			grammarSQL.ID(column.TableName, db),
+			grammarSQL.ID(column.Name, db),
+			grammarSQL.VAL(column.Comment, db),
+		), "").(string)
+
+	if column.Type == "ipAddress" { // ipAddress
+		comment = fmt.Sprintf("COMMENT on column %s.%s is %s;",
+			grammarSQL.ID(column.TableName, db),
+			grammarSQL.ID(column.Name, db),
+			grammarSQL.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db),
+		)
+	}
+	return comment
 }
 
 // SQLAddIndex  return the add index sql for table create
@@ -106,8 +132,8 @@ func (grammarSQL Postgres) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) str
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
-	for _, Column := range primary.Columns {
-		columns = append(columns, quoter.ID(Column.Name, db))
+	for _, column := range primary.Columns {
+		columns = append(columns, quoter.ID(column.Name, db))
 	}
 
 	sql := fmt.Sprintf(

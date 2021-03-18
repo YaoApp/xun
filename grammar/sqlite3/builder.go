@@ -84,8 +84,10 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string 
 	// JSON type
 	if typ == "JSON" || typ == "JSONB" {
 		typ = "TEXT"
-	} else if typ == "UUID" { // UUID
+	} else if typ == "UUID" { // uuid
 		typ = "VARCHAR(36)"
+	} else if typ == "IPADDRESS" { // ipAdderss
+		typ = "integer"
 	}
 
 	sql := fmt.Sprintf(

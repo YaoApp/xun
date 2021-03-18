@@ -82,6 +82,7 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.TableName, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
+	commentStmts := []string{}
 
 	var primary *dbal.Primary = nil
 	columns := []*dbal.Column{}
@@ -117,13 +118,18 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 	types := map[string][]string{}
 
 	// Columns
-	for _, Column := range columns {
+	for _, column := range columns {
 		stmts = append(stmts,
-			grammarSQL.SQLAddColumn(db, Column),
+			grammarSQL.SQLAddColumn(db, column),
 		)
-		if Column.Type == "enum" {
-			typeName := strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
-			types[typeName] = Column.Option
+
+		commentStmt := grammarSQL.SQLAddComment(db, column)
+		if commentStmt != "" {
+			commentStmts = append(commentStmts, commentStmt)
+		}
+		if column.Type == "enum" {
+			typeName := strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
+			types[typeName] = column.Option
 		}
 	}
 
@@ -160,8 +166,16 @@ func (grammarSQL Postgres) Create(table *dbal.Table, db *sqlx.DB) error {
 			indexStmts = append(indexStmts, indexStmt)
 		}
 	}
-	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
-	_, err = db.Exec(strings.Join(indexStmts, ";\n"))
+	if len(indexStmts) > 0 {
+		defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
+		_, err = db.Exec(strings.Join(indexStmts, ";\n"))
+	}
+
+	// Comments
+	if len(commentStmts) > 0 {
+		defer logger.Debug(logger.CREATE, commentStmts...).TimeCost(time.Now())
+		_, err = db.Exec(strings.Join(commentStmts, ";\n"))
+	}
 
 	// Callback
 	for _, cmd := range cbCommands {
@@ -277,6 +291,15 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
+
+			commentStmt := grammarSQL.SQLAddComment(db, column)
+			if commentStmt != "" {
+				err := grammarSQL.ExecSQL(db, table, commentStmt)
+				if err != nil {
+					errs = append(errs, err)
+				}
+			}
+
 			command.Callback(err)
 			break
 		case "ChangeColumn":
@@ -296,6 +319,15 @@ func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
+
+			commentStmt := grammarSQL.SQLAddComment(db, column)
+			if commentStmt != "" {
+				err := grammarSQL.ExecSQL(db, table, commentStmt)
+				if err != nil {
+					errs = append(errs, err)
+				}
+			}
+
 			command.Callback(err)
 			break
 		case "RenameColumn":
@@ -418,6 +450,8 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 		typ = strings.ToLower("ENUM__" + strings.Join(Column.Option, "_EOPT_"))
 	} else if Column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(Column.Length))
+	} else if typ == "IPADDRESS" { // ipAddress
+		typ = "integer"
 	}
 
 	if utils.StringVal(Column.Extra) != "" {
@@ -456,10 +490,6 @@ func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *dbal.Index) string 
 		columns = append(columns, quoter.ID(Column.Name, db))
 	}
 
-	comment := ""
-	if index.Comment != nil {
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
-	}
 	name := quoter.ID(index.Name, db)
 	sql := fmt.Sprintf(
 		"CREATE %s %s ON %s (%s)",
@@ -467,8 +497,8 @@ func (grammarSQL Postgres) SQLAlterIndex(db *sqlx.DB, index *dbal.Index) string 
 
 	if typ == "PRIMARY KEY" {
 		sql = fmt.Sprintf(
-			"%s (%s) %s",
-			typ, strings.Join(columns, ","), comment)
+			"%s (%s) ",
+			typ, strings.Join(columns, ","))
 	}
 	return sql
 }
@@ -563,7 +593,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 		 	WHEN (COLUMN_DEFAULT ~ 'nextval\(.*_seq') THEN 'auto_increment'
 		 	ELSE ''
 		END as "extra"`,
-		"'' as \"comment\"",
+		"pg_catalog.col_description(format('%s.%s',table_schema,table_name)::regclass::oid,ordinal_position)  as \"comment\"",
 	}
 	sql := fmt.Sprintf(`
 			SELECT %s
@@ -580,9 +610,6 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 	if err != nil {
 		return nil, err
 	}
-	//
-
-	enumOptions := map[string][]string{}
 
 	// Cast the database data type to DBAL data type
 	for _, column := range columns {
@@ -591,10 +618,18 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string, db 
 			column.Type = typ
 		}
 
+		if column.Comment != nil {
+			typ = grammarSQL.GetTypeFromComment(column.Comment)
+			if typ != "" {
+				column.Type = typ
+			}
+		}
+
 		// user defined types
 		if column.Type == "USER-DEFINED" {
 
 			// enum options
+			enumOptions := map[string][]string{}
 			if strings.Contains(column.TypeName, "enum__") {
 				column.Type = "enum"
 				if _, has := enumOptions[column.TypeName]; !has {

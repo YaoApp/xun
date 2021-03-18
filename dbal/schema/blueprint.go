@@ -356,3 +356,10 @@ func (table *Table) UUID(name string) *Column {
 	table.PutColumn(column)
 	return column
 }
+
+// IPAddress Create a new IP address ( integer 4-byte ) column on the table.
+func (table *Table) IPAddress(name string) *Column {
+	column := table.NewColumn(name).SetType("ipAddress")
+	table.PutColumn(column)
+	return column
+}

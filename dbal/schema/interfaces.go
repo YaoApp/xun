@@ -128,10 +128,10 @@ type Blueprint interface {
 	JSON(name string) *Column
 	JSONB(name string) *Column
 
-	// uuid, geometry, geometryCollection, point, multiPoint, polygon, multiPolygon
+	// uuid, ipAddress, macAddress, year
+	// @todo: geometry, geometryCollection, point, multiPoint, polygon, multiPolygon
 	UUID(name string) *Column
-
-	// ipAddress, macAddress, year
+	IPAddress(name string) *Column
 
 	// timestamps, timestampsTz, nullableTimestamps,  softDeletes, softDeletesTz
 

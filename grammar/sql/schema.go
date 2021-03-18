@@ -539,7 +539,7 @@ func (grammarSQL SQL) GetTypeFromComment(comment *string) string {
 		return ""
 	}
 
-	re := regexp.MustCompile(`^T:([a-z]+)`)
+	re := regexp.MustCompile(`^T:([a-zA-Z]+)`)
 	matched := re.FindStringSubmatch(lines[0])
 	if len(matched) == 2 {
 		return matched[1]

@@ -58,6 +58,9 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 	} else if typ == "UUID" { // UUID
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
 		typ = "VARCHAR(36)"
+	} else if typ == "IPADDRESS" { // ipAddress
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		typ = "integer"
 	}
 
 	sql := fmt.Sprintf(
