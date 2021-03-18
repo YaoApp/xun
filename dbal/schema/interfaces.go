@@ -93,6 +93,7 @@ type Blueprint interface {
 	TimestampTz(name string, args ...int) *Column
 
 	// Numberic types
+	// @todo: MediumInteger
 	TinyInteger(name string) *Column
 	UnsignedTinyInteger(name string) *Column
 	TinyIncrements(name string) *Column
@@ -135,7 +136,7 @@ type Blueprint interface {
 	MACAddress(name string) *Column
 	Year(name string) *Column
 
-	// timestamps, nullableTimestamps, timestampsTz,DropTimestamps, softDeletes, softDeletesTz, DropSoftDeletes
+	// timestamps, nullableTimestamps, timestampsTz,DropTimestamps, DropTimestampsTz, softDeletes, softDeletesTz, DropSoftDeletes, DropSoftDeletesTz
 	Timestamps(args ...int) map[string]*Column
 	NullableTimestamps(args ...int) map[string]*Column
 	TimestampsTz(args ...int) map[string]*Column

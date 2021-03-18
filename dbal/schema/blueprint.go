@@ -416,7 +416,7 @@ func (table *Table) SoftDeletes(args ...int) *Column {
 
 // SoftDeletesTz Add a "deleted_at" timestampTz for the table.
 func (table *Table) SoftDeletesTz(args ...int) *Column {
-	return table.Timestamp("deleted_at", args...).Null()
+	return table.TimestampTz("deleted_at", args...).Null()
 }
 
 // DropSoftDeletes drop the "deleted_at" timestamp columns.
