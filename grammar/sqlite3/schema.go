@@ -144,8 +144,8 @@ func (grammarSQL SQLite3) Rename(old string, new string, db *sqlx.DB) error {
 	return err
 }
 
-// Get a table on the schema
-func (grammarSQL SQLite3) Get(table *dbal.Table, db *sqlx.DB) error {
+// GetTable get a table on the schema
+func (grammarSQL SQLite3) GetTable(table *dbal.Table, db *sqlx.DB) error {
 	columns, err := grammarSQL.GetColumnListing(table.DBName, table.TableName, db)
 	if err != nil {
 		return err
@@ -488,7 +488,7 @@ func (grammarSQL SQLite3) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) er
 		return err
 	}
 	// update table structure
-	err = grammarSQL.Get(table, db)
+	err = grammarSQL.GetTable(table, db)
 	if err != nil {
 		return err
 	}

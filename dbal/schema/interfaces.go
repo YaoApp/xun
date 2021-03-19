@@ -4,16 +4,22 @@ import "github.com/yaoapp/xun/dbal"
 
 // Schema The schema interface
 type Schema interface {
-	Get(string) (Blueprint, error)
+	GetVersion() (*dbal.Version, error)
+	GetConnection() (*dbal.Connection, error)
+
+	// GetAllTables()
+	// GetColumnListing(tableName string)
+
+	GetTable(string) (Blueprint, error)
 	Create(string, func(table Blueprint)) error
 	Drop(string) error
 	Alter(string, func(table Blueprint)) error
 	HasTable(string) bool
 	Rename(string, string) error
 	DropIfExists(string) error
-	GetVersion() (*dbal.Version, error)
 
-	MustGet(string) Blueprint
+	MustGetConnection() *dbal.Connection
+	MustGetTable(string) Blueprint
 	MustCreate(string, func(table Blueprint)) Blueprint
 	MustDrop(string)
 	MustAlter(string, func(table Blueprint)) Blueprint
@@ -26,19 +32,18 @@ type Schema interface {
 type Blueprint interface {
 
 	// defined in table.go
+	Get() *Table
+
 	GetName() string
 	GetPrefix() string
 	GetFullName() string
-
 	GetColumns() map[string]*Column
 	GetIndexes() map[string]*Index
 
-	GetTable() *Table
-
 	// defined in column.go
+	GetColumn(name string) *Column
 	NewColumn(name string) *Column
 	PushColumn(column *Column) *Table
-	GetColumn(name string) *Column
 	Column(name string) *Column
 	HasColumn(name ...string) bool
 	PutColumn(column *Column) *Table
@@ -54,9 +59,9 @@ type Blueprint interface {
 	DropPrimary()
 
 	// defined in index.go
+	GetIndex(name string) *Index
 	NewIndex(name string, columns ...*Column) *Index
 	PushIndex(index *Index) *Table
-	GetIndex(name string) *Index
 	Index(name string) *Index
 	HasIndex(name ...string) bool
 	PutIndex(key string, columnNames ...string) *Table

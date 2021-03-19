@@ -45,8 +45,8 @@ func (table *Table) GetIndexes() map[string]*Index {
 	return table.IndexMap
 }
 
-// GetTable Get the DBAL table instance
-func (table *Table) GetTable() *Table {
+// Get Get the DBAL table instance
+func (table *Table) Get() *Table {
 	return table
 }
 

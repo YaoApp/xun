@@ -11,7 +11,7 @@ type Grammar interface {
 	GetSchemaName() string
 
 	Exists(name string, db *sqlx.DB) bool
-	Get(table *Table, db *sqlx.DB) error
+	GetTable(table *Table, db *sqlx.DB) error
 	Create(table *Table, db *sqlx.DB) error
 	Alter(table *Table, db *sqlx.DB) error
 	Drop(name string, db *sqlx.DB) error

@@ -54,7 +54,7 @@ func TestBlueprintTinyIncrements(t *testing.T) {
 	})
 	assert.Nil(t, err, "the create method should be return nil")
 
-	table := builder.MustGet("table_test_blueprint")
+	table := builder.MustGetTable("table_test_blueprint")
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
@@ -113,7 +113,7 @@ func TestBlueprintSmallIncrements(t *testing.T) {
 	})
 	assert.Nil(t, err, "the create method should be return nil")
 
-	table := builder.MustGet("table_test_blueprint")
+	table := builder.MustGetTable("table_test_blueprint")
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
@@ -173,7 +173,7 @@ func TestBlueprintIncrements(t *testing.T) {
 	})
 	assert.Nil(t, err, "the create method should be return nil")
 
-	table := builder.MustGet("table_test_blueprint")
+	table := builder.MustGetTable("table_test_blueprint")
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 	assert.Equal(t, "integer", column.Type, "the column type should be integer")
@@ -228,7 +228,7 @@ func TestBlueprintBigIncrements(t *testing.T) {
 	})
 	assert.Nil(t, err, "the create method should be return nil")
 
-	table := builder.MustGet("table_test_blueprint")
+	table := builder.MustGetTable("table_test_blueprint")
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
@@ -253,7 +253,7 @@ func TestBlueprintID(t *testing.T) {
 	})
 	assert.Nil(t, err, "the create method should be return nil")
 
-	table := builder.MustGet("table_test_blueprint")
+	table := builder.MustGetTable("table_test_blueprint")
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
@@ -1160,7 +1160,7 @@ func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter 
 
 func testGetTable() Blueprint {
 	builder := getTestBuilder()
-	return builder.MustGet("table_test_blueprint")
+	return builder.MustGetTable("table_test_blueprint")
 }
 
 func testCheckUnsigned(t *testing.T, name string, column *Column) {

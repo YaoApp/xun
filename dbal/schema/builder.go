@@ -60,7 +60,7 @@ func NewGrammar(driver string, dsn string) dbal.Grammar {
 	return grammar
 }
 
-// NewHook get the hook of driver
+// NewHook get the hook of driver( should be optimized )
 func NewHook(driver string) dbal.Hook {
 	hook, has := dbal.Hooks[driver]
 	if !has {
@@ -75,15 +75,36 @@ func (builder *Builder) table(name string) *Table {
 	return table
 }
 
+// GetConnection Get the database connection instance.
+func (builder *Builder) GetConnection() (*dbal.Connection, error) {
+	version, err := builder.GetVersion()
+	if err != nil {
+		return nil, err
+	}
+	return &dbal.Connection{
+		DB:      builder.Conn.Write,
+		Config:  builder.Conn.WriteConfig,
+		Option:  builder.Conn.Option,
+		Version: version,
+	}, nil
+}
+
+// MustGetConnection Get the database connection instance.
+func (builder *Builder) MustGetConnection() *dbal.Connection {
+	connection, err := builder.GetConnection()
+	utils.PanicIF(err)
+	return connection
+}
+
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) bool {
 	return builder.Grammar.Exists(name, builder.Conn.Write)
 }
 
-// Get a table on the schema.
-func (builder *Builder) Get(name string) (Blueprint, error) {
+// GetTable a table on the schema.
+func (builder *Builder) GetTable(name string) (Blueprint, error) {
 	table := builder.table(name)
-	err := builder.Grammar.Get(table.Table, builder.Conn.Write)
+	err := builder.Grammar.GetTable(table.Table, builder.Conn.Write)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +138,9 @@ func (builder *Builder) Get(name string) (Blueprint, error) {
 	return table, nil
 }
 
-// MustGet a table on the schema.
-func (builder *Builder) MustGet(name string) Blueprint {
-	table, err := builder.Get(name)
+// MustGetTable a table on the schema.
+func (builder *Builder) MustGetTable(name string) Blueprint {
+	table, err := builder.GetTable(name)
 	utils.PanicIF(err)
 	return table
 }
@@ -142,16 +163,16 @@ func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) 
 
 // Alter a table on the schema.
 func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
-	table := builder.MustGet(name)
+	table := builder.MustGetTable(name)
 	callback(table)
-	return builder.Grammar.Alter(table.GetTable().Table, builder.Conn.Write)
+	return builder.Grammar.Alter(table.Get().Table, builder.Conn.Write)
 }
 
 // MustAlter a table on the schema.
 func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) Blueprint {
-	table := builder.MustGet(name)
+	table := builder.MustGetTable(name)
 	callback(table)
-	err := builder.Grammar.Alter(table.GetTable().Table, builder.Conn.Write)
+	err := builder.Grammar.Alter(table.Get().Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }

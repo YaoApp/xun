@@ -76,8 +76,8 @@ func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
 	return name == fmt.Sprintf("%s", res[0])
 }
 
-// Get a table on the schema
-func (grammarSQL SQL) Get(table *dbal.Table, db *sqlx.DB) error {
+// GetTable get a table on the schema
+func (grammarSQL SQL) GetTable(table *dbal.Table, db *sqlx.DB) error {
 	columns, err := grammarSQL.GetColumnListing(table.DBName, table.TableName, db)
 	if err != nil {
 		return err
@@ -521,7 +521,7 @@ func (grammarSQL SQL) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) error 
 		return err
 	}
 	// update table structure
-	err = grammarSQL.Get(table, db)
+	err = grammarSQL.GetTable(table, db)
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Connection the database connection
+type Connection struct {
+	DB      *sqlx.DB
+	Config  *Config
+	Option  *Option
+	Version *Version
+}
+
 // Config the Connection configuration
 type Config struct {
 	Driver   string `json:"driver"`        // The driver name. mysql,pgsql,sqlite3,oci,sqlsrv

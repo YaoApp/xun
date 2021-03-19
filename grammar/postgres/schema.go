@@ -197,8 +197,8 @@ func (grammarSQL Postgres) Rename(old string, new string, db *sqlx.DB) error {
 	return err
 }
 
-// Get a table on the schema
-func (grammarSQL Postgres) Get(table *dbal.Table, db *sqlx.DB) error {
+// GetTable get a table on the schema
+func (grammarSQL Postgres) GetTable(table *dbal.Table, db *sqlx.DB) error {
 	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.TableName, db)
 	if err != nil {
 		return err
@@ -422,7 +422,7 @@ func (grammarSQL Postgres) ExecSQL(db *sqlx.DB, table *dbal.Table, sql string) e
 		return err
 	}
 	// update table structure
-	err = grammarSQL.Get(table, db)
+	err = grammarSQL.GetTable(table, db)
 	if err != nil {
 		return err
 	}

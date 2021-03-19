@@ -55,6 +55,20 @@ func getTestBuilderInstance() *Builder {
 	return testBuilderInstance
 }
 
+func TestBuilderGetConnection(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	conn, err := builder.GetConnection()
+	assert.Equal(t, nil, err, "the return error should be nil")
+	value := ""
+	err = conn.DB.Get(&value, "SELECT 'hello' ")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err == nil {
+		assert.Equal(t, "hello", value, "the return value should be hello")
+	}
+	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
+}
+
 func TestBuilderCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -72,10 +86,10 @@ func TestBuilderCreate(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func TestBuilderGet(t *testing.T) {
+func TestBuilderGetTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	table, err := builder.Get("table_test_builder")
+	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	assert.True(t, table != nil, "the return table should be BluePrint")
 	if table == nil {
@@ -138,7 +152,7 @@ func TestBuilderAlter(t *testing.T) {
 		return
 	}
 	// cheking the schema structure
-	table, err := builder.Get("table_test_builder")
+	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlter(t, table)
 	// builder.Drop("table_test_builder")
@@ -172,6 +186,19 @@ func TestBuilderGetVersion(t *testing.T) {
 	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
 }
 
+func TestBuilderMustGetConnection(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	conn := builder.MustGetConnection()
+	value := ""
+	err := conn.DB.Get(&value, "SELECT 'hello' ")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err == nil {
+		assert.Equal(t, "hello", value, "the return value should be hello")
+	}
+	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
+}
+
 func TestBuilderMustCreate(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -189,10 +216,10 @@ func TestBuilderMustCreate(t *testing.T) {
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 }
 
-func TestBuilderMustGet(t *testing.T) {
+func TestBuilderMustGetTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
-	table := builder.MustGet("table_test_builder")
+	table := builder.MustGetTable("table_test_builder")
 	assert.True(t, table != nil, "the return table should be BluePrint")
 	if table == nil {
 		return
@@ -249,7 +276,7 @@ func TestBuilderMustAlter(t *testing.T) {
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 
 	// cheking the schema structure
-	table, err := builder.Get("table_test_builder")
+	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlter(t, table)
 	builder.Drop("table_test_builder")
