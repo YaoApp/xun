@@ -9,26 +9,26 @@ type Schema interface {
 
 	GetTables() ([]string, error)
 
-	GetTable(string) (Blueprint, error)
-	CreateTable(string, func(table Blueprint)) error
-	DropTable(string) error
-	AlterTable(string, func(table Blueprint)) error
-	HasTable(string) (bool, error)
-	RenameTable(string, string) error
-	DropTableIfExists(string) error
+	GetTable(name string) (Blueprint, error)
+	CreateTable(name string, createFunc func(table Blueprint)) error
+	DropTable(name string) error
+	AlterTable(name string, alterFunc func(table Blueprint)) error
+	HasTable(name string) (bool, error)
+	RenameTable(old string, new string) error
+	DropTableIfExists(name string) error
 
 	MustGetVersion() *dbal.Version
 	MustGetConnection() *dbal.Connection
 
 	MustGetTables() []string
 
-	MustGetTable(string) Blueprint
-	MustCreateTable(string, func(table Blueprint)) Blueprint
-	MustDropTable(string)
-	MustAlterTable(string, func(table Blueprint)) Blueprint
-	MustHasTable(string) bool
-	MustRenameTable(string, string) Blueprint
-	MustDropTableIfExists(string)
+	MustGetTable(name string) Blueprint
+	MustCreateTable(name string, createFunc func(table Blueprint)) Blueprint
+	MustDropTable(name string)
+	MustAlterTable(name string, alterFunc func(table Blueprint)) Blueprint
+	MustHasTable(name string) bool
+	MustRenameTable(old string, new string) Blueprint
+	MustDropTableIfExists(name string)
 }
 
 // Blueprint the table operating interface
@@ -44,13 +44,7 @@ type Blueprint interface {
 
 	// defined in column.go
 	GetColumn(name string) *Column
-	NewColumn(name string) *Column
-	PushColumn(column *Column) *Table
-	Column(name string) *Column
 	HasColumn(name ...string) bool
-	PutColumn(column *Column) *Table
-	AddColumn(column *Column) *Table
-	ChangeColumn(column *Column) *Table
 	RenameColumn(old string, new string) *Column
 	DropColumn(name ...string)
 
@@ -62,22 +56,14 @@ type Blueprint interface {
 
 	// defined in index.go
 	GetIndex(name string) *Index
-	NewIndex(name string, columns ...*Column) *Index
-	PushIndex(index *Index) *Table
-	Index(name string) *Index
 	HasIndex(name ...string) bool
-	PutIndex(key string, columnNames ...string) *Table
-	PutUnique(key string, columnNames ...string) *Table
-	AddIndex(key string, columnNames ...string) *Table
-	AddUnique(key string, columnNames ...string) *Table
-	ChangeIndex(key string, columnNames ...string) *Table
+	AddIndex(name string, columnNames ...string) *Table
+	AddUnique(name string, columnNames ...string) *Table
 	RenameIndex(old string, new string) *Index
-	DropIndex(key ...string)
+	DropIndex(name ...string)
 
 	// defined in constraint.go
-	AddUniqueConstraint(name string, columnNames ...string)
-	GetUniqueConstraint(name string)
-	DropUniqueConstraint(name string)
+	// @todo: GetUniqueConstraint, AddUniqueConstraint, DropUniqueConstraint
 
 	// defined in blueprint.go
 	// Character types

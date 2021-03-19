@@ -8,6 +8,63 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
+func TestColumnGetColumn(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilderInstance()
+	table := NewTable("test", builder)
+	NewColumnsForTest(table)
+
+	col1 := table.GetColumn("field1")
+	assert.True(t, col1 != nil, "the column field1 should not be nil")
+	if col1 != nil {
+		assert.Equal(t, "field1", col1.Name, "the column name should be field1")
+		assert.Equal(t, 20, utils.IntVal(col1.Length), "the column field1 length should be 20")
+	}
+
+	col2 := table.GetColumn("field2")
+	assert.True(t, col2 != nil, "the column field2 should not be nil")
+	if col2 != nil {
+		assert.Equal(t, "field2", col2.Name, "the column name should be field2")
+		assert.Equal(t, 40, utils.IntVal(col2.Length), "the column field2 length should be 20")
+	}
+}
+
+func TestColumnHasColumn(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilderInstance()
+	table := NewTable("test", builder)
+	NewColumnsForTest(table)
+	assert.True(t, table.HasColumn("field1"), "the table test should have the field1 column")
+	assert.True(t, table.HasColumn("field2"), "the table test should have the field2 column")
+	assert.False(t, table.HasColumn("field3"), "the table test should not have the field3 column")
+}
+
+func TestColumnRenameColumn(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	NewTableForColumnTest()
+	table := builder.MustAlterTable("table_test_column", func(table Blueprint) {
+		table.RenameColumn("field2", "re_field2")
+	})
+	assert.True(t, table.HasColumn("field1"), "the table table_test_column should have the field1 column")
+	assert.True(t, table.HasColumn("re_field2"), "the table table_test_column should have the re_field2 column")
+	assert.False(t, table.HasColumn("field2"), "the table table_test_column should not have the field2 column")
+}
+
+func TestColumnDropColumn(t *testing.T) {
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	defer unit.Catch()
+	builder := getTestBuilder()
+	NewTableForColumnTest()
+	table := builder.MustAlterTable("table_test_column", func(table Blueprint) {
+		table.DropColumn("field2")
+	})
+	assert.True(t, table.HasColumn("field1"), "the table table_test_column should have the field1 column")
+	assert.False(t, table.HasColumn("field2"), "the table table_test_column should not have the field2 column")
+}
+
 func TestColumnSetLength(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilderInstance()
@@ -106,4 +163,29 @@ func TestColumnSetComment(t *testing.T) {
 	assert.Equal(t, "This is a col", utils.StringVal(col.Comment), "the column Comment should be  \"This is a col\"")
 	col = table.String("col")
 	assert.True(t, col.Comment == nil, "the column Comment should be nil")
+}
+
+// clean the test data
+func TestColumnClean(t *testing.T) {
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_column")
+}
+
+func NewColumnsForTest(table *Table) {
+	col1 := table.String("field1", 20)
+	col2 := table.String("field2", 40)
+	table.pushColumn(col1)
+	table.pushColumn(col2)
+}
+
+func NewTableForColumnTest() Blueprint {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_column")
+	return builder.MustCreateTable("table_test_column", func(table Blueprint) {
+		table.ID("id")
+		table.String("field1")
+		table.String("field2")
+		table.AddIndex("field1_field2", "field1", "field2")
+	})
 }

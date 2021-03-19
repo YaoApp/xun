@@ -4,7 +4,7 @@ package schema
 
 // String Create a new string column on the table.
 func (table *Table) String(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("string")
+	column := table.newColumn(name).SetType("string")
 	column.MaxLength = 65535
 	column.DefaultLength = 200
 	length := column.DefaultLength
@@ -12,13 +12,13 @@ func (table *Table) String(name string, args ...int) *Column {
 		length = args[0]
 	}
 	column.SetLength(length)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // Char Create a new char column on the table.
 func (table *Table) Char(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("char")
+	column := table.newColumn(name).SetType("char")
 	column.MaxLength = 30
 	column.DefaultLength = 10
 	length := column.DefaultLength
@@ -26,28 +26,28 @@ func (table *Table) Char(name string, args ...int) *Column {
 		length = args[0]
 	}
 	column.SetLength(length)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // Text Create a new text column on the table.
 func (table *Table) Text(name string) *Column {
-	column := table.NewColumn(name).SetType("text")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("text")
+	table.putColumn(column)
 	return column
 }
 
 // MediumText Create a new medium text column on the table.
 func (table *Table) MediumText(name string) *Column {
-	column := table.NewColumn(name).SetType("mediumText")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("mediumText")
+	table.putColumn(column)
 	return column
 }
 
 // LongText Create a new long text column on the table.
 func (table *Table) LongText(name string) *Column {
-	column := table.NewColumn(name).SetType("longText")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("longText")
+	table.putColumn(column)
 	return column
 }
 
@@ -55,7 +55,7 @@ func (table *Table) LongText(name string) *Column {
 
 // Binary Create a new binary column on the table.
 func (table *Table) Binary(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("binary")
+	column := table.newColumn(name).SetType("binary")
 	column.MaxLength = 65535
 	column.DefaultLength = 255
 	length := column.DefaultLength
@@ -63,7 +63,7 @@ func (table *Table) Binary(name string, args ...int) *Column {
 		length = args[0]
 	}
 	column.SetLength(length)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
@@ -71,14 +71,14 @@ func (table *Table) Binary(name string, args ...int) *Column {
 
 // Date Create a new date column on the table.
 func (table *Table) Date(name string) *Column {
-	column := table.NewColumn(name).SetType("date")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("date")
+	table.putColumn(column)
 	return column
 }
 
 // DateTime Create a new date-time column on the table.
 func (table *Table) DateTime(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("dateTime")
+	column := table.newColumn(name).SetType("dateTime")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -86,13 +86,13 @@ func (table *Table) DateTime(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // DateTimeTz Create a new date-time column (with time zone) on the table.
 func (table *Table) DateTimeTz(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("dateTimeTz")
+	column := table.newColumn(name).SetType("dateTimeTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -100,13 +100,13 @@ func (table *Table) DateTimeTz(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // Time Create a new time column on the table.
 func (table *Table) Time(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("time")
+	column := table.newColumn(name).SetType("time")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -114,13 +114,13 @@ func (table *Table) Time(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // TimeTz Create a new time column (with time zone) on the table.
 func (table *Table) TimeTz(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("timeTz")
+	column := table.newColumn(name).SetType("timeTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -128,13 +128,13 @@ func (table *Table) TimeTz(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // Timestamp Create a new timestamp column on the table.
 func (table *Table) Timestamp(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("timestamp")
+	column := table.newColumn(name).SetType("timestamp")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -142,13 +142,13 @@ func (table *Table) Timestamp(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // TimestampTz Create a new timestamp (with time zone) column on the table.
 func (table *Table) TimestampTz(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("timestampTz")
+	column := table.newColumn(name).SetType("timestampTz")
 	column.MaxDateTimePrecision = 6
 	column.DefaultDateTimePrecision = 0
 	precision := column.DefaultDateTimePrecision
@@ -156,7 +156,7 @@ func (table *Table) TimestampTz(name string, args ...int) *Column {
 		precision = args[0]
 	}
 	column.SetDateTimePrecision(precision)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
@@ -167,8 +167,8 @@ func (table *Table) TimestampTz(name string, args ...int) *Column {
 
 // TinyInteger Create a new tiny integer (1-byte) column on the table.
 func (table *Table) TinyInteger(name string) *Column {
-	column := table.NewColumn(name).SetType("tinyInteger")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("tinyInteger")
+	table.putColumn(column)
 	return column
 }
 
@@ -184,8 +184,8 @@ func (table *Table) TinyIncrements(name string) *Column {
 
 // SmallInteger Create a new small integer (2-byte) column on the table.
 func (table *Table) SmallInteger(name string) *Column {
-	column := table.NewColumn(name).SetType("smallInteger")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("smallInteger")
+	table.putColumn(column)
 	return column
 }
 
@@ -201,8 +201,8 @@ func (table *Table) SmallIncrements(name string) *Column {
 
 // Integer Create a new integer (4-byte) column on the table.
 func (table *Table) Integer(name string) *Column {
-	column := table.NewColumn(name).SetType("integer")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("integer")
+	table.putColumn(column)
 	return column
 }
 
@@ -218,8 +218,8 @@ func (table *Table) Increments(name string) *Column {
 
 // BigInteger Create a new auto-incrementing big integer (8-byte) column on the table.
 func (table *Table) BigInteger(name string) *Column {
-	column := table.NewColumn(name).SetType("bigInteger")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("bigInteger")
+	table.putColumn(column)
 	return column
 }
 
@@ -245,7 +245,7 @@ func (table *Table) ForeignID(name string) *Column {
 
 // Decimal Create a new decimal (16-byte) column on the table.
 func (table *Table) Decimal(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("decimal")
+	column := table.newColumn(name).SetType("decimal")
 	column.MaxPrecision = 65
 	column.MaxScale = 30
 	column.DefaultPrecision = 10
@@ -260,7 +260,7 @@ func (table *Table) Decimal(name string, args ...int) *Column {
 		places = args[1]
 	}
 	column.SetPrecision(total).SetScale(places)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
@@ -271,7 +271,7 @@ func (table *Table) UnsignedDecimal(name string, args ...int) *Column {
 
 // Float Create a new float (4-byte) column on the table.
 func (table *Table) Float(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("float")
+	column := table.newColumn(name).SetType("float")
 	column.MaxPrecision = 23
 	column.DefaultPrecision = 10
 	column.MaxScale = 22
@@ -286,7 +286,7 @@ func (table *Table) Float(name string, args ...int) *Column {
 		places = args[1]
 	}
 	column.SetPrecision(total).SetScale(places)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
@@ -297,7 +297,7 @@ func (table *Table) UnsignedFloat(name string, args ...int) *Column {
 
 // Double Create a new double (8-byte) column on the table.
 func (table *Table) Double(name string, args ...int) *Column {
-	column := table.NewColumn(name).SetType("double")
+	column := table.newColumn(name).SetType("double")
 	column.MaxPrecision = 53
 	column.MaxScale = 52
 	column.DefaultPrecision = 24
@@ -312,7 +312,7 @@ func (table *Table) Double(name string, args ...int) *Column {
 		places = args[1]
 	}
 	column.SetPrecision(total).SetScale(places)
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
@@ -323,58 +323,58 @@ func (table *Table) UnsignedDouble(name string, args ...int) *Column {
 
 // Boolean Create a new boolean column on the table.
 func (table *Table) Boolean(name string) *Column {
-	column := table.NewColumn(name).SetType("boolean")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("boolean")
+	table.putColumn(column)
 	return column
 }
 
 // Enum Create a new enum column on the table.
 func (table *Table) Enum(name string, option []string) *Column {
-	column := table.NewColumn(name).SetType("enum")
+	column := table.newColumn(name).SetType("enum")
 	column.Option = option
-	table.PutColumn(column)
+	table.putColumn(column)
 	return column
 }
 
 // JSON Create a new json column on the table.
 func (table *Table) JSON(name string) *Column {
-	column := table.NewColumn(name).SetType("json")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("json")
+	table.putColumn(column)
 	return column
 }
 
 // JSONB  Create a new jsonb column on the table.
 func (table *Table) JSONB(name string) *Column {
-	column := table.NewColumn(name).SetType("jsonb")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("jsonb")
+	table.putColumn(column)
 	return column
 }
 
 // UUID Create a new uuid column on the table.
 func (table *Table) UUID(name string) *Column {
-	column := table.NewColumn(name).SetType("uuid")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("uuid")
+	table.putColumn(column)
 	return column
 }
 
 // IPAddress Create a new IP address ( integer 4-byte ) column on the table.
 func (table *Table) IPAddress(name string) *Column {
-	column := table.NewColumn(name).SetType("ipAddress")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("ipAddress")
+	table.putColumn(column)
 	return column
 }
 
 // MACAddress Create a new MAC address column on the table.
 func (table *Table) MACAddress(name string) *Column {
-	column := table.NewColumn(name).SetType("macAddress")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("macAddress")
+	table.putColumn(column)
 	return column
 }
 
 // Year Create a new year column on the table.
 func (table *Table) Year(name string) *Column {
-	column := table.NewColumn(name).SetType("year")
-	table.PutColumn(column)
+	column := table.newColumn(name).SetType("year")
+	table.putColumn(column)
 	return column
 }
 

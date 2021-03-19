@@ -6,34 +6,9 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// NewColumn Create a new column instance
-func (table *Table) NewColumn(name string) *Column {
-	column := &Column{
-		Column: table.Table.NewColumn(name),
-		Table:  table,
-	}
-	return column
-}
-
-// PushColumn add a column to the table
-func (table *Table) PushColumn(column *Column) *Table {
-	table.Table.PushColumn(column.Column)
-	table.ColumnMap[column.Name] = column
-	return table
-}
-
 // GetColumn get the column instance of the table, if the column does not exist return nil.
 func (table *Table) GetColumn(name string) *Column {
 	return table.ColumnMap[name]
-}
-
-// Column get the column instance of the table, if the column does not exist create a new one.
-func (table *Table) Column(name string) *Column {
-	column, has := table.ColumnMap[name]
-	if has {
-		return column
-	}
-	return table.NewColumn(name)
 }
 
 // HasColumn Determine if the table has a given column.
@@ -46,33 +21,6 @@ func (table *Table) HasColumn(name ...string) bool {
 		}
 	}
 	return has
-}
-
-// PutColumn add or modify a column to the table
-func (table *Table) PutColumn(column *Column) *Table {
-	if table.HasColumn(column.Name) {
-		table.ChangeColumn(column)
-	} else {
-		table.AddColumn(column)
-	}
-	return table
-}
-
-// AddColumn add a column to the table
-func (table *Table) AddColumn(column *Column) *Table {
-	table.PushColumn(column)
-	table.AddColumnCommand(column.Column, nil, func() {
-		delete(table.ColumnMap, column.Name)
-	})
-	return table
-}
-
-// ChangeColumn modify a column to the table
-func (table *Table) ChangeColumn(column *Column) *Table {
-	table.ChangeColumnCommand(column.Column, func() {
-		table.ColumnMap[column.Name] = column
-	}, nil)
-	return table
 }
 
 // DropColumn Indicate that the given columns should be dropped.
@@ -97,6 +45,49 @@ func (table *Table) RenameColumn(old string, new string) *Column {
 	return column
 }
 
+// newColumn Create a new column instance
+func (table *Table) newColumn(name string) *Column {
+	column := &Column{
+		Column: table.Table.NewColumn(name),
+		Table:  table,
+	}
+	return column
+}
+
+// pushColumn add a column to the table
+func (table *Table) pushColumn(column *Column) *Table {
+	table.Table.PushColumn(column.Column)
+	table.ColumnMap[column.Name] = column
+	return table
+}
+
+// putColumn add or modify a column to the table
+func (table *Table) putColumn(column *Column) *Table {
+	if table.HasColumn(column.Name) {
+		table.changeColumn(column)
+	} else {
+		table.addColumn(column)
+	}
+	return table
+}
+
+// addColumn add a column to the table
+func (table *Table) addColumn(column *Column) *Table {
+	table.pushColumn(column)
+	table.AddColumnCommand(column.Column, nil, func() {
+		delete(table.ColumnMap, column.Name)
+	})
+	return table
+}
+
+// changeColumn modify a column to the table
+func (table *Table) changeColumn(column *Column) *Table {
+	table.ChangeColumnCommand(column.Column, func() {
+		table.ColumnMap[column.Name] = column
+	}, nil)
+	return table
+}
+
 // HasIndex check if the column has created the index
 func (column *Column) HasIndex(name string) bool {
 	for _, idx := range column.Indexes {
@@ -106,6 +97,8 @@ func (column *Column) HasIndex(name string) bool {
 	}
 	return false
 }
+
+// the column portables
 
 // Unique set as index
 func (column *Column) Unique() *Column {

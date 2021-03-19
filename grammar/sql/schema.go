@@ -451,6 +451,7 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 			if err != nil {
 				errs = append(errs, fmt.Errorf("DropColumn: %s", err))
 			}
+			command.Callback(err)
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*dbal.Index)

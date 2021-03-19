@@ -1247,8 +1247,10 @@ func testCheckIndexesAfterCreate(executable bool, t *testing.T, check func(t *te
 		"field_field2nd", "field2nd_field3rd",
 	}
 	assert.True(t, table.HasIndex(names...), "should return true")
-	assert.Equal(t, "unique", table.Index("field_field2nd").Type, "the field_field2nd type should be unique")
-	assert.Equal(t, "index", table.Index("field2nd_field3rd").Type, "the field2nd_field3rd type should be index")
+	if table.HasIndex(names...) {
+		assert.Equal(t, "unique", table.GetIndex("field_field2nd").Type, "the field_field2nd type should be unique")
+		assert.Equal(t, "index", table.GetIndex("field2nd_field3rd").Type, "the field2nd_field3rd type should be index")
+	}
 
 	fieldWithIndex := table.GetIndex("fieldWithIndex_index")
 	if fieldWithIndex != nil {
