@@ -69,6 +69,13 @@ func TestBuilderGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
+func TestBuilderHasTable(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_builder")
+	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+}
+
 func TestBuilderCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -86,8 +93,23 @@ func TestBuilderCreateTable(t *testing.T) {
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
+func TestBuilderGetTables(t *testing.T) {
+	defer unit.Catch()
+	TestBuilderCreateTable(t)
+	builder := getTestBuilder()
+	tables, err := builder.GetTables()
+	assert.Equal(t, nil, err, "the return error should be nil")
+	assert.True(t, utils.StringHave(tables, "table_test_builder"), "the return value should have table_test_builder")
+
+	builder.DropTableIfExists("table_test_builder")
+	tables, err = builder.GetTables()
+	assert.Equal(t, nil, err, "the return error should be nil")
+	assert.False(t, utils.StringHave(tables, "table_test_builder"), "the return value should have not table_test_builder")
+}
+
 func TestBuilderGetTable(t *testing.T) {
 	defer unit.Catch()
+	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
@@ -197,6 +219,18 @@ func TestBuilderMustGetConnection(t *testing.T) {
 		assert.Equal(t, "hello", value, "the return value should be hello")
 	}
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
+}
+
+func TestBuilderMustGetTables(t *testing.T) {
+	defer unit.Catch()
+	TestBuilderCreateTable(t)
+	builder := getTestBuilder()
+	tables := builder.MustGetTables()
+	assert.True(t, utils.StringHave(tables, "table_test_builder"), "the return value should have table_test_builder")
+
+	builder.DropTableIfExists("table_test_builder")
+	tables = builder.MustGetTables()
+	assert.False(t, utils.StringHave(tables, "table_test_builder"), "the return value should have not table_test_builder")
 }
 
 func TestBuilderMustCreateTable(t *testing.T) {

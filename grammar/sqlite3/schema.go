@@ -39,6 +39,18 @@ func (grammarSQL SQLite3) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
+// GetTables Get all of the table names for the database.
+func (grammarSQL SQLite3) GetTables(db *sqlx.DB) ([]string, error) {
+	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table'")
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	tables := []string{}
+	err := db.Select(&tables, sql)
+	if err != nil {
+		return nil, err
+	}
+	return tables, nil
+}
+
 // TableExists check if the table exists
 func (grammarSQL SQLite3) TableExists(name string, db *sqlx.DB) bool {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.Quoter.VAL(name, db))

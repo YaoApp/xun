@@ -96,6 +96,18 @@ func (builder *Builder) MustGetConnection() *dbal.Connection {
 	return connection
 }
 
+// GetTables Get all of the table names for the schema.
+func (builder *Builder) GetTables() ([]string, error) {
+	return builder.Grammar.GetTables(builder.Conn.Write)
+}
+
+// MustGetTables Get all of the table names for the schema.
+func (builder *Builder) MustGetTables() []string {
+	tables, err := builder.GetTables()
+	utils.PanicIF(err)
+	return tables
+}
+
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) bool {
 	return builder.Grammar.TableExists(name, builder.Conn.Write)

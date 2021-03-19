@@ -7,8 +7,7 @@ type Schema interface {
 	GetVersion() (*dbal.Version, error)
 	GetConnection() (*dbal.Connection, error)
 
-	// GetAllTables()
-	// GetColumnListing(tableName string)
+	GetTables() ([]string, error)
 
 	GetTable(string) (Blueprint, error)
 	CreateTable(string, func(table Blueprint)) error
@@ -18,14 +17,17 @@ type Schema interface {
 	RenameTable(string, string) error
 	DropTableIfExists(string) error
 
+	MustGetVersion() *dbal.Version
 	MustGetConnection() *dbal.Connection
+
+	MustGetTables() []string
+
 	MustGetTable(string) Blueprint
 	MustCreateTable(string, func(table Blueprint)) Blueprint
 	MustDropTable(string)
 	MustAlterTable(string, func(table Blueprint)) Blueprint
 	MustRenameTable(string, string) Blueprint
 	MustDropTableIfExists(string)
-	MustGetVersion() *dbal.Version
 }
 
 // Blueprint the table operating interface
@@ -33,7 +35,6 @@ type Blueprint interface {
 
 	// defined in table.go
 	Get() *Table
-
 	GetName() string
 	GetPrefix() string
 	GetFullName() string

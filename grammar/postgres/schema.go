@@ -41,9 +41,30 @@ func (grammarSQL Postgres) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
+// GetTables Get all of the table names for the database.
+func (grammarSQL Postgres) GetTables(db *sqlx.DB) ([]string, error) {
+	sql := fmt.Sprintf(
+		"SELECT table_name AS name FROM information_schema.tables WHERE table_catalog=%s AND table_schema=%s",
+		grammarSQL.VAL(grammarSQL.GetDBName(), db),
+		grammarSQL.VAL(grammarSQL.GetSchemaName(), db),
+	)
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	tables := []string{}
+	err := db.Select(&tables, sql)
+	if err != nil {
+		return nil, err
+	}
+	return tables, nil
+}
+
 // TableExists check if the table exists
 func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) bool {
-	sql := fmt.Sprintf("SELECT table_name AS name FROM information_schema.tables WHERE table_name = %s", grammarSQL.Quoter.VAL(name, db))
+	sql := fmt.Sprintf(
+		"SELECT table_name AS name FROM information_schema.tables WHERE table_catalog=%s AND table_schema=%s AND table_name = %s",
+		grammarSQL.VAL(grammarSQL.GetDBName(), db),
+		grammarSQL.VAL(grammarSQL.GetSchemaName(), db),
+		grammarSQL.VAL(name, db),
+	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)
 	if row.Err() != nil {

@@ -61,6 +61,18 @@ func (grammarSQL SQL) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
+// GetTables Get all of the table names for the database.
+func (grammarSQL SQL) GetTables(db *sqlx.DB) ([]string, error) {
+	sql := "SHOW TABLES"
+	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	tables := []string{}
+	err := db.Select(&tables, sql)
+	if err != nil {
+		return nil, err
+	}
+	return tables, nil
+}
+
 // TableExists check if the table exists
 func (grammarSQL SQL) TableExists(name string, db *sqlx.DB) bool {
 	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.Quoter.VAL(name, db))
