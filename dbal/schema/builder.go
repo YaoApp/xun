@@ -152,8 +152,8 @@ func (builder *Builder) CreateTable(name string, callback func(table Blueprint))
 	return builder.Grammar.CreateTable(table.Table, builder.Conn.Write)
 }
 
-// MustCreate a new table on the schema.
-func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) Blueprint {
+// MustCreateTable create a new table on the schema.
+func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.table(name)
 	callback(table)
 	err := builder.Grammar.CreateTable(table.Table, builder.Conn.Write)

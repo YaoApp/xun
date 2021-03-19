@@ -20,7 +20,7 @@ type Schema interface {
 
 	MustGetConnection() *dbal.Connection
 	MustGetTable(string) Blueprint
-	MustCreate(string, func(table Blueprint)) Blueprint
+	MustCreateTable(string, func(table Blueprint)) Blueprint
 	MustDrop(string)
 	MustAlter(string, func(table Blueprint)) Blueprint
 	MustRename(string, string) Blueprint

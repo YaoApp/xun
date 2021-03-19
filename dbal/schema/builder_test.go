@@ -199,11 +199,11 @@ func TestBuilderMustGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
-func TestBuilderMustCreate(t *testing.T) {
+func TestBuilderMustCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
-	table := builder.MustCreate("table_test_builder", func(table Blueprint) {
+	table := builder.MustCreateTable("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -243,7 +243,7 @@ func TestBuilderMustDropIfExistsTableNotExists(t *testing.T) {
 
 func TestBuilderMustDropIfExistsTableExists(t *testing.T) {
 	defer unit.Catch()
-	TestBuilderMustCreate(t)
+	TestBuilderMustCreateTable(t)
 	builder := getTestBuilder()
 	builder.MustDropIfExists("table_test_builder")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
