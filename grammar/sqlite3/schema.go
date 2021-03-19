@@ -39,8 +39,8 @@ func (grammarSQL SQLite3) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
-// Exists the Exists
-func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {
+// TableExists check if the table exists
+func (grammarSQL SQLite3) TableExists(name string, db *sqlx.DB) bool {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.Quoter.VAL(name, db))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)

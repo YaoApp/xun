@@ -10,7 +10,7 @@ type Grammar interface {
 	GetDBName() string
 	GetSchemaName() string
 
-	Exists(name string, db *sqlx.DB) bool
+	TableExists(name string, db *sqlx.DB) bool
 	GetTable(table *Table, db *sqlx.DB) error
 	CreateTable(table *Table, db *sqlx.DB) error
 	AlterTable(table *Table, db *sqlx.DB) error

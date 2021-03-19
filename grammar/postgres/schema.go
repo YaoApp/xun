@@ -41,8 +41,8 @@ func (grammarSQL Postgres) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
-// Exists the Exists
-func (grammarSQL Postgres) Exists(name string, db *sqlx.DB) bool {
+// TableExists check if the table exists
+func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) bool {
 	sql := fmt.Sprintf("SELECT table_name AS name FROM information_schema.tables WHERE table_name = %s", grammarSQL.Quoter.VAL(name, db))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)

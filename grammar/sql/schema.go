@@ -61,8 +61,8 @@ func (grammarSQL SQL) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 	}, nil
 }
 
-// Exists the Exists
-func (grammarSQL SQL) Exists(name string, db *sqlx.DB) bool {
+// TableExists check if the table exists
+func (grammarSQL SQL) TableExists(name string, db *sqlx.DB) bool {
 	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.Quoter.VAL(name, db))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	row := db.QueryRowx(sql)

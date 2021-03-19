@@ -98,7 +98,7 @@ func (builder *Builder) MustGetConnection() *dbal.Connection {
 
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) bool {
-	return builder.Grammar.Exists(name, builder.Conn.Write)
+	return builder.Grammar.TableExists(name, builder.Conn.Write)
 }
 
 // GetTable a table on the schema.
