@@ -69,11 +69,11 @@ func TestBuilderGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
-func TestBuilderCreate(t *testing.T) {
+func TestBuilderCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
-	err := builder.Create("table_test_builder", func(table Blueprint) {
+	err := builder.CreateTable("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -116,7 +116,7 @@ func TestBuilderDropIfExistsTableNotExists(t *testing.T) {
 
 func TestBuilderDropIfExistsTableExists(t *testing.T) {
 	defer unit.Catch()
-	TestBuilderCreate(t)
+	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	err := builder.DropIfExists("table_test_builder")
 	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
@@ -125,7 +125,7 @@ func TestBuilderDropIfExistsTableExists(t *testing.T) {
 
 func TestBuilderRename(t *testing.T) {
 	defer unit.Catch()
-	TestBuilderCreate(t)
+	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	err := builder.Rename("table_test_builder", "table_test_builder_re")
 	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
@@ -137,7 +137,7 @@ func TestBuilderAlter(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropIfExists("table_test_builder")
-	TestBuilderCreate(t)
+	TestBuilderCreateTable(t)
 	err := builder.Alter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
@@ -251,7 +251,7 @@ func TestBuilderMustDropIfExistsTableExists(t *testing.T) {
 
 func TestBuilderMustRename(t *testing.T) {
 	defer unit.Catch()
-	TestBuilderCreate(t)
+	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	table := builder.MustRename("table_test_builder", "table_test_builder_re")
 	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
@@ -261,7 +261,7 @@ func TestBuilderMustRename(t *testing.T) {
 
 func TestBuilderMustAlter(t *testing.T) {
 	defer unit.Catch()
-	TestBuilderCreate(t)
+	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	table := builder.MustAlter("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)

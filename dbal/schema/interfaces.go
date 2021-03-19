@@ -11,7 +11,7 @@ type Schema interface {
 	// GetColumnListing(tableName string)
 
 	GetTable(string) (Blueprint, error)
-	Create(string, func(table Blueprint)) error
+	CreateTable(string, func(table Blueprint)) error
 	Drop(string) error
 	Alter(string, func(table Blueprint)) error
 	HasTable(string) bool

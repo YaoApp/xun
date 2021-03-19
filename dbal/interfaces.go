@@ -12,7 +12,7 @@ type Grammar interface {
 
 	Exists(name string, db *sqlx.DB) bool
 	GetTable(table *Table, db *sqlx.DB) error
-	Create(table *Table, db *sqlx.DB) error
+	CreateTable(table *Table, db *sqlx.DB) error
 	Alter(table *Table, db *sqlx.DB) error
 	Drop(name string, db *sqlx.DB) error
 	DropIfExists(name string, db *sqlx.DB) error

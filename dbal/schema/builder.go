@@ -145,18 +145,18 @@ func (builder *Builder) MustGetTable(name string) Blueprint {
 	return table
 }
 
-// Create a new table on the schema.
-func (builder *Builder) Create(name string, callback func(table Blueprint)) error {
+// CreateTable create a new table on the schema.
+func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) error {
 	table := builder.table(name)
 	callback(table)
-	return builder.Grammar.Create(table.Table, builder.Conn.Write)
+	return builder.Grammar.CreateTable(table.Table, builder.Conn.Write)
 }
 
 // MustCreate a new table on the schema.
 func (builder *Builder) MustCreate(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.table(name)
 	callback(table)
-	err := builder.Grammar.Create(table.Table, builder.Conn.Write)
+	err := builder.Grammar.CreateTable(table.Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }

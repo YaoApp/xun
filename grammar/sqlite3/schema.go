@@ -54,8 +54,8 @@ func (grammarSQL SQLite3) Exists(name string, db *sqlx.DB) bool {
 	return name == fmt.Sprintf("%s", res[0])
 }
 
-// Create a new table on the schema
-func (grammarSQL SQLite3) Create(table *dbal.Table, db *sqlx.DB) error {
+// CreateTable create a new table on the schema
+func (grammarSQL SQLite3) CreateTable(table *dbal.Table, db *sqlx.DB) error {
 
 	name := grammarSQL.Quoter.ID(table.TableName, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)

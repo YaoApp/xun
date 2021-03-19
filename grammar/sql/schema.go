@@ -269,8 +269,8 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string, db *sqlx
 	return columns, nil
 }
 
-// Create a new table on the schema
-func (grammarSQL SQL) Create(table *dbal.Table, db *sqlx.DB) error {
+// CreateTable create a new table on the schema
+func (grammarSQL SQL) CreateTable(table *dbal.Table, db *sqlx.DB) error {
 	name := grammarSQL.Quoter.ID(table.TableName, db)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
