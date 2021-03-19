@@ -43,7 +43,7 @@ func TestBlueprintUnsignedTinyInteger(t *testing.T) {
 
 func TestBlueprintTinyIncrements(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.TinyIncrements("id").Primary()
@@ -102,7 +102,7 @@ func TestBlueprintUnsignedSmallInteger(t *testing.T) {
 
 func TestBlueprintSmallIncrements(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.SmallIncrements("id").Primary()
@@ -162,7 +162,7 @@ func TestBlueprintUnsignedInteger(t *testing.T) {
 
 func TestBlueprintIncrements(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.Increments("id").Primary()
@@ -217,7 +217,7 @@ func TestBlueprintUnsignedBigInteger(t *testing.T) {
 
 func TestBlueprintBigIncrements(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.BigIncrements("id").Primary()
@@ -246,7 +246,7 @@ func TestBlueprintBigIncrements(t *testing.T) {
 
 func TestBlueprintID(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.String("field1st", 60)
@@ -827,7 +827,7 @@ func TestBlueprintYear(t *testing.T) {
 
 func TestBlueprintTimestamps(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.Timestamps()
@@ -852,7 +852,7 @@ func TestBlueprintTimestamps(t *testing.T) {
 
 func TestBlueprintTimestampsWithP(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.Timestamps(6)
@@ -894,7 +894,7 @@ func TestBlueprintDropTimestamps(t *testing.T) {
 
 func TestBlueprintTimestampsTz(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.TimestampsTz()
@@ -927,7 +927,7 @@ func TestBlueprintTimestampsTz(t *testing.T) {
 
 func TestBlueprintTimestampsTzWithP(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.TimestampsTz(6)
@@ -977,7 +977,7 @@ func TestBlueprintDropTimestampsTz(t *testing.T) {
 
 func TestBlueprintSoftDeletes(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.SoftDeletes()
@@ -995,7 +995,7 @@ func TestBlueprintSoftDeletes(t *testing.T) {
 
 func TestBlueprintSoftDeletesWithP(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.SoftDeletes(6)
@@ -1027,7 +1027,7 @@ func TestBlueprintDropSoftDeletes(t *testing.T) {
 
 func TestBlueprintSoftDeletesTz(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.SoftDeletesTz()
@@ -1050,7 +1050,7 @@ func TestBlueprintSoftDeletesTz(t *testing.T) {
 
 func TestBlueprintSoftDeletesTzWithP(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.SoftDeletesTz(6)
@@ -1088,14 +1088,14 @@ func TestBlueprintDropSoftDeletesTz(t *testing.T) {
 // clean the test data
 func TestBlueprintClean(t *testing.T) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 }
 
 // The blueprint test utils
 
 func testCreateTable(t *testing.T, create columnFunc) {
 	builder := getTestBuilder()
-	builder.DropIfExists("table_test_blueprint")
+	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		create(table, "field", 1, 1)

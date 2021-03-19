@@ -12,19 +12,19 @@ type Schema interface {
 
 	GetTable(string) (Blueprint, error)
 	CreateTable(string, func(table Blueprint)) error
-	Drop(string) error
+	DropTable(string) error
 	Alter(string, func(table Blueprint)) error
 	HasTable(string) bool
 	Rename(string, string) error
-	DropIfExists(string) error
+	DropTableIfExists(string) error
 
 	MustGetConnection() *dbal.Connection
 	MustGetTable(string) Blueprint
 	MustCreateTable(string, func(table Blueprint)) Blueprint
-	MustDrop(string)
+	MustDropTable(string)
 	MustAlter(string, func(table Blueprint)) Blueprint
 	MustRename(string, string) Blueprint
-	MustDropIfExists(string)
+	MustDropTableIfExists(string)
 	MustGetVersion() *dbal.Version
 }
 

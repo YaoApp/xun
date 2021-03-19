@@ -350,16 +350,16 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table, db *sqlx.DB) error {
 	return err
 }
 
-// Drop a table from the schema.
-func (grammarSQL SQL) Drop(name string, db *sqlx.DB) error {
+// DropTable a table from the schema.
+func (grammarSQL SQL) DropTable(name string, db *sqlx.DB) error {
 	sql := fmt.Sprintf("DROP TABLE %s", grammarSQL.Quoter.ID(name, db))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)
 	return err
 }
 
-// DropIfExists if the table exists, drop it from the schema.
-func (grammarSQL SQL) DropIfExists(name string, db *sqlx.DB) error {
+// DropTableIfExists if the table exists, drop it from the schema.
+func (grammarSQL SQL) DropTableIfExists(name string, db *sqlx.DB) error {
 	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammarSQL.Quoter.ID(name, db))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)

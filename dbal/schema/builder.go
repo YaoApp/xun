@@ -177,25 +177,25 @@ func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) B
 	return table
 }
 
-// Drop Indicate that the table should be dropped.
-func (builder *Builder) Drop(name string) error {
-	return builder.Grammar.Drop(name, builder.Conn.Write)
+// DropTable Indicate that the table should be dropped.
+func (builder *Builder) DropTable(name string) error {
+	return builder.Grammar.DropTable(name, builder.Conn.Write)
 }
 
-// MustDrop Indicate that the table should be dropped.
-func (builder *Builder) MustDrop(name string) {
-	err := builder.Drop(name)
+// MustDropTable Indicate that the table should be dropped.
+func (builder *Builder) MustDropTable(name string) {
+	err := builder.DropTable(name)
 	utils.PanicIF(err)
 }
 
-// DropIfExists Indicate that the table should be dropped if it exists.
-func (builder *Builder) DropIfExists(name string) error {
-	return builder.Grammar.DropIfExists(name, builder.Conn.Write)
+// DropTableIfExists Indicate that the table should be dropped if it exists.
+func (builder *Builder) DropTableIfExists(name string) error {
+	return builder.Grammar.DropTableIfExists(name, builder.Conn.Write)
 }
 
-// MustDropIfExists Indicate that the table should be dropped if it exists.
-func (builder *Builder) MustDropIfExists(name string) {
-	err := builder.DropIfExists(name)
+// MustDropTableIfExists Indicate that the table should be dropped if it exists.
+func (builder *Builder) MustDropTableIfExists(name string) {
+	err := builder.DropTableIfExists(name)
 	utils.PanicIF(err)
 }
 
