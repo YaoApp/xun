@@ -136,8 +136,8 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table, db *sqlx.DB) error {
 	return nil
 }
 
-// Rename a table on the schema.
-func (grammarSQL SQLite3) Rename(old string, new string, db *sqlx.DB) error {
+// RenameTable rename a table on the schema.
+func (grammarSQL SQLite3) RenameTable(old string, new string, db *sqlx.DB) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := db.Exec(sql)

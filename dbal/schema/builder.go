@@ -199,14 +199,14 @@ func (builder *Builder) MustDropTableIfExists(name string) {
 	utils.PanicIF(err)
 }
 
-// Rename a table on the schema.
-func (builder *Builder) Rename(old string, new string) error {
-	return builder.Grammar.Rename(old, new, builder.Conn.Write)
+// RenameTable rename a table on the schema.
+func (builder *Builder) RenameTable(old string, new string) error {
+	return builder.Grammar.RenameTable(old, new, builder.Conn.Write)
 }
 
-// MustRename a table on the schema.
-func (builder *Builder) MustRename(old string, new string) Blueprint {
-	err := builder.Rename(old, new)
+//MustRenameTable rename a table on the schema.
+func (builder *Builder) MustRenameTable(old string, new string) Blueprint {
+	err := builder.RenameTable(old, new)
 	utils.PanicIF(err)
 	return builder.table(new)
 }

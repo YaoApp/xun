@@ -16,7 +16,7 @@ type Grammar interface {
 	AlterTable(table *Table, db *sqlx.DB) error
 	DropTable(name string, db *sqlx.DB) error
 	DropTableIfExists(name string, db *sqlx.DB) error
-	Rename(old string, new string, db *sqlx.DB) error
+	RenameTable(old string, new string, db *sqlx.DB) error
 	GetColumnListing(dbName string, tableName string, db *sqlx.DB) ([]*Column, error)
 }
 
