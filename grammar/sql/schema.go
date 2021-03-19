@@ -74,18 +74,18 @@ func (grammarSQL SQL) GetTables(db *sqlx.DB) ([]string, error) {
 }
 
 // TableExists check if the table exists
-func (grammarSQL SQL) TableExists(name string, db *sqlx.DB) bool {
+func (grammarSQL SQL) TableExists(name string, db *sqlx.DB) (bool, error) {
 	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.Quoter.VAL(name, db))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	row := db.QueryRowx(sql)
-	if row.Err() != nil {
-		panic(row.Err())
-	}
-	res, err := row.SliceScan()
+	rows := []string{}
+	err := db.Select(&rows, sql)
 	if err != nil {
-		return false
+		return false, err
 	}
-	return name == fmt.Sprintf("%s", res[0])
+	if len(rows) == 0 {
+		return false, nil
+	}
+	return name == fmt.Sprintf("%s", rows[0]), nil
 }
 
 // GetTable get a table on the schema

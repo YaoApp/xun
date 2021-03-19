@@ -58,7 +58,7 @@ func (grammarSQL Postgres) GetTables(db *sqlx.DB) ([]string, error) {
 }
 
 // TableExists check if the table exists
-func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) bool {
+func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) (bool, error) {
 	sql := fmt.Sprintf(
 		"SELECT table_name AS name FROM information_schema.tables WHERE table_catalog=%s AND table_schema=%s AND table_name = %s",
 		grammarSQL.VAL(grammarSQL.GetDBName(), db),
@@ -66,15 +66,15 @@ func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) bool {
 		grammarSQL.VAL(name, db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	row := db.QueryRowx(sql)
-	if row.Err() != nil {
-		panic(row.Err())
-	}
-	res, err := row.SliceScan()
+	rows := []string{}
+	err := db.Select(&rows, sql)
 	if err != nil {
-		return false
+		return false, err
 	}
-	return name == fmt.Sprintf("%s", res[0])
+	if len(rows) == 0 {
+		return false, nil
+	}
+	return name == fmt.Sprintf("%s", rows[0]), nil
 }
 
 // CreateType create user defined type

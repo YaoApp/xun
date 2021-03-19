@@ -73,7 +73,9 @@ func TestBuilderHasTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	has, err := builder.HasTable("table_test_builder")
+	assert.True(t, err == nil, "the return error should be nil")
+	assert.False(t, has, "the return value should be false")
 }
 
 func TestBuilderCreateTable(t *testing.T) {
@@ -89,7 +91,7 @@ func TestBuilderCreateTable(t *testing.T) {
 		table.AddUnique("name_latest", "name", "latest")
 		table.AddIndex("name_counter", "name", "counter")
 	})
-	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
@@ -124,7 +126,7 @@ func TestBuilderDropTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	err := builder.DropTable("table_test_builder")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
@@ -132,7 +134,7 @@ func TestBuilderDropTableIfExistsTableNotExists(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	err := builder.DropTableIfExists("table_not_exists")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
@@ -141,7 +143,7 @@ func TestBuilderDropTableIfExistsTableExists(t *testing.T) {
 	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	err := builder.DropTableIfExists("table_test_builder")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
@@ -150,7 +152,7 @@ func TestBuilderRenameTable(t *testing.T) {
 	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	err := builder.RenameTable("table_test_builder", "table_test_builder_re")
-	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
+	assert.True(t, builder.MustHasTable("table_test_builder_re"), "should return true")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	builder.DropTable("table_test_builder_re")
 }
@@ -221,6 +223,13 @@ func TestBuilderMustGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
+func TestBuilderMustHasTable(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_builder")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
+}
+
 func TestBuilderMustGetTables(t *testing.T) {
 	defer unit.Catch()
 	TestBuilderCreateTable(t)
@@ -246,7 +255,7 @@ func TestBuilderMustCreateTable(t *testing.T) {
 		table.AddUnique("name_latest", "name", "latest")
 		table.AddIndex("name_counter", "name", "counter")
 	})
-	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 }
 
@@ -265,14 +274,14 @@ func TestBuilderMustDropTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.MustDropTable("table_test_builder")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 }
 
 func TestBuilderMustDropTableIfExistsTableNotExists(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.MustDropTableIfExists("table_not_exists")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 }
 
 func TestBuilderMustDropTableIfExistsTableExists(t *testing.T) {
@@ -280,7 +289,7 @@ func TestBuilderMustDropTableIfExistsTableExists(t *testing.T) {
 	TestBuilderMustCreateTable(t)
 	builder := getTestBuilder()
 	builder.MustDropTableIfExists("table_test_builder")
-	assert.False(t, builder.HasTable("table_test_builder"), "should return false")
+	assert.False(t, builder.MustHasTable("table_test_builder"), "should return false")
 }
 
 func TestBuilderMustRenameTable(t *testing.T) {
@@ -288,7 +297,7 @@ func TestBuilderMustRenameTable(t *testing.T) {
 	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
 	table := builder.MustRenameTable("table_test_builder", "table_test_builder_re")
-	assert.True(t, builder.HasTable("table_test_builder_re"), "should return true")
+	assert.True(t, builder.MustHasTable("table_test_builder_re"), "should return true")
 	assert.Equal(t, "table_test_builder_re", table.GetName(), "the table name should be table_test_builder_re")
 	builder.DropTable("table_test_builder_re")
 }
@@ -306,7 +315,7 @@ func TestBuilderMustAlterTable(t *testing.T) {
 		table.AddIndex("nickname_index", "nickname")
 		table.RenameIndex("latest_index", "re_latest_index")
 	})
-	assert.True(t, builder.HasTable("table_test_builder"), "should return true")
+	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 
 	// cheking the schema structure

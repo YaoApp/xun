@@ -109,8 +109,15 @@ func (builder *Builder) MustGetTables() []string {
 }
 
 // HasTable determine if the given table exists.
-func (builder *Builder) HasTable(name string) bool {
+func (builder *Builder) HasTable(name string) (bool, error) {
 	return builder.Grammar.TableExists(name, builder.Conn.Write)
+}
+
+// MustHasTable determine if the given table exists.
+func (builder *Builder) MustHasTable(name string) bool {
+	has, err := builder.HasTable(name)
+	utils.PanicIF(err)
+	return has
 }
 
 // GetTable a table on the schema.
