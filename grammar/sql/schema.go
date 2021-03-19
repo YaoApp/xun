@@ -374,8 +374,8 @@ func (grammarSQL SQL) Rename(old string, new string, db *sqlx.DB) error {
 	return err
 }
 
-// Alter a table on the schema
-func (grammarSQL SQL) Alter(table *dbal.Table, db *sqlx.DB) error {
+// AlterTable alter a table on the schema
+func (grammarSQL SQL) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 
 	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.TableName, db))
 	stmts := []string{}

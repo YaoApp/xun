@@ -133,12 +133,12 @@ func TestBuilderRename(t *testing.T) {
 	builder.DropTable("table_test_builder_re")
 }
 
-func TestBuilderAlter(t *testing.T) {
+func TestBuilderAlterTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
 	TestBuilderCreateTable(t)
-	err := builder.Alter("table_test_builder", func(table Blueprint) {
+	err := builder.AlterTable("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -154,7 +154,7 @@ func TestBuilderAlter(t *testing.T) {
 	// cheking the schema structure
 	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
-	checkTableAlter(t, table)
+	checkTableAlterTable(t, table)
 	// builder.DropTable("table_test_builder")
 }
 
@@ -259,11 +259,11 @@ func TestBuilderMustRename(t *testing.T) {
 	builder.DropTable("table_test_builder_re")
 }
 
-func TestBuilderMustAlter(t *testing.T) {
+func TestBuilderMustAlterTable(t *testing.T) {
 	defer unit.Catch()
 	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
-	table := builder.MustAlter("table_test_builder", func(table Blueprint) {
+	table := builder.MustAlterTable("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -278,7 +278,7 @@ func TestBuilderMustAlter(t *testing.T) {
 	// cheking the schema structure
 	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
-	checkTableAlter(t, table)
+	checkTableAlterTable(t, table)
 	builder.DropTable("table_test_builder")
 }
 
@@ -306,7 +306,7 @@ func TestBuilderMustGetVersion(t *testing.T) {
 	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
 }
 
-func checkTableAlter(t *testing.T, table Blueprint) {
+func checkTableAlterTable(t *testing.T, table Blueprint) {
 	DefaultBigIntPrecision := 20
 	if unit.Is("postgres") {
 		DefaultBigIntPrecision = 64

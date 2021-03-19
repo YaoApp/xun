@@ -13,7 +13,7 @@ type Grammar interface {
 	Exists(name string, db *sqlx.DB) bool
 	GetTable(table *Table, db *sqlx.DB) error
 	CreateTable(table *Table, db *sqlx.DB) error
-	Alter(table *Table, db *sqlx.DB) error
+	AlterTable(table *Table, db *sqlx.DB) error
 	DropTable(name string, db *sqlx.DB) error
 	DropTableIfExists(name string, db *sqlx.DB) error
 	Rename(old string, new string, db *sqlx.DB) error

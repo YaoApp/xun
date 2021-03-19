@@ -161,18 +161,18 @@ func (builder *Builder) MustCreateTable(name string, callback func(table Bluepri
 	return table
 }
 
-// Alter a table on the schema.
-func (builder *Builder) Alter(name string, callback func(table Blueprint)) error {
+// AlterTable alter a table on the schema.
+func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) error {
 	table := builder.MustGetTable(name)
 	callback(table)
-	return builder.Grammar.Alter(table.Get().Table, builder.Conn.Write)
+	return builder.Grammar.AlterTable(table.Get().Table, builder.Conn.Write)
 }
 
-// MustAlter a table on the schema.
-func (builder *Builder) MustAlter(name string, callback func(table Blueprint)) Blueprint {
+// MustAlterTable alter a table on the schema.
+func (builder *Builder) MustAlterTable(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.MustGetTable(name)
 	callback(table)
-	err := builder.Grammar.Alter(table.Get().Table, builder.Conn.Write)
+	err := builder.Grammar.AlterTable(table.Get().Table, builder.Conn.Write)
 	utils.PanicIF(err)
 	return table
 }

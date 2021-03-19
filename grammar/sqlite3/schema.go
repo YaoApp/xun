@@ -345,8 +345,8 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string, 
 	return columns, nil
 }
 
-// Alter a table on the schema
-func (grammarSQL SQLite3) Alter(table *dbal.Table, db *sqlx.DB) error {
+// AlterTable alter a table on the schema
+func (grammarSQL SQLite3) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 
 	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.TableName, db))
 	stmts := []string{}

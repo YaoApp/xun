@@ -256,8 +256,8 @@ func (grammarSQL Postgres) GetTable(table *dbal.Table, db *sqlx.DB) error {
 	return nil
 }
 
-// Alter a table on the schema
-func (grammarSQL Postgres) Alter(table *dbal.Table, db *sqlx.DB) error {
+// AlterTable alter a table on the schema
+func (grammarSQL Postgres) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 
 	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.Quoter.ID(table.TableName, db))
 	stmts := []string{}
