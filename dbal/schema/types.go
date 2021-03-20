@@ -15,11 +15,11 @@ type Connection struct {
 
 // Builder the table schema builder struct
 type Builder struct {
-	Conn *Connection
-	dbal.Grammar
+	Conn     *Connection
 	Mode     string
 	Database string
 	Schema   string
+	dbal.Grammar
 }
 
 // Table the table struct

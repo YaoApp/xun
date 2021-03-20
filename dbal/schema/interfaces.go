@@ -1,11 +1,15 @@
 package schema
 
-import "github.com/yaoapp/xun/dbal"
+import (
+	"github.com/jmoiron/sqlx"
+	"github.com/yaoapp/xun/dbal"
+)
 
 // Schema The schema interface
 type Schema interface {
-	GetVersion() (*dbal.Version, error)
 	GetConnection() (*dbal.Connection, error)
+	GetDB() (*sqlx.DB, error)
+	GetVersion() (*dbal.Version, error)
 
 	GetTables() ([]string, error)
 
@@ -17,8 +21,9 @@ type Schema interface {
 	RenameTable(old string, new string) error
 	DropTableIfExists(name string) error
 
-	MustGetVersion() *dbal.Version
 	MustGetConnection() *dbal.Connection
+	MustGetDB() *sqlx.DB
+	MustGetVersion() *dbal.Version
 
 	MustGetTables() []string
 
@@ -29,6 +34,8 @@ type Schema interface {
 	MustHasTable(name string) bool
 	MustRenameTable(old string, new string) Blueprint
 	MustDropTableIfExists(name string)
+
+	DB() *sqlx.DB // alias MustGetDB
 }
 
 // Blueprint the table operating interface

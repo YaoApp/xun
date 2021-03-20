@@ -69,6 +69,19 @@ func TestBuilderGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
+func TestBuilderGetDB(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	db, err := builder.GetDB()
+	assert.Equal(t, nil, err, "the return error should be nil")
+	value := ""
+	err = db.Get(&value, "SELECT 'hello' ")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err == nil {
+		assert.Equal(t, "hello", value, "the return value should be hello")
+	}
+}
+
 func TestBuilderHasTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -223,6 +236,18 @@ func TestBuilderMustGetConnection(t *testing.T) {
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
+func TestBuilderMustGetDB(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	db := builder.MustGetDB()
+	value := ""
+	err := db.Get(&value, "SELECT 'hello' ")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err == nil {
+		assert.Equal(t, "hello", value, "the return value should be hello")
+	}
+}
+
 func TestBuilderMustHasTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
@@ -348,6 +373,20 @@ func TestBuilderMustGetVersion(t *testing.T) {
 	}
 	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
 }
+
+func TestBuilderDB(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	db := builder.DB()
+	value := ""
+	err := db.Get(&value, "SELECT 'hello' ")
+	assert.Equal(t, nil, err, "the return error should be nil")
+	if err == nil {
+		assert.Equal(t, "hello", value, "the return value should be hello")
+	}
+}
+
+// Utils..........
 
 func checkTableAlterTable(t *testing.T, table Blueprint) {
 	DefaultBigIntPrecision := 20

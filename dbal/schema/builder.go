@@ -82,6 +82,26 @@ func (builder *Builder) GetConnection() (*dbal.Connection, error) {
 	}, nil
 }
 
+// GetDB Get the sqlx DB instance
+func (builder *Builder) GetDB() (*sqlx.DB, error) {
+	if builder.Conn == nil || builder.Conn.Write == nil {
+		return nil, fmt.Errorf("the connection is nil")
+	}
+	return builder.Conn.Write, nil
+}
+
+// MustGetDB Get the sqlx DB instance
+func (builder *Builder) MustGetDB() *sqlx.DB {
+	db, err := builder.GetDB()
+	utils.PanicIF(err)
+	return db
+}
+
+// DB  Alias MustGetDB Get the sqlx DB instance
+func (builder *Builder) DB() *sqlx.DB {
+	return builder.MustGetDB()
+}
+
 // MustGetConnection Get the database connection instance.
 func (builder *Builder) MustGetConnection() *dbal.Connection {
 	connection, err := builder.GetConnection()
