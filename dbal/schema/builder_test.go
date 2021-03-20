@@ -95,7 +95,7 @@ func TestBuilderCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
-	err := builder.CreateTable("table_test_builder", func(table Blueprint) {
+	table, err := builder.CreateTable("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -104,8 +104,13 @@ func TestBuilderCreateTable(t *testing.T) {
 		table.AddUnique("name_latest", "name", "latest")
 		table.AddIndex("name_counter", "name", "counter")
 	})
+
 	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 	assert.Equal(t, nil, err, "the return error should be nil")
+	assert.True(t, table != nil, "the return table should not be nil")
+
+	// @todo: the return value should be refreshed
+	// checkTable(t, table)
 }
 
 func TestBuilderGetTables(t *testing.T) {
@@ -175,7 +180,7 @@ func TestBuilderAlterTable(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
 	TestBuilderCreateTable(t)
-	err := builder.AlterTable("table_test_builder", func(table Blueprint) {
+	table, err := builder.AlterTable("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -188,8 +193,12 @@ func TestBuilderAlterTable(t *testing.T) {
 	if err != nil {
 		return
 	}
+
+	// @todo: the return value should be refreshed
+	// checkTableAlterTable(t, table)
+
 	// cheking the schema structure
-	table, err := builder.GetTable("table_test_builder")
+	table, err = builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlterTable(t, table)
 	// builder.DropTable("table_test_builder")

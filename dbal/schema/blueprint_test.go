@@ -44,7 +44,7 @@ func TestBlueprintUnsignedTinyInteger(t *testing.T) {
 func TestBlueprintTinyIncrements(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.TinyIncrements("id").Primary()
 		} else {
@@ -103,7 +103,7 @@ func TestBlueprintUnsignedSmallInteger(t *testing.T) {
 func TestBlueprintSmallIncrements(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.SmallIncrements("id").Primary()
 		} else {
@@ -163,7 +163,7 @@ func TestBlueprintUnsignedInteger(t *testing.T) {
 func TestBlueprintIncrements(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.Increments("id").Primary()
 		} else {
@@ -218,7 +218,7 @@ func TestBlueprintUnsignedBigInteger(t *testing.T) {
 func TestBlueprintBigIncrements(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		if unit.Is("sqlite3") {
 			table.BigIncrements("id").Primary()
 		} else {
@@ -247,7 +247,7 @@ func TestBlueprintBigIncrements(t *testing.T) {
 func TestBlueprintID(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		table.String("field1st", 60)
 	})
@@ -883,7 +883,7 @@ func TestBlueprintDropTimestamps(t *testing.T) {
 	}
 	TestBlueprintTimestamps(t)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.DropTimestamps()
 	})
 	assert.True(t, err == nil, "the alter method should be return nil")
@@ -966,7 +966,7 @@ func TestBlueprintDropTimestampsTz(t *testing.T) {
 	}
 	TestBlueprintTimestampsTz(t)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.DropTimestampsTz()
 	})
 	assert.True(t, err == nil, "the alter method should be return nil")
@@ -1017,7 +1017,7 @@ func TestBlueprintDropSoftDeletes(t *testing.T) {
 	}
 	TestBlueprintSoftDeletes(t)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.DropSoftDeletes()
 	})
 	assert.True(t, err == nil, "the alter method should be return nil")
@@ -1077,7 +1077,7 @@ func TestBlueprintDropSoftDeletesTz(t *testing.T) {
 	}
 	TestBlueprintSoftDeletes(t)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.DropSoftDeletesTz()
 	})
 	assert.True(t, err == nil, "the alter method should be return nil")
@@ -1096,7 +1096,7 @@ func TestBlueprintClean(t *testing.T) {
 func testCreateTable(t *testing.T, create columnFunc) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
-	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
 		table.ID("id")
 		create(table, "field", 1, 1)
 		create(table, "field2nd", 2, 2)
@@ -1121,7 +1121,7 @@ func testAlterTable(executable bool, t *testing.T, create columnFunc, alter colu
 	}
 	testCreateTable(t, create)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		alter(table, "field1st", 1, 1)         // Create new column
 		alter(table, "field2nd", 4, 4)         // Alter field2nd column
 		alter(table, "field4th", 16, 8)        // Alter field4th column
@@ -1137,7 +1137,7 @@ func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter 
 	}
 	testCreateTable(t, create)
 	builder := getTestBuilder()
-	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.DropIndex("fieldWithIndex_index")
 		table.DropIndex("fieldWithUnique_unique")
 		table.DropIndex("field_field2nd")
@@ -1151,7 +1151,7 @@ func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter 
 	assert.Equal(t, nil, err, "the return error should be nil")
 
 	// Add index
-	err = builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+	_, err = builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		table.AddUnique("field_field2nd", "field", "field2nd")
 		table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
 	})

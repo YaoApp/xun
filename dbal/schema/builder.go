@@ -178,10 +178,14 @@ func (builder *Builder) MustGetTable(name string) Blueprint {
 }
 
 // CreateTable create a new table on the schema.
-func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) error {
+func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) (Blueprint, error) {
 	table := builder.table(name)
 	callback(table)
-	return builder.Grammar.CreateTable(table.Table)
+	err := builder.Grammar.CreateTable(table.Table)
+	if err != nil {
+		return nil, err
+	}
+	return table, nil
 }
 
 // MustCreateTable create a new table on the schema.
@@ -194,10 +198,14 @@ func (builder *Builder) MustCreateTable(name string, callback func(table Bluepri
 }
 
 // AlterTable alter a table on the schema.
-func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) error {
+func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) (Blueprint, error) {
 	table := builder.MustGetTable(name)
 	callback(table)
-	return builder.Grammar.AlterTable(table.Get().Table)
+	err := builder.Grammar.AlterTable(table.Get().Table)
+	if err != nil {
+		return nil, err
+	}
+	return table, nil
 }
 
 // MustAlterTable alter a table on the schema.
