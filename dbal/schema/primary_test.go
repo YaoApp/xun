@@ -33,15 +33,23 @@ func TestPrimaryAddPrimaryFail(t *testing.T) {
 	builder := getTestBuilderInstance()
 	builder.DropTableIfExists("table_test_primary")
 	TestPrimaryAddPrimary(t)
-	builder.AlterTable("table_test_primary", func(table Blueprint) {
+	_, err := builder.AlterTable("table_test_primary", func(table Blueprint) {
 		table.Text("hello")
 		table.DropPrimary()
 		table.AddPrimary("id", "hello", "field1", "field2")
 	})
 
-	table := builder.MustGetTable("table_test_primary")
-	primryKey := table.GetPrimary()
-	assert.True(t, primryKey == nil, "The primary key should be nil")
+	if unit.DriverIs("mysql") {
+		assert.False(t, err == nil, "The return error should not be nil")
+		table := builder.MustGetTable("table_test_primary")
+		primryKey := table.GetPrimary()
+		assert.True(t, primryKey == nil, "The primary key should be nil")
+	} else if unit.DriverIs("postgres") {
+		assert.True(t, err == nil, "The return error should  be nil")
+		table := builder.MustGetTable("table_test_primary")
+		primryKey := table.GetPrimary()
+		assert.Equal(t, 4, len(primryKey.Columns), "The primary key should have 4 columns")
+	}
 }
 
 func TestPrimaryGetPrimary(t *testing.T) {

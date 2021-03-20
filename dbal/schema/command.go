@@ -34,9 +34,6 @@ func (table *Table) createPrimaryCommand(primary *dbal.Primary, success func(), 
 
 // dropPrimaryCommand add a new command drop the primary key
 func (table *Table) dropPrimaryCommand(primary *Primary, success func(), fail func()) {
-	if primary == nil {
-		success()
-	}
 	table.AddCommand("DropPrimary", success, fail, primary.Name, primary.Columns)
 }
 

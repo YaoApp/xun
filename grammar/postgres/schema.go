@@ -387,6 +387,7 @@ func (grammarSQL Postgres) AlterTable(table *dbal.Table) error {
 			if err != nil {
 				errs = append(errs, err)
 			}
+			command.Callback(err)
 			break
 		case "DropIndex":
 			name := command.Params[0].(string)
@@ -402,21 +403,17 @@ func (grammarSQL Postgres) AlterTable(table *dbal.Table) error {
 			}
 			command.Callback(err)
 			break
+		case "CreatePrimary":
+			primary := command.Params[0].(*dbal.Primary)
+			stmt := "ADD " + grammarSQL.SQLAddPrimary(primary)
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(table, sql+stmt)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			command.Callback(err)
+			break
 		case "DropPrimary":
-			// name := command.Params[0].(string)
-			// columns := command.Params[1].([]*dbal.Column)
-			// for _, column := range columns {
-			// 	// remove AutoIncrement
-			// 	if utils.StringVal(column.Extra) == "AutoIncrement" {
-			// 		column.Extra = nil
-			// 		stmt := "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
-			// 		stmts = append(stmts, sql+stmt)
-			// 		err := grammarSQL.ExecSQL(db, table, sql+stmt)
-			// 		if err != nil {
-			// 			errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
-			// 		}
-			// 	}
-			// }
 			stmt := fmt.Sprintf(
 				"DROP CONSTRAINT %s",
 				grammarSQL.ID(fmt.Sprintf("%s_pkey", table.GetName()), grammarSQL.DB),
