@@ -51,7 +51,6 @@ type Blueprint interface {
 	// defined in primry.go
 	GetPrimary() *Primary
 	AddPrimary(columnName ...string)
-	AddPrimaryWithName(name string, columnName ...string)
 	DropPrimary()
 
 	// defined in index.go

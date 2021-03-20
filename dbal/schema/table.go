@@ -86,8 +86,11 @@ func (table *Table) CreatePrimaryCommand(primary *dbal.Primary, success func(), 
 }
 
 // DropPrimaryCommand add a new command drop the primary key
-func (table *Table) DropPrimaryCommand(success func(), fail func()) {
-	table.AddCommand("DropPrimary", success, fail)
+func (table *Table) DropPrimaryCommand(primary *Primary, success func(), fail func()) {
+	if primary == nil {
+		success()
+	}
+	table.AddCommand("DropPrimary", success, fail, primary.Name, primary.Columns)
 }
 
 // DropIndexCommand add a new command that dropping a index

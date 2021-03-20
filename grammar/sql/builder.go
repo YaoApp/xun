@@ -20,7 +20,9 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 	if !has {
 		typ = "VARCHAR"
 	}
-	if column.Precision != nil && column.Scale != nil {
+
+	decimalTypes := []string{"DECIMAL", "FLOAT", "DOUBLE"}
+	if utils.StringHave(decimalTypes, typ) && column.Precision != nil && column.Scale != nil {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
 	} else if column.DateTimePrecision != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))

@@ -114,7 +114,9 @@ func (grammarSQL SQLite3) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) stri
 	}
 
 	sql := fmt.Sprintf(
+		// "CONSTRAINT %s PRIMARY KEY (%s)",
 		"PRIMARY KEY (%s)",
+		// quoter.ID(primary.Table.GetName()+"_pkey", db),
 		strings.Join(columns, ","))
 
 	return sql

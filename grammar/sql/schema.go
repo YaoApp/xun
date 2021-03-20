@@ -472,6 +472,28 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 			}
 			command.Callback(err)
 			break
+		case "DropPrimary":
+			columns := command.Params[1].([]*dbal.Column)
+			for _, column := range columns {
+				// remove AutoIncrement
+				if utils.StringVal(column.Extra) == "AutoIncrement" {
+					column.Extra = nil
+					stmt := "MODIFY " + grammarSQL.SQLAddColumn(db, column)
+					stmts = append(stmts, sql+stmt)
+					err := grammarSQL.ExecSQL(db, table, sql+stmt)
+					if err != nil {
+						errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
+					}
+				}
+			}
+			stmt := "DROP PRIMARY KEY"
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
+			}
+			command.Callback(err)
+			break
 		case "RenameIndex":
 			old := command.Params[0].(string)
 			new := command.Params[1].(string)

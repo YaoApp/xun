@@ -19,7 +19,10 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string
 	if !has {
 		typ = "VARCHAR"
 	}
-	if column.Precision != nil && column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
+
+	decimalTypes := []string{"DECIMAL", "FLOAT", "NUMBERIC", "DOUBLE"}
+
+	if column.Precision != nil && column.Scale != nil && utils.StringHave(decimalTypes, typ) {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
 	} else if strings.Contains(typ, "TIMESTAMP(%d)") || strings.Contains(typ, "TIME(%d)") {
 		DateTimePrecision := utils.IntVal(column.DateTimePrecision, 0)
@@ -140,7 +143,9 @@ func (grammarSQL Postgres) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) str
 	}
 
 	sql := fmt.Sprintf(
+		// "CONSTRAINT %s PRIMARY KEY (%s)",
 		"PRIMARY KEY (%s)",
+		// grammarSQL.ID(primary.Name, db),
 		strings.Join(columns, ","))
 
 	return sql

@@ -427,6 +427,11 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 			}
 			command.Callback(err)
 			break
+		case "DropPrimary":
+			// ALTER TABLE COMPANY DROP PRIMARY KEY ;
+			logger.Warn(logger.CREATE, "sqlite3 not support DropPrimary operation").Write()
+			break
+
 		case "RenameIndex":
 			logger.Warn(logger.CREATE, "sqlite3 not support RenameIndex operation").Write()
 			break

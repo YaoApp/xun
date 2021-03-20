@@ -403,6 +403,32 @@ func (grammarSQL Postgres) AlterTable(table *dbal.Table, db *sqlx.DB) error {
 			}
 			command.Callback(err)
 			break
+		case "DropPrimary":
+			// name := command.Params[0].(string)
+			// columns := command.Params[1].([]*dbal.Column)
+			// for _, column := range columns {
+			// 	// remove AutoIncrement
+			// 	if utils.StringVal(column.Extra) == "AutoIncrement" {
+			// 		column.Extra = nil
+			// 		stmt := "ALTER COLUMN " + grammarSQL.SQLAlterColumnType(db, column)
+			// 		stmts = append(stmts, sql+stmt)
+			// 		err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			// 		if err != nil {
+			// 			errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
+			// 		}
+			// 	}
+			// }
+			stmt := fmt.Sprintf(
+				"DROP CONSTRAINT %s",
+				grammarSQL.Quoter.ID(fmt.Sprintf("%s_pkey", table.GetName()), db),
+			)
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(db, table, sql+stmt)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
+			}
+			command.Callback(err)
+			break
 		case "RenameIndex":
 			old := command.Params[0].(string)
 			new := command.Params[1].(string)
@@ -460,7 +486,9 @@ func (grammarSQL Postgres) SQLAlterColumnType(db *sqlx.DB, Column *dbal.Column) 
 	if !has {
 		typ = "VARCHAR"
 	}
-	if Column.Precision != nil && Column.Scale != nil && (typ == "NUMBERIC" || typ == "DECIMAL") {
+
+	decimalTypes := []string{"DECIMAL", "FLOAT", "NUMBERIC", "DOUBLE"}
+	if Column.Precision != nil && Column.Scale != nil && utils.StringHave(decimalTypes, typ) {
 		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(Column.Precision), utils.IntVal(Column.Scale))
 	} else if strings.Contains(typ, "TIMESTAMP(%d)") || strings.Contains(typ, "TIME(%d)") {
 		DateTimePrecision := utils.IntVal(Column.DateTimePrecision, 0)
