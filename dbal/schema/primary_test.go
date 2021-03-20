@@ -25,6 +25,15 @@ func TestPrimaryAddPrimary(t *testing.T) {
 	CheckPrimaryKey(t, primryKey)
 }
 
+func TestPrimaryGetPrimary(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilderInstance()
+	TestPrimaryAddPrimary(t)
+	table := builder.MustGetTable("table_test_primary")
+	primryKey := table.GetPrimary()
+	CheckPrimaryKey(t, primryKey)
+}
+
 func TestPrimaryDropPrimary(t *testing.T) {
 	defer unit.Catch()
 	if unit.DriverIs("sqlite3") {
