@@ -44,6 +44,12 @@ func TestIndexAddIndex(t *testing.T) {
 		index := table.GetIndex("field1_field2")
 		assert.Equal(t, "index", index.Type, "the type of field1_field2 index should be 'index'")
 	}
+
+	// AddIndex Fail
+	table, err := builder.AlterTable("table_test_index", func(table Blueprint) {
+		table.AddIndex("field1_field2", "id", "field1", "field2")
+	})
+	assert.False(t, err == nil, "The return error should not be nil")
 }
 
 func TestIndexAddUnique(t *testing.T) {
@@ -61,6 +67,12 @@ func TestIndexAddUnique(t *testing.T) {
 		index := table.GetIndex("field1_field2")
 		assert.Equal(t, "unique", index.Type, "the type of field1_field2 index should be 'index'")
 	}
+
+	// AddUnique Fail
+	table, err := builder.AlterTable("table_test_index", func(table Blueprint) {
+		table.AddUnique("field1_field2", "id", "field1", "field2")
+	})
+	assert.False(t, err == nil, "The return error should not be nil")
 }
 
 func TestIndexRenameIndex(t *testing.T) {
@@ -75,6 +87,13 @@ func TestIndexRenameIndex(t *testing.T) {
 	})
 	assert.True(t, table.HasIndex("re_field1_field2"), "the table should have the re_field1_field2 index")
 	assert.False(t, table.HasIndex("field1_field2"), "the table should have not the field1_field2 index")
+
+	// RenameIndex Fail
+	table, err := builder.AlterTable("table_test_index", func(table Blueprint) {
+		table.AddIndex("field1_field2", "field2")
+		table.RenameIndex("re_field1_field2", "field1_field2")
+	})
+	assert.False(t, err == nil, "The return error should not be nil")
 }
 
 func TestIndexDropIndex(t *testing.T) {
