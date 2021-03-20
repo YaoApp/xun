@@ -91,7 +91,7 @@ func (builder *Builder) MustGetConnection() *dbal.Connection {
 
 // GetTables Get all of the table names for the schema.
 func (builder *Builder) GetTables() ([]string, error) {
-	return builder.Grammar.GetTables(builder.Conn.Write)
+	return builder.Grammar.GetTables()
 }
 
 // MustGetTables Get all of the table names for the schema.
@@ -103,7 +103,7 @@ func (builder *Builder) MustGetTables() []string {
 
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) (bool, error) {
-	return builder.Grammar.TableExists(name, builder.Conn.Write)
+	return builder.Grammar.TableExists(name)
 }
 
 // MustHasTable determine if the given table exists.
@@ -116,7 +116,7 @@ func (builder *Builder) MustHasTable(name string) bool {
 // GetTable a table on the schema.
 func (builder *Builder) GetTable(name string) (Blueprint, error) {
 	table := builder.table(name)
-	err := builder.Grammar.GetTable(table.Table, builder.Conn.Write)
+	err := builder.Grammar.GetTable(table.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -161,14 +161,14 @@ func (builder *Builder) MustGetTable(name string) Blueprint {
 func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) error {
 	table := builder.table(name)
 	callback(table)
-	return builder.Grammar.CreateTable(table.Table, builder.Conn.Write)
+	return builder.Grammar.CreateTable(table.Table)
 }
 
 // MustCreateTable create a new table on the schema.
 func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.table(name)
 	callback(table)
-	err := builder.Grammar.CreateTable(table.Table, builder.Conn.Write)
+	err := builder.Grammar.CreateTable(table.Table)
 	utils.PanicIF(err)
 	return table
 }
@@ -177,21 +177,21 @@ func (builder *Builder) MustCreateTable(name string, callback func(table Bluepri
 func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) error {
 	table := builder.MustGetTable(name)
 	callback(table)
-	return builder.Grammar.AlterTable(table.Get().Table, builder.Conn.Write)
+	return builder.Grammar.AlterTable(table.Get().Table)
 }
 
 // MustAlterTable alter a table on the schema.
 func (builder *Builder) MustAlterTable(name string, callback func(table Blueprint)) Blueprint {
 	table := builder.MustGetTable(name)
 	callback(table)
-	err := builder.Grammar.AlterTable(table.Get().Table, builder.Conn.Write)
+	err := builder.Grammar.AlterTable(table.Get().Table)
 	utils.PanicIF(err)
 	return table
 }
 
 // DropTable Indicate that the table should be dropped.
 func (builder *Builder) DropTable(name string) error {
-	return builder.Grammar.DropTable(name, builder.Conn.Write)
+	return builder.Grammar.DropTable(name)
 }
 
 // MustDropTable Indicate that the table should be dropped.
@@ -202,7 +202,7 @@ func (builder *Builder) MustDropTable(name string) {
 
 // DropTableIfExists Indicate that the table should be dropped if it exists.
 func (builder *Builder) DropTableIfExists(name string) error {
-	return builder.Grammar.DropTableIfExists(name, builder.Conn.Write)
+	return builder.Grammar.DropTableIfExists(name)
 }
 
 // MustDropTableIfExists Indicate that the table should be dropped if it exists.
@@ -213,7 +213,7 @@ func (builder *Builder) MustDropTableIfExists(name string) {
 
 // RenameTable rename a table on the schema.
 func (builder *Builder) RenameTable(old string, new string) error {
-	return builder.Grammar.RenameTable(old, new, builder.Conn.Write)
+	return builder.Grammar.RenameTable(old, new)
 }
 
 //MustRenameTable rename a table on the schema.
@@ -231,7 +231,7 @@ func (builder *Builder) GetVersion() (*dbal.Version, error) {
 	}
 
 	// Query Version using connection
-	version, err := builder.Grammar.GetVersion(builder.Conn.Write)
+	version, err := builder.Grammar.GetVersion()
 	if err != nil {
 		return nil, err
 	}

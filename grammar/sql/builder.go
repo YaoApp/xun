@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
+func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
+	db := grammarSQL.DB
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
@@ -50,7 +50,7 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 	// JSON type
 	if typ == "JSON" || typ == "JSONB" {
 		mysql5_7_8, _ := semver.Make("5.7.8")
-		version, err := grammarSQL.GetVersion(db)
+		version, err := grammarSQL.GetVersion()
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
 		if err != nil || version.LT(mysql5_7_8) {
 			typ = "TEXT"
@@ -81,8 +81,8 @@ func (grammarSQL SQL) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
 }
 
 // SQLAddIndex  return the add index sql for table create
-func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
-
+func (grammarSQL SQL) SQLAddIndex(index *dbal.Index) string {
+	db := grammarSQL.DB
 	maxKeyLength := 256
 	indexTypes := grammarSQL.IndexTypes
 	quoter := grammarSQL.Quoter
@@ -121,19 +121,19 @@ func (grammarSQL SQL) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 }
 
 // SQLAddPrimary return the add primary key sql for table create
-func (grammarSQL SQL) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) string {
+func (grammarSQL SQL) SQLAddPrimary(primary *dbal.Primary) string {
 
 	quoter := grammarSQL.Quoter
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range primary.Columns {
-		columns = append(columns, quoter.ID(column.Name, db))
+		columns = append(columns, quoter.ID(column.Name, grammarSQL.DB))
 	}
 
 	sql := fmt.Sprintf(
 		"PRIMARY KEY %s (%s)",
-		quoter.ID(primary.Name, db), strings.Join(columns, ","))
+		quoter.ID(primary.Name, grammarSQL.DB), strings.Join(columns, ","))
 
 	return sql
 }

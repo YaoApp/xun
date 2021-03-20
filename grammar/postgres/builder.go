@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
+func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
+	db := grammarSQL.DB
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
@@ -68,7 +68,8 @@ func (grammarSQL Postgres) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string
 }
 
 // SQLAddComment return the add comment sql for table create
-func (grammarSQL Postgres) SQLAddComment(db *sqlx.DB, column *dbal.Column) string {
+func (grammarSQL Postgres) SQLAddComment(column *dbal.Column) string {
+	db := grammarSQL.DB
 	comment := utils.GetIF(
 		utils.StringVal(column.Comment) != "",
 		fmt.Sprintf(
@@ -90,7 +91,8 @@ func (grammarSQL Postgres) SQLAddComment(db *sqlx.DB, column *dbal.Column) strin
 }
 
 // SQLAddIndex  return the add index sql for table create
-func (grammarSQL Postgres) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
+func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
+	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 	indexTypes := grammarSQL.IndexTypes
 	typ, has := indexTypes[index.Type]
@@ -132,14 +134,13 @@ func (grammarSQL Postgres) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 }
 
 // SQLAddPrimary return the add primary key sql for table create
-func (grammarSQL Postgres) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) string {
-
+func (grammarSQL Postgres) SQLAddPrimary(primary *dbal.Primary) string {
 	quoter := grammarSQL.Quoter
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range primary.Columns {
-		columns = append(columns, quoter.ID(column.Name, db))
+		columns = append(columns, quoter.ID(column.Name, grammarSQL.DB))
 	}
 
 	sql := fmt.Sprintf(

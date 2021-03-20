@@ -40,7 +40,7 @@ func (grammarSQL *MySQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Op
 
 // OnConnected the event will be triggered when db server was connected
 func (grammarSQL *MySQL) OnConnected() error {
-	version, err := grammarSQL.GetVersion(grammarSQL.DB)
+	version, err := grammarSQL.GetVersion()
 	if err != nil {
 		panic(fmt.Errorf("OnConnected: %s", err))
 	}

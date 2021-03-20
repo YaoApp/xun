@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQLAddIndex  return the add index sql for table create
-func (grammarSQL SQLite3) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
+func (grammarSQL SQLite3) SQLAddIndex(index *dbal.Index) string {
+	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 	indexTypes := grammarSQL.IndexTypes
 	typ, has := indexTypes[index.Type]
@@ -36,8 +36,8 @@ func (grammarSQL SQLite3) SQLAddIndex(db *sqlx.DB, index *dbal.Index) string {
 }
 
 // SQLAddColumn return the add column sql for table create
-func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string {
-
+func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
+	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 	types := grammarSQL.Types
 
@@ -103,8 +103,8 @@ func (grammarSQL SQLite3) SQLAddColumn(db *sqlx.DB, column *dbal.Column) string 
 }
 
 // SQLAddPrimary return the add primary key sql for table create
-func (grammarSQL SQLite3) SQLAddPrimary(db *sqlx.DB, primary *dbal.Primary) string {
-
+func (grammarSQL SQLite3) SQLAddPrimary(primary *dbal.Primary) string {
+	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
