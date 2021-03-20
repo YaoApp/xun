@@ -472,6 +472,17 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table) error {
 			if err != nil {
 				errs = append(errs, fmt.Errorf("CreateIndex: %s", err))
 			}
+			command.Callback(err)
+			break
+		case "CreatePrimary":
+			primary := command.Params[0].(*dbal.Primary)
+			stmt := "ADD " + grammarSQL.SQLAddPrimary(primary)
+			stmts = append(stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(table, sql+stmt)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("CreateIndex: %s", err))
+			}
+			command.Callback(err)
 			break
 		case "DropIndex":
 			name := command.Params[0].(string)

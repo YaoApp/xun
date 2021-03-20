@@ -132,8 +132,10 @@ func (grammarSQL SQL) SQLAddPrimary(primary *dbal.Primary) string {
 	}
 
 	sql := fmt.Sprintf(
-		"PRIMARY KEY %s (%s)",
-		quoter.ID(primary.Name, grammarSQL.DB), strings.Join(columns, ","))
+		// "PRIMARY KEY %s (%s)",
+		"PRIMARY KEY(%s)",
+		// quoter.ID(primary.Name, grammarSQL.DB),
+		strings.Join(columns, ","))
 
 	return sql
 }

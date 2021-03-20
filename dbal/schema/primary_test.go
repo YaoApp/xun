@@ -25,6 +25,25 @@ func TestPrimaryAddPrimary(t *testing.T) {
 	CheckPrimaryKey(t, primryKey)
 }
 
+func TestPrimaryAddPrimaryFail(t *testing.T) {
+	defer unit.Catch()
+	if unit.DriverIs("sqlite3") {
+		return
+	}
+	builder := getTestBuilderInstance()
+	builder.DropTableIfExists("table_test_primary")
+	TestPrimaryAddPrimary(t)
+	builder.AlterTable("table_test_primary", func(table Blueprint) {
+		table.Text("hello")
+		table.DropPrimary()
+		table.AddPrimary("id", "hello", "field1", "field2")
+	})
+
+	table := builder.MustGetTable("table_test_primary")
+	primryKey := table.GetPrimary()
+	assert.True(t, primryKey == nil, "The primary key should be nil")
+}
+
 func TestPrimaryGetPrimary(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilderInstance()
