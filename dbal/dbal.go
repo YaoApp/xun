@@ -3,13 +3,9 @@ package dbal
 // Grammars loaded grammar driver
 var Grammars = map[string]Grammar{}
 
-// Hooks loaded hooks of the driver
-var Hooks = map[string]Hook{}
-
 // Register register the grammar driver
-func Register(name string, grammar Grammar, hook Hook) {
+func Register(name string, grammar Grammar) {
 	Grammars[name] = grammar
-	Hooks[name] = hook
 }
 
 // GetName get the table name

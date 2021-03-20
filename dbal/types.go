@@ -36,11 +36,6 @@ type Version struct {
 	semver.Version
 }
 
-// Hook the driver hook
-type Hook struct {
-	OnConnected func(Grammar, *sqlx.DB)
-}
-
 // Table the table struct
 type Table struct {
 	DBName        string    `db:"db_name"`

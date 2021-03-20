@@ -18,34 +18,42 @@ type MySQL struct {
 }
 
 func init() {
-	dbal.Register("mysql", New(), dbal.Hook{
-		OnConnected: func(grammarSQL dbal.Grammar, db *sqlx.DB) {
-			version, err := grammarSQL.GetVersion(db)
-			if err != nil {
-				panic(fmt.Errorf("OnConnected: %s", err))
-			}
-			ver577, err := semver.Make("5.7.7")
-			if err != nil {
-				panic(fmt.Errorf("OnConnected: %s", err))
-			}
-			if version.LE(ver577) {
-				db.Exec("SET GLOBAL innodb_file_format=`BARRACUDA`")
-				db.Exec("SET GLOBAL innodb_file_per_table=`ON`;")
-				db.Exec("SET GLOBAL innodb_large_prefix=`ON`;")
-			}
-		},
-	})
+	dbal.Register("mysql", New())
 }
 
-// Config set the configure using DSN
-func (grammarSQL *MySQL) Config(dsn string) {
-	grammarSQL.DSN = dsn
-	cfg, err := mysql.ParseDSN(grammarSQL.DSN)
-	if err != nil {
-		panic(err)
+// Setup the method will be executed when db server was connected
+func (grammarSQL *MySQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	grammarSQL.DB = db
+	grammarSQL.Config = config
+	grammarSQL.Option = option
+	if grammarSQL.Config == nil {
+		return fmt.Errorf("config is nil")
 	}
-	grammarSQL.DB = cfg.DBName
-	grammarSQL.Schema = grammarSQL.DB
+	cfg, err := mysql.ParseDSN(grammarSQL.Config.DSN)
+	if err != nil {
+		return err
+	}
+	grammarSQL.DatabaseName = cfg.DBName
+	grammarSQL.SchemaName = grammarSQL.DatabaseName
+	return nil
+}
+
+// OnConnected the event will be triggered when db server was connected
+func (grammarSQL *MySQL) OnConnected() error {
+	version, err := grammarSQL.GetVersion(grammarSQL.DB)
+	if err != nil {
+		panic(fmt.Errorf("OnConnected: %s", err))
+	}
+	ver577, err := semver.Make("5.7.7")
+	if err != nil {
+		panic(fmt.Errorf("OnConnected: %s", err))
+	}
+	if version.LE(ver577) {
+		grammarSQL.DB.Exec("SET GLOBAL innodb_file_format=`BARRACUDA`")
+		grammarSQL.DB.Exec("SET GLOBAL innodb_file_per_table=`ON`;")
+		grammarSQL.DB.Exec("SET GLOBAL innodb_large_prefix=`ON`;")
+	}
+	return nil
 }
 
 // New Create a new MySQL grammar inteface

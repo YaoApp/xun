@@ -26,7 +26,7 @@ func (table *Table) HasColumn(name ...string) bool {
 // DropColumn Indicate that the given columns should be dropped.
 func (table *Table) DropColumn(name ...string) {
 	for _, n := range name {
-		table.DropColumnCommand(n, func() {
+		table.dropColumnCommand(n, func() {
 			delete(table.ColumnMap, n)
 		}, nil)
 	}
@@ -37,7 +37,7 @@ func (table *Table) RenameColumn(old string, new string) *Column {
 	column := table.GetColumn(old)
 	column.Name = new
 	table.ColumnMap[new] = column
-	table.RenameColumnCommand(old, new, func() {
+	table.renameColumnCommand(old, new, func() {
 		delete(table.ColumnMap, old)
 	}, func() {
 		delete(table.ColumnMap, new)
@@ -74,7 +74,7 @@ func (table *Table) putColumn(column *Column) *Table {
 // addColumn add a column to the table
 func (table *Table) addColumn(column *Column) *Table {
 	table.pushColumn(column)
-	table.AddColumnCommand(column.Column, nil, func() {
+	table.addColumnCommand(column.Column, nil, func() {
 		delete(table.ColumnMap, column.Name)
 	})
 	return table
@@ -82,7 +82,7 @@ func (table *Table) addColumn(column *Column) *Table {
 
 // changeColumn modify a column to the table
 func (table *Table) changeColumn(column *Column) *Table {
-	table.ChangeColumnCommand(column.Column, func() {
+	table.changeColumnCommand(column.Column, func() {
 		table.ColumnMap[column.Name] = column
 	}, nil)
 	return table

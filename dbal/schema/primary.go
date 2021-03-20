@@ -14,7 +14,15 @@ func (table *Table) AddPrimary(columnNames ...string) {
 	table.addPrimaryWithName("PRIMARY", columnNames...)
 }
 
-// AddPrimaryWithName Indicate that the given column should be a primary index.
+// DropPrimary Indicate that dropping the primary index
+func (table *Table) DropPrimary() {
+	primary := table.GetPrimary()
+	table.dropPrimaryCommand(primary, func() {
+		table.Primary = nil
+	}, nil)
+}
+
+// addPrimaryWithName Indicate that the given column should be a primary index.
 func (table *Table) addPrimaryWithName(name string, columnNames ...string) {
 	columns := []*dbal.Column{}
 	for _, columnName := range columnNames {
@@ -29,15 +37,7 @@ func (table *Table) addPrimaryWithName(name string, columnNames ...string) {
 	}
 
 	table.Primary = primary
-	table.CreatePrimaryCommand(primary.Primary, nil, func() {
+	table.createPrimaryCommand(primary.Primary, nil, func() {
 		table.Primary = nil
 	})
-}
-
-// DropPrimary Indicate that dropping the primary index
-func (table *Table) DropPrimary() {
-	primary := table.GetPrimary()
-	table.DropPrimaryCommand(primary, func() {
-		table.Primary = nil
-	}, nil)
 }

@@ -4,11 +4,12 @@ import "github.com/jmoiron/sqlx"
 
 // Grammar the SQL Grammar inteface
 type Grammar interface {
-	Config(dsn string)
+	Setup(db *sqlx.DB, config *Config, option *Option) error
+	OnConnected() error
 
 	GetVersion(db *sqlx.DB) (*Version, error)
-	GetDBName() string
-	GetSchemaName() string
+	GetDatabase() string
+	GetSchema() string
 
 	GetTables(db *sqlx.DB) ([]string, error)
 

@@ -1,10 +1,12 @@
 package sqlite3
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/grammar/sql"
@@ -17,20 +19,38 @@ type SQLite3 struct {
 }
 
 func init() {
-	dbal.Register("sqlite3", New(), dbal.Hook{})
+	dbal.Register("sqlite3", New())
 }
 
-// Config set the configure using DSN
-func (grammarSQL *SQLite3) Config(dsn string) {
-	grammarSQL.DSN = dsn
-	uinfo, err := url.Parse(grammarSQL.DSN)
-	if err != nil {
-		grammarSQL.DB = "memory"
-	} else {
-		filename := filepath.Base(uinfo.Path)
-		grammarSQL.DB = strings.TrimSuffix(filename, filepath.Ext(filename))
+// Config2 set the configure using DSN
+// func (grammarSQL *SQLite3) Config2(dsn string) {
+// 	grammarSQL.DSN = dsn
+// 	uinfo, err := url.Parse(grammarSQL.DSN)
+// 	if err != nil {
+// 		grammarSQL.DB = "memory"
+// 	} else {
+// 		filename := filepath.Base(uinfo.Path)
+// 		grammarSQL.DB = strings.TrimSuffix(filename, filepath.Ext(filename))
+// 	}
+// 	grammarSQL.Schema = grammarSQL.DB
+// }
+
+// Setup the method will be executed when db server was connected
+func (grammarSQL *SQLite3) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	grammarSQL.DB = db
+	grammarSQL.Config = config
+	grammarSQL.Option = option
+	if grammarSQL.Config == nil {
+		return fmt.Errorf("config is nil")
 	}
-	grammarSQL.Schema = grammarSQL.DB
+	uinfo, err := url.Parse(grammarSQL.Config.DSN)
+	if err != nil {
+		return err
+	}
+	filename := filepath.Base(uinfo.Path)
+	grammarSQL.DatabaseName = strings.TrimSuffix(filename, filepath.Ext(filename))
+	grammarSQL.SchemaName = grammarSQL.DatabaseName
+	return nil
 }
 
 // New Create a new mysql grammar inteface

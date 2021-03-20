@@ -45,8 +45,8 @@ func (grammarSQL Postgres) GetVersion(db *sqlx.DB) (*dbal.Version, error) {
 func (grammarSQL Postgres) GetTables(db *sqlx.DB) ([]string, error) {
 	sql := fmt.Sprintf(
 		"SELECT table_name AS name FROM information_schema.tables WHERE table_catalog=%s AND table_schema=%s",
-		grammarSQL.VAL(grammarSQL.GetDBName(), db),
-		grammarSQL.VAL(grammarSQL.GetSchemaName(), db),
+		grammarSQL.VAL(grammarSQL.GetDatabase(), db),
+		grammarSQL.VAL(grammarSQL.GetSchema(), db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	tables := []string{}
@@ -61,8 +61,8 @@ func (grammarSQL Postgres) GetTables(db *sqlx.DB) ([]string, error) {
 func (grammarSQL Postgres) TableExists(name string, db *sqlx.DB) (bool, error) {
 	sql := fmt.Sprintf(
 		"SELECT table_name AS name FROM information_schema.tables WHERE table_catalog=%s AND table_schema=%s AND table_name = %s",
-		grammarSQL.VAL(grammarSQL.GetDBName(), db),
-		grammarSQL.VAL(grammarSQL.GetSchemaName(), db),
+		grammarSQL.VAL(grammarSQL.GetDatabase(), db),
+		grammarSQL.VAL(grammarSQL.GetSchema(), db),
 		grammarSQL.VAL(name, db),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())

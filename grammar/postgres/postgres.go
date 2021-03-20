@@ -1,9 +1,11 @@
 package postgres
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Load postgres driver
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/grammar/sql"
@@ -16,22 +18,43 @@ type Postgres struct {
 }
 
 func init() {
-	dbal.Register("postgres", New(), dbal.Hook{})
+	dbal.Register("postgres", New())
 }
 
 // Config set the configure using DSN
-func (grammarSQL *Postgres) Config(dsn string) {
-	grammarSQL.DSN = dsn
-	uinfo, err := url.Parse(grammarSQL.DSN)
-	if err != nil {
-		panic(err)
+// func (grammarSQL *Postgres) Confi2g(dsn string) {
+// 	grammarSQL.DSN = dsn
+// 	uinfo, err := url.Parse(grammarSQL.DSN)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	grammarSQL.DB = filepath.Base(uinfo.Path)
+// 	schema := uinfo.Query().Get("search_path")
+// 	if schema == "" {
+// 		schema = "public"
+// 	}
+// 	grammarSQL.Schema = schema
+// }
+
+// Setup the method will be executed when db server was connected
+func (grammarSQL *Postgres) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	grammarSQL.DB = db
+	grammarSQL.Config = config
+	grammarSQL.Option = option
+	if grammarSQL.Config == nil {
+		return fmt.Errorf("config is nil")
 	}
-	grammarSQL.DB = filepath.Base(uinfo.Path)
+	uinfo, err := url.Parse(grammarSQL.Config.DSN)
+	if err != nil {
+		return err
+	}
+	grammarSQL.DatabaseName = filepath.Base(uinfo.Path)
 	schema := uinfo.Query().Get("search_path")
 	if schema == "" {
 		schema = "public"
 	}
-	grammarSQL.Schema = schema
+	grammarSQL.SchemaName = schema
+	return nil
 }
 
 // New Create a new mysql grammar inteface

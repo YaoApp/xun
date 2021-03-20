@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
@@ -33,40 +33,33 @@ func Use(conn *Connection) Schema {
 
 // NewBuilder create a new schema builder instance
 func NewBuilder(conn *Connection) *Builder {
-	grammar := NewGrammar(conn.WriteConfig.Driver, conn.WriteConfig.DSN)
-	hook := NewHook(conn.WriteConfig.Driver)
+	grammar := NewGrammar(conn)
 	builder := Builder{
-		Mode:       "production",
-		Conn:       conn,
-		Hook:       hook,
-		Grammar:    grammar,
-		DBName:     grammar.GetDBName(),
-		SchemaName: grammar.GetSchemaName(),
-	}
-
-	if builder.Hook.OnConnected != nil {
-		builder.Hook.OnConnected(grammar, conn.Write)
+		Mode:     "production",
+		Conn:     conn,
+		Grammar:  grammar,
+		Database: grammar.GetDatabase(),
+		Schema:   grammar.GetSchema(),
 	}
 	return &builder
 }
 
 // NewGrammar create a new grammar instance
-func NewGrammar(driver string, dsn string) dbal.Grammar {
+func NewGrammar(conn *Connection) dbal.Grammar {
+	driver := conn.WriteConfig.Driver
 	grammar, has := dbal.Grammars[driver]
 	if !has {
-		panic(errors.New("the " + driver + "driver not import!"))
+		panic(fmt.Errorf("The %s driver not import", driver))
 	}
-	grammar.Config(dsn)
+	err := grammar.Setup(conn.Write, conn.WriteConfig, conn.Option)
+	if err != nil {
+		panic(fmt.Errorf("grammar setup error. (%s)", err))
+	}
+	err = grammar.OnConnected()
+	if err != nil {
+		panic(fmt.Errorf("the OnConnected event error. (%s)", err))
+	}
 	return grammar
-}
-
-// NewHook get the hook of driver( should be optimized )
-func NewHook(driver string) dbal.Hook {
-	hook, has := dbal.Hooks[driver]
-	if !has {
-		return dbal.Hook{}
-	}
-	return hook
 }
 
 // Table create the table blueprint instance

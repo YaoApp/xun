@@ -16,25 +16,36 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
-// Config set the configure using DSN
-func (grammarSQL *SQL) Config(dsn string) {
-	grammarSQL.DSN = dsn
-	uinfo, err := url.Parse(grammarSQL.DSN)
-	if err != nil {
-		panic(err)
+// Setup the method will be executed when db server was connected
+func (grammarSQL *SQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	grammarSQL.DB = db
+	grammarSQL.Config = config
+	grammarSQL.Option = option
+	if grammarSQL.Config == nil {
+		return fmt.Errorf("config is nil")
 	}
-	grammarSQL.DB = filepath.Base(uinfo.Path)
-	grammarSQL.Schema = grammarSQL.DB
+	uinfo, err := url.Parse(grammarSQL.Config.DSN)
+	if err != nil {
+		return err
+	}
+	grammarSQL.DatabaseName = filepath.Base(uinfo.Path)
+	grammarSQL.SchemaName = grammarSQL.DatabaseName
+	return nil
 }
 
-// GetDBName get the database name of the current connection
-func (grammarSQL SQL) GetDBName() string {
-	return grammarSQL.DB
+// OnConnected the event will be triggered when db server was connected
+func (grammarSQL *SQL) OnConnected() error {
+	return nil
 }
 
-// GetSchemaName get the schema name of the current connection
-func (grammarSQL SQL) GetSchemaName() string {
-	return grammarSQL.Schema
+// GetDatabase get the database name of the current connection
+func (grammarSQL *SQL) GetDatabase() string {
+	return grammarSQL.DatabaseName
+}
+
+// GetSchema get the schema name of the current connection
+func (grammarSQL SQL) GetSchema() string {
+	return grammarSQL.SchemaName
 }
 
 // GetVersion get the version of the connection database

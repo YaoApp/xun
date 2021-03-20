@@ -30,7 +30,7 @@ func (table *Table) AddIndex(key string, columnNames ...string) *Table {
 	index := table.newIndex(key, columns...)
 	index.Type = "index"
 	table.pushIndex(index)
-	table.CreateIndexCommand(index.Index, nil, func() {
+	table.createIndexCommand(index.Index, nil, func() {
 		delete(table.IndexMap, index.Name)
 	})
 	return table
@@ -45,7 +45,7 @@ func (table *Table) AddUnique(key string, columnNames ...string) *Table {
 	index := table.newIndex(key, columns...)
 	index.Type = "unique"
 	table.pushIndex(index)
-	table.CreateIndexCommand(index.Index, nil, func() {
+	table.createIndexCommand(index.Index, nil, func() {
 		delete(table.IndexMap, index.Name)
 	})
 	return table
@@ -54,7 +54,7 @@ func (table *Table) AddUnique(key string, columnNames ...string) *Table {
 // DropIndex Indicate that the given indexes should be dropped.
 func (table *Table) DropIndex(key ...string) {
 	for _, n := range key {
-		table.DropIndexCommand(n, func() {
+		table.dropIndexCommand(n, func() {
 			delete(table.IndexMap, n)
 		}, nil)
 	}
@@ -65,7 +65,7 @@ func (table *Table) RenameIndex(old string, new string) *Index {
 	index := table.GetIndex(old)
 	index.Name = new
 	table.IndexMap[new] = index
-	table.RenameIndexCommand(old, new,
+	table.renameIndexCommand(old, new,
 		func() {
 			delete(table.IndexMap, old)
 		},

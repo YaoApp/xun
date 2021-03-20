@@ -1,20 +1,23 @@
 package sql
 
 import (
+	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
 // SQL the SQL Grammar
 type SQL struct {
-	Driver     string
-	Mode       string
-	Types      map[string]string
-	FlipTypes  map[string]string
-	IndexTypes map[string]string
-	DSN        string
-	DB         string
-	Schema     string
+	Driver       string
+	Mode         string
+	Types        map[string]string
+	FlipTypes    map[string]string
+	IndexTypes   map[string]string
+	DatabaseName string
+	SchemaName   string
+	DB           *sqlx.DB
+	Config       *dbal.Config
+	Option       *dbal.Option
 	dbal.Grammar
 	dbal.Quoter
 }
