@@ -1,7 +1,5 @@
 package query
 
-import "fmt"
-
 // New Get a fluent query builder instance.
 func New(conn *Connection) Query {
 	builder := NewBuilder(conn)
@@ -17,8 +15,8 @@ func NewBuilder(conn *Connection) Builder {
 
 // Where Add a basic where clause to the query.
 func (builder *Builder) Where() {
-	fmt.Printf("\nWhere DBAL: \n===\n%#v\n===\n", builder.Conn)
+	// fmt.Printf("\nWhere DBAL: \n===\n%#v\n===\n", builder.Conn)
 }
 
 // Join Add a join clause to the query.
-func (builder *Builder) Join() { fmt.Printf("DBAL JOIN\n") }
+func (builder *Builder) Join() {}

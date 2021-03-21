@@ -47,6 +47,22 @@ func TestBuilderNewFail(t *testing.T) {
 		driver := unit.Driver()
 		New(driver, "file:/root/error_dsn")
 	})
+
+	assert.Panics(t, func() {
+		driver := unit.Driver()
+		newBuilder(driver, "file:/root/error_dsn")
+	})
+}
+
+func TestBuilderReconnectFail(t *testing.T) {
+	assert.Panics(t, func() {
+		driver := unit.Driver()
+		dsn := unit.DSN()
+		builder := newBuilder(driver, dsn)
+		builder.DB().Close()
+		builder.Conn.WriteConfig.DSN = "file:/root/error_dsn"
+		builder.reconnect()
+	})
 }
 
 func TestBuilderNewGrammarFail(t *testing.T) {
@@ -328,6 +344,12 @@ func TestBuilderMustGetConnection(t *testing.T) {
 		assert.Equal(t, "hello", value, "the return value should be hello")
 	}
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
+
+	assert.Panics(t, func() {
+		builder := newBuilder(unit.Driver(), unit.DSN())
+		builder.DB().Close()
+		builder.MustGetConnection()
+	})
 }
 
 func TestBuilderMustGetDB(t *testing.T) {
@@ -340,6 +362,12 @@ func TestBuilderMustGetDB(t *testing.T) {
 	if err == nil {
 		assert.Equal(t, "hello", value, "the return value should be hello")
 	}
+
+	assert.Panics(t, func() {
+		builder := newBuilder(unit.Driver(), unit.DSN())
+		builder.Conn.Write = nil
+		builder.MustGetDB()
+	})
 }
 
 func TestBuilderMustHasTable(t *testing.T) {

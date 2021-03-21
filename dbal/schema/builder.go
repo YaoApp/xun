@@ -90,10 +90,7 @@ func (builder *Builder) reconnect() {
 		panic(err)
 	}
 	builder.Conn.Write = db
-	builder.Grammar, err = builder.Grammar.NewWith(builder.Conn.Write, builder.Conn.WriteConfig, builder.Conn.Option)
-	if err != nil {
-		panic(fmt.Errorf("reconnect error. (%s)", err))
-	}
+	builder.Grammar, _ = builder.Grammar.NewWith(builder.Conn.Write, builder.Conn.WriteConfig, builder.Conn.Option)
 }
 
 // Table create the table blueprint instance
