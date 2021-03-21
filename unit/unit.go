@@ -81,5 +81,6 @@ func Catch() {
 			color.Red("%#v\n", r)
 		}
 		fmt.Println(string(debug.Stack()))
+		panic("FAIL")
 	}
 }

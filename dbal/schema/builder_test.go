@@ -544,15 +544,15 @@ func TestBuilderDB(t *testing.T) {
 // Utils..........
 
 func checkTableAlterTable(t *testing.T, table Blueprint) {
-	DefaultBigIntPrecision := 20
-	if unit.Is("postgres") {
-		DefaultBigIntPrecision = 64
-	}
 
+	DefaultBigIntPrecision := 20
 	columnType := "bigInteger"
 	idColumnType := "bigInteger"
-	if unit.Is("sqlite3") {
+
+	if unit.DriverIs("sqlite3") {
 		idColumnType = "integer"
+	} else if unit.DriverIs("postgres") {
+		DefaultBigIntPrecision = 64
 	}
 
 	// checking the table schema structure
@@ -560,24 +560,15 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 	assert.Equal(t, idColumnType, table.GetColumn("id").Type, "the id type should be %s", idColumnType)
 	assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
 	assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
-	if unit.Not("postgres") {
-		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
-	}
 
 	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
 	assert.Equal(t, columnType, table.GetColumn("counter").Type, "the counter type should be %s", columnType)
 	assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
-	if unit.Not("postgres") {
-		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
-	}
+
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
 	if unit.Is("postgres") {
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 64")
-	}
-	if unit.Not("postgres") {
-		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
-		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
 	}
 
 	assert.True(t, nil != table.GetColumn("nickname"), "the column nickname should be created")
@@ -613,16 +604,17 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 	assert.Equal(t, "unique", table.GetIndex("uid_unique").Type, "the uid_unique key type should be unique")
 
 	nicknameIndex := table.GetIndex("nickname_index")
+	reLatestIndex := table.GetIndex("re_latest_index")
+	nameLatest := table.GetIndex("name_latest")
+	nameCounter := table.GetIndex("name_counter")
+
 	if unit.Not("sqlite3") {
 		assert.Equal(t, 1, len(nicknameIndex.Columns), "the index nickname_index should has one column")
 		assert.Equal(t, "index", nicknameIndex.Type, "the nickname_index key type should be unique")
 		if len(nicknameIndex.Columns) == 1 {
 			assert.Equal(t, "nickname", nicknameIndex.Columns[0].Name, "the second column of the index nickname_index should be latest")
 		}
-	}
 
-	reLatestIndex := table.GetIndex("re_latest_index")
-	if unit.Not("sqlite3") {
 		assert.Equal(t, 1, len(reLatestIndex.Columns), "the index re_latest_index  should has one column")
 		assert.Equal(t, "index", reLatestIndex.Type, "the re_latest_index key type should be unique")
 		if len(reLatestIndex.Columns) == 1 {
@@ -630,21 +622,23 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 		}
 	}
 
-	nameLatest := table.GetIndex("name_latest")
+	if unit.Not("postgres") {
+		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
+		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
+		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+	}
+
 	if unit.Is("postgres") {
 		assert.Nil(t, nameLatest, "the index name_latest should has none")
+		assert.Nil(t, nameCounter, "the index name_counter should has none")
 	} else if unit.Not("sqlite3") {
 		assert.Equal(t, 1, len(nameLatest.Columns), "the index name_latest should has one column")
 		assert.Equal(t, "unique", nameLatest.Type, "the name_latest key type should be unique")
 		if len(nameLatest.Columns) == 1 {
 			assert.Equal(t, "latest", nameLatest.Columns[0].Name, "the second column of the index name_latest should be latest")
 		}
-	}
 
-	nameCounter := table.GetIndex("name_counter")
-	if unit.Is("postgres") {
-		assert.Nil(t, nameCounter, "the index name_counter should has none")
-	} else if unit.Not("sqlite3") {
 		assert.Equal(t, 1, len(nameCounter.Columns), "the index name_counter should has one column")
 		assert.Equal(t, "index", nameCounter.Type, "the name_counter key type should be unique")
 		if len(nameCounter.Columns) == 2 {
