@@ -194,7 +194,7 @@ func TestColumnHasIndex(t *testing.T) {
 	assert.True(t, res, "the column field1 should have the index field1_index")
 
 	// @todo:  postgres does not have the index field1_field2. it should be fixed at next version.
-	res = col.HasIndex("field1_field2")
+	// res = col.HasIndex("field1_field2")
 }
 
 func TestColumnUniqueAndIndex(t *testing.T) {
