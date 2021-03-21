@@ -641,7 +641,7 @@ func TestBlueprintTimeTz(t *testing.T) {
 
 func TestBlueprintTimeTzWithP(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
-		return table.TimeTz(name).SetDateTimePrecision(6)
+		return table.TimeTz(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timeTz", testCheckDateTimePrecision6)
@@ -650,7 +650,7 @@ func TestBlueprintTimeTzWithP(t *testing.T) {
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column {
-			return table.TimeTz(name).SetDateTimePrecision(6)
+			return table.TimeTz(name, 6)
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", testCheckDateTimePrecision6)
