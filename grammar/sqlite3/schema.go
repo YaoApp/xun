@@ -396,9 +396,6 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			}
 			command.Callback(err)
 			break
-		case "ChangeColumn":
-			logger.Warn(logger.CREATE, "sqlite3 not support ChangeColumn operation").Write()
-			break
 		case "RenameColumn":
 			old := command.Params[0].(string)
 			new := command.Params[1].(string)
@@ -413,9 +410,6 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 				errs = append(errs, errors.New("SQL: "+stmt+" ERROR: "+err.Error()))
 			}
 			command.Callback(err)
-			break
-		case "DropColumn":
-			logger.Warn(logger.CREATE, "sqlite3 not support DropColumn operation").Write()
 			break
 		case "CreateIndex":
 			index := command.Params[0].(*dbal.Index)
@@ -437,13 +431,8 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			}
 			command.Callback(err)
 			break
-		case "DropPrimary":
-			// ALTER TABLE COMPANY DROP PRIMARY KEY ;
-			logger.Warn(logger.CREATE, "sqlite3 not support DropPrimary operation").Write()
-			break
-
-		case "RenameIndex":
-			logger.Warn(logger.CREATE, "sqlite3 not support RenameIndex operation").Write()
+		case "DropColumn", "ChangeColumn", "DropPrimary", "RenameIndex":
+			logger.Warn(logger.CREATE, "sqlite3 not support "+command.Name+" operation").Write()
 			break
 		}
 	}
@@ -534,7 +523,7 @@ func (grammarSQL SQLite3) ParseType(column *dbal.Column) {
 		typeArgs := strings.Trim(matched[2], " ")
 		args := []string{}
 		if typeArgs != "" {
-			args = strings.Split(strings.Trim(matched[2], " "), ",")
+			args = strings.Split(typeArgs, ",")
 		}
 		typ, has := grammarSQL.FlipTypes[typeName]
 		if has {
@@ -543,10 +532,8 @@ func (grammarSQL SQLite3) ParseType(column *dbal.Column) {
 		switch column.Type {
 		case "bigInteger", "integer":
 			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
+				precision, _ := strconv.Atoi(args[0])
+				column.Precision = utils.IntPtr(precision)
 			} else if column.IsUnsigned {
 				column.Precision = utils.IntPtr(20)
 			} else {
@@ -555,33 +542,24 @@ func (grammarSQL SQLite3) ParseType(column *dbal.Column) {
 			break
 		case "timestamp":
 			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.DateTimePrecision = utils.IntPtr(precision)
-				}
+				precision, _ := strconv.Atoi(args[0])
+				column.DateTimePrecision = utils.IntPtr(precision)
 			}
 			break
 		case "float":
 			if len(args) > 0 {
-				precision, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Precision = utils.IntPtr(precision)
-				}
-
+				precision, _ := strconv.Atoi(args[0])
+				column.Precision = utils.IntPtr(precision)
 				if len(args) > 1 {
-					scale, err := strconv.Atoi(args[1])
-					if err == nil {
-						column.Scale = utils.IntPtr(scale)
-					}
+					scale, _ := strconv.Atoi(args[1])
+					column.Scale = utils.IntPtr(scale)
 				}
 			}
 			break
 		case "string", "text":
 			if len(args) > 0 {
-				length, err := strconv.Atoi(args[0])
-				if err == nil {
-					column.Length = utils.IntPtr(length)
-				}
+				length, _ := strconv.Atoi(args[0])
+				column.Length = utils.IntPtr(length)
 			}
 			break
 		}
