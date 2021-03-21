@@ -224,9 +224,7 @@ func (builder *Builder) CreateTable(name string, callback func(table Blueprint))
 
 // MustCreateTable create a new table on the schema.
 func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) {
-	table := builder.table(name)
-	callback(table)
-	err := builder.Grammar.CreateTable(table.Table)
+	err := builder.CreateTable(name, callback)
 	utils.PanicIF(err)
 }
 
@@ -243,9 +241,7 @@ func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) 
 
 // MustAlterTable alter a table on the schema.
 func (builder *Builder) MustAlterTable(name string, callback func(table Blueprint)) {
-	table := builder.MustGetTable(name)
-	callback(table)
-	err := builder.Grammar.AlterTable(table.Get().Table)
+	err := builder.AlterTable(name, callback)
 	utils.PanicIF(err)
 }
 
