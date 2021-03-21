@@ -79,7 +79,7 @@ func New(dsn string) dbal.Grammar {
 	if ok {
 		sql.FlipTypes = flipTypes.(map[string]string)
 	}
-	return &sql
+	return sql
 }
 
 // Setup the method will be executed when db server was connected
@@ -105,7 +105,16 @@ func (grammarSQL *SQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Opti
 	return nil
 }
 
+// NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL SQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.Setup(db, config, option)
+	if err != nil {
+		return nil, err
+	}
+	return grammarSQL, nil
+}
+
 // OnConnected the event will be triggered when db server was connected
-func (grammarSQL *SQL) OnConnected() error {
+func (grammarSQL SQL) OnConnected() error {
 	return nil
 }

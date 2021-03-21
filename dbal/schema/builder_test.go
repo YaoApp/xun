@@ -38,21 +38,7 @@ func getTestBuilderInstance() *Builder {
 	}
 	driver := unit.Driver()
 	dsn := unit.DSN()
-	db, err := sqlx.Open(driver, dsn)
-	if err != nil {
-		panic(err)
-	}
-	conn := &Connection{
-		Write: db,
-		WriteConfig: &dbal.Config{
-			DSN:    dsn,
-			Driver: driver,
-			Name:   "main",
-		},
-		Option: &dbal.Option{},
-	}
-
-	testBuilderInstance = NewBuilder(conn)
+	testBuilderInstance = newBuilder(driver, dsn)
 	return testBuilderInstance
 }
 
@@ -84,7 +70,7 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 			Option: &dbal.Option{},
 		}
 		conn.WriteConfig.Driver = notSupportValue
-		NewGrammar(conn)
+		newGrammar(conn)
 	})
 
 	assert.PanicsWithError(t, "grammar setup error. (db is nil)", func() {
@@ -102,7 +88,7 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 			Option: &dbal.Option{},
 		}
 		conn.Write = nil
-		NewGrammar(conn)
+		newGrammar(conn)
 	})
 
 	if unit.DriverIs("mysql") {
@@ -121,7 +107,7 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 				Option: &dbal.Option{},
 			}
 			conn.Write.Close()
-			NewGrammar(conn)
+			newGrammar(conn)
 		})
 	}
 
@@ -138,7 +124,7 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 		},
 		Option: &dbal.Option{},
 	}
-	NewGrammar(conn)
+	newGrammar(conn)
 
 }
 
@@ -316,6 +302,19 @@ func TestBuilderGetVersion(t *testing.T) {
 		assert.Equal(t, 34, int(version.Minor), "the minor version should be 34")
 	}
 	// fmt.Printf("The version is: %s %d.%d\n", version.Driver, version.Major, version.Minor)
+}
+
+func TestBuilderGetVersionFail(t *testing.T) {
+	defer unit.Catch()
+	builder := newBuilder(unit.Driver(), unit.DSN())
+	assert.Panics(t, func() {
+		builder.DB().Close()
+		builder.MustGetVersion()
+	})
+
+	builder.reconnect()
+	_, err := builder.GetVersion()
+	assert.True(t, err == nil, "the return error should be nil")
 }
 
 func TestBuilderMustGetConnection(t *testing.T) {

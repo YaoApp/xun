@@ -63,6 +63,15 @@ func (grammarSQL *Postgres) Setup(db *sqlx.DB, config *dbal.Config, option *dbal
 	return nil
 }
 
+// NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL Postgres) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.Setup(db, config, option)
+	if err != nil {
+		return nil, err
+	}
+	return grammarSQL, nil
+}
+
 // New Create a new mysql grammar inteface
 func New() dbal.Grammar {
 	pg := Postgres{
@@ -107,5 +116,5 @@ func New() dbal.Grammar {
 		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
 		pg.FlipTypes["SMALLINT"] = "smallInteger"
 	}
-	return &pg
+	return pg
 }

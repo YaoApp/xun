@@ -43,8 +43,17 @@ func (grammarSQL *MySQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Op
 	return nil
 }
 
+// NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL MySQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.Setup(db, config, option)
+	if err != nil {
+		return nil, err
+	}
+	return grammarSQL, nil
+}
+
 // OnConnected the event will be triggered when db server was connected
-func (grammarSQL *MySQL) OnConnected() error {
+func (grammarSQL MySQL) OnConnected() error {
 	version, err := grammarSQL.GetVersion()
 	if err != nil {
 		return err
@@ -76,5 +85,5 @@ func New() dbal.Grammar {
 		my.FlipTypes["TIME"] = "time"
 		my.FlipTypes["TIMESTAMP"] = "timestamp"
 	}
-	return &my
+	return my
 }

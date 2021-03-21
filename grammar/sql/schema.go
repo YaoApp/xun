@@ -14,7 +14,7 @@ import (
 )
 
 // GetDatabase get the database name of the current connection
-func (grammarSQL *SQL) GetDatabase() string {
+func (grammarSQL SQL) GetDatabase() string {
 	return grammarSQL.DatabaseName
 }
 

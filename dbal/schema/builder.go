@@ -28,12 +28,30 @@ func New(driver string, dsn string) Schema {
 
 // Use create a new schema interface using the given connection
 func Use(conn *Connection) Schema {
-	return NewBuilder(conn)
+	return useBuilder(conn)
 }
 
-// NewBuilder create a new schema builder instance
-func NewBuilder(conn *Connection) *Builder {
-	grammar := NewGrammar(conn)
+// newBuilder New create a new schema builder interface using the given driver and DSN
+func newBuilder(driver string, dsn string) *Builder {
+	db, err := sqlx.Connect(driver, dsn)
+	if err != nil {
+		panic(err)
+	}
+	conn := &Connection{
+		Write: db,
+		WriteConfig: &dbal.Config{
+			DSN:    dsn,
+			Driver: driver,
+			Name:   "main",
+		},
+		Option: &dbal.Option{},
+	}
+	return useBuilder(conn)
+}
+
+// useBuilder create a new schema builder instance using the given connection
+func useBuilder(conn *Connection) *Builder {
+	grammar := newGrammar(conn)
 	builder := Builder{
 		Mode:     "production",
 		Conn:     conn,
@@ -44,14 +62,15 @@ func NewBuilder(conn *Connection) *Builder {
 	return &builder
 }
 
-// NewGrammar create a new grammar instance
-func NewGrammar(conn *Connection) dbal.Grammar {
+// newGrammar create a new grammar interface
+func newGrammar(conn *Connection) dbal.Grammar {
 	driver := conn.WriteConfig.Driver
 	grammar, has := dbal.Grammars[driver]
 	if !has {
 		panic(fmt.Errorf("The %s driver not import", driver))
 	}
-	err := grammar.Setup(conn.Write, conn.WriteConfig, conn.Option)
+	// create ne grammar using the registered grammars
+	grammar, err := grammar.NewWith(conn.Write, conn.WriteConfig, conn.Option)
 	if err != nil {
 		panic(fmt.Errorf("grammar setup error. (%s)", err))
 	}
@@ -60,6 +79,21 @@ func NewGrammar(conn *Connection) dbal.Grammar {
 		panic(fmt.Errorf("the OnConnected event error. (%s)", err))
 	}
 	return grammar
+}
+
+// reconnect reconnect db server using setting driver and dsn
+func (builder *Builder) reconnect() {
+	driver := builder.Conn.WriteConfig.Driver
+	dsn := builder.Conn.WriteConfig.DSN
+	db, err := sqlx.Connect(driver, dsn)
+	if err != nil {
+		panic(err)
+	}
+	builder.Conn.Write = db
+	builder.Grammar, err = builder.Grammar.NewWith(builder.Conn.Write, builder.Conn.WriteConfig, builder.Conn.Option)
+	if err != nil {
+		panic(fmt.Errorf("reconnect error. (%s)", err))
+	}
 }
 
 // Table create the table blueprint instance

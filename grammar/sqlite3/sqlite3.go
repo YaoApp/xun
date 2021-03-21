@@ -59,6 +59,15 @@ func (grammarSQL *SQLite3) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.
 	return nil
 }
 
+// NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL SQLite3) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.Setup(db, config, option)
+	if err != nil {
+		return nil, err
+	}
+	return grammarSQL, nil
+}
+
 // New Create a new mysql grammar inteface
 func New() dbal.Grammar {
 	sqlite := SQLite3{
@@ -88,5 +97,5 @@ func New() dbal.Grammar {
 		sqlite.FlipTypes["UNSIGNED BIG INT"] = "bigInteger"
 	}
 
-	return &sqlite
+	return sqlite
 }
