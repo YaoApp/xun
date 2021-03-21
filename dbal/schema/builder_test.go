@@ -441,7 +441,7 @@ func TestBuilderMustGetTable(t *testing.T) {
 	assert.Panics(t, func() {
 		builder := newBuilder(unit.Driver(), unit.DSN())
 		builder.DB().Close()
-		builder.MustGetTable("table_test_builder_not_exists")
+		builder.MustGetTable("table_test_builder'")
 	})
 }
 

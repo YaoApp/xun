@@ -156,15 +156,26 @@ func (grammarSQL SQLite3) RenameTable(old string, new string) error {
 }
 
 // GetTable get a table on the schema
-func (grammarSQL SQLite3) GetTable(table *dbal.Table) error {
+func (grammarSQL SQLite3) GetTable(name string) (*dbal.Table, error) {
+
+	has, err := grammarSQL.TableExists(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, fmt.Errorf("the table %s does not exists", name)
+	}
+
+	table := dbal.NewTable(name, grammarSQL.GetSchema(), grammarSQL.GetDatabase())
 	columns, err := grammarSQL.GetColumnListing(table.DBName, table.TableName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	indexes, err := grammarSQL.GetIndexListing(table.DBName, table.TableName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	primaryKeyName := ""
@@ -179,7 +190,7 @@ func (grammarSQL SQLite3) GetTable(table *dbal.Table) error {
 	for i := range indexes {
 		idx := indexes[i]
 		if !table.HasColumn(idx.ColumnName) {
-			return errors.New("the column does not exists" + idx.ColumnName)
+			return nil, fmt.Errorf("the column   %s does not exists", idx.ColumnName)
 		}
 		column := table.ColumnMap[idx.ColumnName]
 		if !table.HasIndex(idx.Name) {
@@ -213,7 +224,7 @@ func (grammarSQL SQLite3) GetTable(table *dbal.Table) error {
 		}
 	}
 
-	return nil
+	return table, nil
 }
 
 // GetIndexListing get a table indexes structure
@@ -504,10 +515,12 @@ func (grammarSQL SQLite3) ExecSQL(table *dbal.Table, sql string) error {
 		return err
 	}
 	// update table structure
-	err = grammarSQL.GetTable(table)
+	new, err := grammarSQL.GetTable(table.TableName)
 	if err != nil {
 		return err
 	}
+
+	*table = *new
 	return nil
 }
 

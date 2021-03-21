@@ -14,7 +14,7 @@ type Grammar interface {
 	GetTables() ([]string, error)
 
 	TableExists(name string) (bool, error)
-	GetTable(table *Table) error
+	GetTable(name string) (*Table, error)
 	CreateTable(table *Table) error
 	AlterTable(table *Table) error
 	DropTable(name string) error
