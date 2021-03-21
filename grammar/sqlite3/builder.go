@@ -39,25 +39,10 @@ func (grammarSQL SQLite3) SQLAddIndex(index *dbal.Index) string {
 func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
-	types := grammarSQL.Types
 
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[column.Type]
-	if !has {
-		typ = "VARCHAR"
-	}
-	if column.Precision != nil && column.Scale != nil {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
-	} else if column.DateTimePrecision != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
-	} else if typ == "BLOB" {
-		typ = "BLOB"
-	} else if typ == "ENUM" {
-		option := fmt.Sprintf("('%s')", strings.Join(column.Option, "','"))
-		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", quoter.ID(column.Name, db), option)
-	} else if column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
-	}
+	typ := grammarSQL.getType(column)
+
 	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", column.Default), "").(string)
 	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
@@ -81,25 +66,55 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 		typ = "UNSIGNED BIG INT"
 	}
 
-	// JSON type
-	if typ == "JSON" || typ == "JSONB" {
-		typ = "TEXT"
-	} else if typ == "UUID" { // uuid
-		typ = "VARCHAR(36)"
-	} else if typ == "IPADDRESS" { // ipAdderss
-		typ = "integer"
-	} else if typ == "MACADDRESS" { // macAddress 08:00:2b:01:02:03:04:05  bigint unsigned (8 bytes)
-		typ = "UNSIGNED BIG INT"
-	} else if typ == "YEAR" { // 2021 -1046
-		typ = "SMALLINT"
-	}
-
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s",
 		quoter.ID(column.Name, db), typ, nullable, defaultValue, extra, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
+}
+
+// getType
+func (grammarSQL SQLite3) getType(column *dbal.Column) string {
+
+	// `id` bigint(20) unsigned NOT NULL,
+	typ, has := grammarSQL.Types[column.Type]
+	if !has {
+		typ = "VARCHAR"
+	}
+
+	if column.Precision != nil && column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
+	} else if column.DateTimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
+	} else if typ == "BLOB" {
+		typ = "BLOB"
+	} else if typ == "ENUM" {
+		option := fmt.Sprintf("('%s')", strings.Join(column.Option, "','"))
+		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", grammarSQL.ID(column.Name, grammarSQL.DB), option)
+	} else if column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
+	}
+
+	switch typ {
+	case "JSON", "JSONB":
+		typ = "TEXT"
+		break
+	case "UUID":
+		typ = "VARCHAR(36)"
+		break
+	case "IPADDRESS": // 192.168.0.3
+		typ = "integer"
+		break
+	case "MACADDRESS":
+		typ = "UNSIGNED BIG INT" // / macAddress 08:00:2b:01:02:03:04:05  bigint unsigned (8 bytes)
+		break
+	case "YEAR":
+		typ = "SMALLINT" // 2021 -1046
+		break
+	}
+
+	return typ
 }
 
 // SQLAddPrimary return the add primary key sql for table create
