@@ -52,6 +52,17 @@ func TestColumnRenameColumn(t *testing.T) {
 	assert.False(t, table.HasColumn("field2"), "the table table_test_column should not have the field2 column")
 }
 
+func TestColumnRenameColumnFail(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	NewTableForColumnTest()
+	assert.Panics(t, func() {
+		builder.MustAlterTable("table_test_column", func(table Blueprint) {
+			table.RenameColumn("field2", "field1")
+		})
+	})
+}
+
 func TestColumnDropColumn(t *testing.T) {
 	if unit.DriverIs("sqlite3") {
 		return
@@ -120,8 +131,13 @@ func TestColumnSetPrecision(t *testing.T) {
 	assert.Equal(t, 12, utils.IntVal(col.Precision), "the column precision should be 12")
 	assert.Equal(t, 4, utils.IntVal(col.Scale), "the column scale should be 4")
 
+	col = table.Float("col").SetScale(6).SetPrecision(20)
+	assert.Equal(t, 17, utils.IntVal(col.Precision), "the column precision should be 12")
+	assert.Equal(t, 6, utils.IntVal(col.Scale), "the column scale should be 4")
+
 	col = table.BigIncrements("col").SetPrecision(200)
 	assert.True(t, col.Precision == nil, "the column precision should be nil")
+
 }
 
 func TestColumnSetScale(t *testing.T) {
@@ -167,6 +183,41 @@ func TestColumnSetComment(t *testing.T) {
 	assert.True(t, col.Comment == nil, "the column Comment should be nil")
 }
 
+func TestColumnHasIndex(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	NewTableForColumnTest()
+	table := builder.MustGetTable("table_test_column")
+	col := table.GetColumn("field1")
+	assert.True(t, col != nil, "the column field1 should be exists")
+	res := col.HasIndex("field1_index")
+	assert.True(t, res, "the column field1 should have the index field1_index")
+
+	// @todo:  postgres does not have the index field1_field2. it should be fixed at next version.
+	res = col.HasIndex("field1_field2")
+}
+
+func TestColumnUniqueAndIndex(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_column")
+	builder.MustCreateTable("table_test_column", func(table Blueprint) {
+		table.ID("id")
+		table.String("field1").Index().Index()
+		table.String("field2").Unique().Unique()
+		table.AddIndex("field1_field2", "field1", "field2")
+	})
+
+	assert.True(t, builder.MustHasTable("table_test_column"), "the table table_test_column should be created")
+	if builder.MustHasTable("table_test_column") {
+		table := builder.MustGetTable("table_test_column")
+		col1 := table.GetColumn("field1")
+		col2 := table.GetColumn("field2")
+		assert.True(t, col1.HasIndex("field1_index"), "the column field1 should have the index field1_index")
+		assert.True(t, col2.HasIndex("field2_unique"), "the column field1 should have the index field2_unique")
+	}
+}
+
 // clean the test data
 func TestColumnClean(t *testing.T) {
 	builder := getTestBuilder()
@@ -186,7 +237,7 @@ func NewTableForColumnTest() {
 	builder.DropTableIfExists("table_test_column")
 	builder.MustCreateTable("table_test_column", func(table Blueprint) {
 		table.ID("id")
-		table.String("field1")
+		table.String("field1").Index()
 		table.String("field2")
 		table.AddIndex("field1_field2", "field1", "field2")
 	})
