@@ -3,40 +3,15 @@ package sql
 import (
 	"errors"
 	"fmt"
-	"net/url"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
-
-// Setup the method will be executed when db server was connected
-func (grammarSQL *SQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
-	grammarSQL.DB = db
-	grammarSQL.Config = config
-	grammarSQL.Option = option
-	if grammarSQL.Config == nil {
-		return fmt.Errorf("config is nil")
-	}
-	uinfo, err := url.Parse(grammarSQL.Config.DSN)
-	if err != nil {
-		return err
-	}
-	grammarSQL.DatabaseName = filepath.Base(uinfo.Path)
-	grammarSQL.SchemaName = grammarSQL.DatabaseName
-	return nil
-}
-
-// OnConnected the event will be triggered when db server was connected
-func (grammarSQL *SQL) OnConnected() error {
-	return nil
-}
 
 // GetDatabase get the database name of the current connection
 func (grammarSQL *SQL) GetDatabase() string {

@@ -23,12 +23,17 @@ func init() {
 
 // Setup the method will be executed when db server was connected
 func (grammarSQL *MySQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
+	}
+
+	if config == nil {
+		return fmt.Errorf("config is nil")
+	}
+
 	grammarSQL.DB = db
 	grammarSQL.Config = config
 	grammarSQL.Option = option
-	if grammarSQL.Config == nil {
-		return fmt.Errorf("config is nil")
-	}
 	cfg, err := mysql.ParseDSN(grammarSQL.Config.DSN)
 	if err != nil {
 		return err
@@ -42,11 +47,11 @@ func (grammarSQL *MySQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Op
 func (grammarSQL *MySQL) OnConnected() error {
 	version, err := grammarSQL.GetVersion()
 	if err != nil {
-		panic(fmt.Errorf("OnConnected: %s", err))
+		return err
 	}
 	ver577, err := semver.Make("5.7.7")
 	if err != nil {
-		panic(fmt.Errorf("OnConnected: %s", err))
+		return err
 	}
 	if version.LE(ver577) {
 		grammarSQL.DB.Exec("SET GLOBAL innodb_file_format=`BARRACUDA`")

@@ -38,12 +38,18 @@ func init() {
 
 // Setup the method will be executed when db server was connected
 func (grammarSQL *Postgres) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
+	}
+
+	if config == nil {
+		return fmt.Errorf("config is nil")
+	}
+
 	grammarSQL.DB = db
 	grammarSQL.Config = config
 	grammarSQL.Option = option
-	if grammarSQL.Config == nil {
-		return fmt.Errorf("config is nil")
-	}
+
 	uinfo, err := url.Parse(grammarSQL.Config.DSN)
 	if err != nil {
 		return err
