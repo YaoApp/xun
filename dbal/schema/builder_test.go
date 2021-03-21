@@ -557,51 +557,42 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 
 	// checking the table schema structure
 	assert.True(t, nil != table.GetColumn("id"), "the column id should be created")
-	if table.GetColumn("id") != nil {
-		assert.Equal(t, idColumnType, table.GetColumn("id").Type, "the id type should be %s", idColumnType)
-		assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
-		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
-		if unit.Not("postgres") {
-			assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
-		}
+	assert.Equal(t, idColumnType, table.GetColumn("id").Type, "the id type should be %s", idColumnType)
+	assert.Equal(t, "AutoIncrement", utils.StringVal(table.GetColumn("id").Extra), "the id extra should be AutoIncrement")
+	assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("id").Precision), "the id precision should be 20")
+	if unit.Not("postgres") {
+		assert.Equal(t, true, table.GetColumn("id").IsUnsigned, "the id IsUnsigned should be true")
 	}
+
 	assert.True(t, nil != table.GetColumn("counter"), "the column counter should be created")
-	if table.GetColumn("counter") != nil {
-		assert.Equal(t, columnType, table.GetColumn("counter").Type, "the counter type should be %s", columnType)
-		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
-		if unit.Not("postgres") {
-			assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
-		}
+	assert.Equal(t, columnType, table.GetColumn("counter").Type, "the counter type should be %s", columnType)
+	assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("counter").Precision), "the counter precision should be 20")
+	if unit.Not("postgres") {
+		assert.Equal(t, true, table.GetColumn("counter").IsUnsigned, "the counter IsUnsigned should be true")
 	}
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
-	if table.GetColumn("latest") != nil {
-		assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
-		if unit.Is("postgres") {
-			assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 64")
-		}
-		if unit.Not("postgres") {
-			assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
-			assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
-		}
+	assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
+	if unit.Is("postgres") {
+		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 64")
 	}
+	if unit.Not("postgres") {
+		assert.Equal(t, 19, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
+		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
+	}
+
 	assert.True(t, nil != table.GetColumn("nickname"), "the column nickname should be created")
-	if table.GetColumn("nickname") != nil {
-		assert.Equal(t, "string", table.GetColumn("nickname").Type, "the name type should be string")
-		assert.Equal(t, 50, utils.IntVal(table.GetColumn("nickname").Length), "the nickname length should be 50")
-	}
+	assert.Equal(t, "string", table.GetColumn("nickname").Type, "the name type should be string")
+	assert.Equal(t, 50, utils.IntVal(table.GetColumn("nickname").Length), "the nickname length should be 50")
+
 	assert.True(t, nil != table.GetColumn("uid"), "the column uid should be created")
-	if table.GetColumn("uid") != nil {
-		assert.Equal(t, "string", table.GetColumn("uid").Type, "the unionid type should be string")
-		if unit.Not("sqlite3") {
-			assert.Equal(t, 200, utils.IntVal(table.GetColumn("uid").Length), "the unionid length should be 200")
-		}
+	assert.Equal(t, "string", table.GetColumn("uid").Type, "the unionid type should be string")
+	if unit.Not("sqlite3") {
+		assert.Equal(t, 200, utils.IntVal(table.GetColumn("uid").Length), "the unionid length should be 200")
 	}
 
 	// checking the table indexes
 	assert.True(t, nil != table.GetPrimary(), "the index PRIMARY should be created")
-	if table.GetPrimary() != nil {
-		assert.Equal(t, "id", table.GetPrimary().Columns[0].Name, "the column of PRIMARY key should be id")
-	}
+	assert.Equal(t, "id", table.GetPrimary().Columns[0].Name, "the column of PRIMARY key should be id")
 
 	assert.Equal(t, 1, len(table.GetIndex("counter_index").Columns), "the counter_index  should has 1 column")
 	assert.Equal(t, "counter", table.GetIndex("counter_index").Columns[0].Name, "the column of counter_index key should be counter")
