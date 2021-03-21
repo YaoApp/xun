@@ -134,36 +134,14 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
 		}
 	}
 
-	// Enum types
-	types := map[string][]string{}
-
-	// Columns
-	for _, column := range columns {
-		stmts = append(stmts,
-			grammarSQL.SQLAddColumn(column),
-		)
-
-		commentStmt := grammarSQL.SQLAddComment(column)
-		if commentStmt != "" {
-			commentStmts = append(commentStmts, commentStmt)
-		}
-		if column.Type == "enum" {
-			typeName := strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
-			types[typeName] = column.Option
-		}
-	}
-
-	// Create Types
-	err := grammarSQL.CreateType(table, types)
+	err := grammarSQL.createTableAddColumn(table, &stmts, &commentStmts, columns)
 	if err != nil {
 		return err
 	}
 
 	// Primary key
 	if primary != nil {
-		stmts = append(stmts,
-			grammarSQL.SQLAddPrimary(primary),
-		)
+		stmts = append(stmts, grammarSQL.SQLAddPrimary(primary))
 	}
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf("\n)")
@@ -176,7 +154,52 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
 	}
 
 	// indexes
+	err = grammarSQL.createTableCreateIndex(table, indexes)
+	if err != nil {
+		return err
+	}
+
+	// Comments
+	err = grammarSQL.createTableAddComment(table, commentStmts)
+	if err != nil {
+		return err
+	}
+
+	// Callback
+	for _, cmd := range cbCommands {
+		cmd.Callback(err)
+	}
+
+	return nil
+}
+
+func (grammarSQL Postgres) createTableAddColumn(table *dbal.Table, stmts *[]string, commentStmts *[]string, columns []*dbal.Column) error {
+	// Enum types
+	types := map[string][]string{}
+
+	// Columns
+	for _, column := range columns {
+		*stmts = append(*stmts,
+			grammarSQL.SQLAddColumn(column),
+		)
+
+		commentStmt := grammarSQL.SQLAddComment(column)
+		if commentStmt != "" {
+			*commentStmts = append(*commentStmts, commentStmt)
+		}
+		if column.Type == "enum" {
+			typeName := strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
+			types[typeName] = column.Option
+		}
+	}
+
+	// Create Types
+	return grammarSQL.CreateType(table, types)
+}
+
+func (grammarSQL Postgres) createTableCreateIndex(table *dbal.Table, indexes []*dbal.Index) error {
 	indexStmts := []string{}
+
 	for _, index := range indexes {
 		if index.Type == "primary" {
 			continue
@@ -188,24 +211,18 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
 	}
 	if len(indexStmts) > 0 {
 		defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
-		_, err = grammarSQL.DB.Exec(strings.Join(indexStmts, ";\n"))
-	}
-
-	// Comments
-	if len(commentStmts) > 0 {
-		defer logger.Debug(logger.CREATE, commentStmts...).TimeCost(time.Now())
-		_, err = grammarSQL.DB.Exec(strings.Join(commentStmts, ";\n"))
-	}
-
-	// Callback
-	for _, cmd := range cbCommands {
-		cmd.Callback(err)
-	}
-
-	if err != nil {
+		_, err := grammarSQL.DB.Exec(strings.Join(indexStmts, ";\n"))
 		return err
 	}
+	return nil
+}
 
+func (grammarSQL Postgres) createTableAddComment(table *dbal.Table, commentStmts []string) error {
+	if len(commentStmts) > 0 {
+		defer logger.Debug(logger.CREATE, commentStmts...).TimeCost(time.Now())
+		_, err := grammarSQL.DB.Exec(strings.Join(commentStmts, ";\n"))
+		return err
+	}
 	return nil
 }
 
