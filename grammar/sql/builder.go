@@ -12,25 +12,10 @@ import (
 // SQLAddColumn return the add column sql for table create
 func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 	db := grammarSQL.DB
-	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
 	// `id` bigint(20) unsigned NOT NULL,
-	typ, has := types[column.Type]
-	if !has {
-		typ = "VARCHAR"
-	}
-
-	decimalTypes := []string{"DECIMAL", "FLOAT", "DOUBLE"}
-	if utils.StringHave(decimalTypes, typ) && column.Precision != nil && column.Scale != nil {
-		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
-	} else if column.DateTimePrecision != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
-	} else if typ == "ENUM" {
-		typ = fmt.Sprintf("ENUM('%s')", strings.Join(column.Option, "','"))
-	} else if column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
-	}
+	typ := grammarSQL.getType(column)
 
 	unsigned := utils.GetIF(column.IsUnsigned, "UNSIGNED", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
@@ -78,6 +63,27 @@ func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 
 	sql = strings.Trim(sql, " ")
 	return sql
+}
+
+func (grammarSQL SQL) getType(column *dbal.Column) string {
+	// `id` bigint(20) unsigned NOT NULL,
+	typ, has := grammarSQL.Types[column.Type]
+	if !has {
+		typ = "VARCHAR"
+	}
+
+	decimalTypes := []string{"DECIMAL", "FLOAT", "DOUBLE"}
+	if utils.StringHave(decimalTypes, typ) && column.Precision != nil && column.Scale != nil {
+		typ = fmt.Sprintf("%s(%d,%d)", typ, utils.IntVal(column.Precision), utils.IntVal(column.Scale))
+	} else if column.DateTimePrecision != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.DateTimePrecision))
+	} else if typ == "ENUM" {
+		typ = fmt.Sprintf("ENUM('%s')", strings.Join(column.Option, "','"))
+	} else if column.Length != nil {
+		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
+	}
+
+	return typ
 }
 
 // SQLAddIndex  return the add index sql for table create
