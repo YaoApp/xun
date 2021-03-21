@@ -405,15 +405,44 @@ func TestBuilderMustCreateTable(t *testing.T) {
 	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 }
 
+func TestBuilderMustCreateTableFail(t *testing.T) {
+	defer unit.Catch()
+	builder := getTestBuilder()
+	builder.DropTableIfExists("table_test_builder")
+	assert.Panics(t, func() {
+		builder := newBuilder(unit.Driver(), unit.DSN())
+		builder.DB().Close()
+		builder.MustCreateTable("table_test_builder", func(table Blueprint) {
+			table.ID("id").Primary()
+			table.UnsignedBigInteger("counter").Index()
+			table.BigInteger("latest").Index()
+			table.String("name", 20).Index()
+			table.String("unionid", 128).Unique()
+			table.AddUnique("name_latest", "name", "latest")
+			table.AddIndex("name_counter", "name", "counter")
+		})
+	})
+
+}
+
 func TestBuilderMustGetTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
+	TestBuilderMustCreateTable(t)
 	table := builder.MustGetTable("table_test_builder")
 	assert.True(t, table != nil, "the return table should be BluePrint")
 	if table == nil {
 		return
 	}
 	checkTable(t, table)
+	assert.Panics(t, func() {
+		builder.MustGetTable("table_test_builder_not_exists")
+	})
+	assert.Panics(t, func() {
+		builder := newBuilder(unit.Driver(), unit.DSN())
+		builder.DB().Close()
+		builder.MustGetTable("table_test_builder_not_exists")
+	})
 }
 
 func TestBuilderMustDropTable(t *testing.T) {

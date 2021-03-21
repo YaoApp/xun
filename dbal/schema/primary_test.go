@@ -69,7 +69,7 @@ func TestPrimaryDropPrimary(t *testing.T) {
 		table.DropPrimary()
 	})
 
-	table := builder.MustGetTable("table_test_index")
+	table := builder.MustGetTable("table_test_primary")
 	primryKey := table.GetPrimary()
 	assert.True(t, primryKey == nil, "The primary key should be nil")
 

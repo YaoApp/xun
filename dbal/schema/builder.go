@@ -167,7 +167,17 @@ func (builder *Builder) MustHasTable(name string) bool {
 // GetTable a table on the schema.
 func (builder *Builder) GetTable(name string) (Blueprint, error) {
 	table := builder.table(name)
-	err := builder.Grammar.GetTable(table.Table)
+
+	has, err := builder.HasTable(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !has {
+		return nil, fmt.Errorf("the table %s does not exists", name)
+	}
+
+	err = builder.Grammar.GetTable(table.Table)
 	if err != nil {
 		return nil, err
 	}
