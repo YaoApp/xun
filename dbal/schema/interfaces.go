@@ -7,6 +7,8 @@ import (
 
 // Schema The schema interface
 type Schema interface {
+	SetOption(option *dbal.Option)
+
 	GetConnection() (*dbal.Connection, error)
 	GetDB() (*sqlx.DB, error)
 	GetVersion() (*dbal.Version, error)

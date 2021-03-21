@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
@@ -99,6 +100,11 @@ func (builder *Builder) table(name string) *Table {
 	return table
 }
 
+// SetOption set the option of connection
+func (builder *Builder) SetOption(option *dbal.Option) {
+	builder.Conn.Option = option
+}
+
 // GetConnection Get the database connection instance.
 func (builder *Builder) GetConnection() (*dbal.Connection, error) {
 	version, err := builder.GetVersion()
@@ -142,7 +148,19 @@ func (builder *Builder) MustGetConnection() *dbal.Connection {
 
 // GetTables Get all of the table names for the schema.
 func (builder *Builder) GetTables() ([]string, error) {
-	return builder.Grammar.GetTables()
+	tables, err := builder.Grammar.GetTables()
+	if err != nil {
+		return nil, err
+	}
+
+	// - prefix
+	if builder.Conn.Option.Prefix != "" {
+		for i, tab := range tables {
+			tables[i] = strings.TrimLeft(tab, builder.Conn.Option.Prefix)
+		}
+	}
+
+	return tables, nil
 }
 
 // MustGetTables Get all of the table names for the schema.
@@ -154,7 +172,8 @@ func (builder *Builder) MustGetTables() []string {
 
 // HasTable determine if the given table exists.
 func (builder *Builder) HasTable(name string) (bool, error) {
-	return builder.Grammar.TableExists(name)
+	table := builder.table(name)
+	return builder.Grammar.TableExists(table.GetFullName())
 }
 
 // MustHasTable determine if the given table exists.
@@ -167,12 +186,12 @@ func (builder *Builder) MustHasTable(name string) bool {
 // GetTable a table on the schema.
 func (builder *Builder) GetTable(name string) (Blueprint, error) {
 
-	dbalTable, err := builder.Grammar.GetTable(name)
+	table := builder.table(name)
+	dbalTable, err := builder.Grammar.GetTable(table.GetFullName())
 	if err != nil {
 		return nil, err
 	}
 
-	table := NewTable(name, builder)
 	table.Table = dbalTable
 
 	// attaching columns
@@ -247,18 +266,21 @@ func (builder *Builder) MustAlterTable(name string, callback func(table Blueprin
 
 // DropTable Indicate that the table should be dropped.
 func (builder *Builder) DropTable(name string) error {
-	return builder.Grammar.DropTable(name)
+	table := builder.table(name)
+	return builder.Grammar.DropTable(table.GetFullName())
 }
 
 // MustDropTable Indicate that the table should be dropped.
 func (builder *Builder) MustDropTable(name string) {
-	err := builder.DropTable(name)
+	table := builder.table(name)
+	err := builder.DropTable(table.GetFullName())
 	utils.PanicIF(err)
 }
 
 // DropTableIfExists Indicate that the table should be dropped if it exists.
 func (builder *Builder) DropTableIfExists(name string) error {
-	return builder.Grammar.DropTableIfExists(name)
+	table := builder.table(name)
+	return builder.Grammar.DropTableIfExists(table.GetFullName())
 }
 
 // MustDropTableIfExists Indicate that the table should be dropped if it exists.
@@ -269,7 +291,9 @@ func (builder *Builder) MustDropTableIfExists(name string) {
 
 // RenameTable rename a table on the schema.
 func (builder *Builder) RenameTable(old string, new string) error {
-	return builder.Grammar.RenameTable(old, new)
+	oldTab := builder.table(old)
+	newTab := builder.table(new)
+	return builder.Grammar.RenameTable(oldTab.GetFullName(), newTab.GetFullName())
 }
 
 //MustRenameTable rename a table on the schema.
