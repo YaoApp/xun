@@ -59,7 +59,7 @@ func getTestBuilderInstance() *Builder {
 func TestBuilderNewFail(t *testing.T) {
 	assert.Panics(t, func() {
 		driver := unit.Driver()
-		New(driver, "error dsn")
+		New(driver, "file:/root/error_dsn")
 	})
 }
 
@@ -67,6 +67,64 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 
 	driver := unit.Driver()
 	dsn := unit.DSN()
+	notSupportValue := "someSQL"
+	shouldReturnError := fmt.Errorf("The %s driver not import", notSupportValue)
+	assert.PanicsWithError(t, shouldReturnError.Error(), func() {
+		db, err := sqlx.Open(driver, dsn)
+		if err != nil {
+			panic(err)
+		}
+		conn := &Connection{
+			Write: db,
+			WriteConfig: &dbal.Config{
+				DSN:    dsn,
+				Driver: driver,
+				Name:   "test",
+			},
+			Option: &dbal.Option{},
+		}
+		conn.WriteConfig.Driver = notSupportValue
+		NewGrammar(conn)
+	})
+
+	assert.PanicsWithError(t, "grammar setup error. (db is nil)", func() {
+		db, err := sqlx.Open(driver, dsn)
+		if err != nil {
+			panic(err)
+		}
+		conn := &Connection{
+			Write: db,
+			WriteConfig: &dbal.Config{
+				DSN:    dsn,
+				Driver: driver,
+				Name:   "test",
+			},
+			Option: &dbal.Option{},
+		}
+		conn.Write = nil
+		NewGrammar(conn)
+	})
+
+	if unit.DriverIs("mysql") {
+		assert.PanicsWithError(t, "the OnConnected event error. (sql: database is closed)", func() {
+			db, err := sqlx.Open(driver, dsn)
+			if err != nil {
+				panic(err)
+			}
+			conn := &Connection{
+				Write: db,
+				WriteConfig: &dbal.Config{
+					DSN:    dsn,
+					Driver: driver,
+					Name:   "test",
+				},
+				Option: &dbal.Option{},
+			}
+			conn.Write.Close()
+			NewGrammar(conn)
+		})
+	}
+
 	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		panic(err)
@@ -76,32 +134,11 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 		WriteConfig: &dbal.Config{
 			DSN:    dsn,
 			Driver: driver,
-			Name:   "main",
+			Name:   "test",
 		},
 		Option: &dbal.Option{},
 	}
-
-	notSupportValue := "someSQL"
-	shouldReturnError := fmt.Errorf("The %s driver not import", notSupportValue)
-	assert.PanicsWithError(t, shouldReturnError.Error(), func() {
-		conn.WriteConfig.Driver = notSupportValue
-		NewGrammar(conn)
-	})
-
-	assert.PanicsWithError(t, "grammar setup error. (db is nil)", func() {
-		conn.WriteConfig.Driver = unit.Driver()
-		conn.Write = nil
-		NewGrammar(conn)
-	})
-
-	if unit.DriverIs("mysql") {
-		assert.PanicsWithError(t, "the OnConnected event error. (sql: database is closed)", func() {
-			conn.WriteConfig.Driver = unit.Driver()
-			conn.Write = db
-			conn.Write.Close()
-			NewGrammar(conn)
-		})
-	}
+	NewGrammar(conn)
 
 }
 

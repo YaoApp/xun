@@ -10,7 +10,7 @@ import (
 
 // New create a new schema interface using the given driver and DSN
 func New(driver string, dsn string) Schema {
-	db, err := sqlx.Open(driver, dsn)
+	db, err := sqlx.Connect(driver, dsn)
 	if err != nil {
 		panic(err)
 	}
