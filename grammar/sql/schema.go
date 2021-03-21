@@ -402,143 +402,31 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table) error {
 	for _, command := range table.Commands {
 		switch command.Name {
 		case "AddColumn":
-			column := command.Params[0].(*dbal.Column)
-			stmt := "ADD " + grammarSQL.SQLAddColumn(column)
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("AddColumn: %s", err))
-			}
-			command.Callback(err)
+			grammarSQL.alterTableAddColumn(table, command, sql, &stmts, &errs)
 			break
 		case "ChangeColumn":
-			column := command.Params[0].(*dbal.Column)
-			stmt := "MODIFY " + grammarSQL.SQLAddColumn(column)
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("ChangeColumn %s: %s", column.Name, err))
-			}
-			command.Callback(err)
+			grammarSQL.alterTableChangeColumn(table, command, sql, &stmts, &errs)
 			break
 		case "RenameColumn":
-			old := command.Params[0].(string)
-			new := command.Params[1].(string)
-			column, has := table.ColumnMap[old]
-			if !has {
-				return fmt.Errorf("RenameColumn: The column %s not exists", old)
-			}
-			column.Name = new
-			stmt := fmt.Sprintf("CHANGE COLUMN %s %s",
-				grammarSQL.ID(old, grammarSQL.DB),
-				grammarSQL.SQLAddColumn(column),
-			)
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("RenameColumn: %s", err))
-			}
-			command.Callback(err)
+			grammarSQL.alterTableRenameColumn(table, command, sql, &stmts, &errs)
 			break
 		case "DropColumn":
-			name := command.Params[0].(string)
-			stmt := fmt.Sprintf("DROP COLUMN %s", grammarSQL.ID(name, grammarSQL.DB))
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("DropColumn: %s", err))
-			}
-			command.Callback(err)
+			grammarSQL.alterTableDropColumn(table, command, sql, &stmts, &errs)
 			break
 		case "CreateIndex":
-			index := command.Params[0].(*dbal.Index)
-			stmt := "ADD " + grammarSQL.SQLAddIndex(index)
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("CreateIndex: %s", err))
-			}
-			command.Callback(err)
-			break
-		case "CreatePrimary":
-			primary := command.Params[0].(*dbal.Primary)
-			stmt := "ADD " + grammarSQL.SQLAddPrimary(primary)
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("CreateIndex: %s", err))
-			}
-			command.Callback(err)
-			break
-		case "DropIndex":
-			name := command.Params[0].(string)
-			stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(name, grammarSQL.DB))
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("DropIndex: %s", err))
-			}
-			command.Callback(err)
-			break
-		case "DropPrimary":
-			columns := command.Params[1].([]*dbal.Column)
-			for _, column := range columns {
-				// remove AutoIncrement
-				if utils.StringVal(column.Extra) == "AutoIncrement" {
-					column.Extra = nil
-					stmt := "MODIFY " + grammarSQL.SQLAddColumn(column)
-					stmts = append(stmts, sql+stmt)
-					err := grammarSQL.ExecSQL(table, sql+stmt)
-					if err != nil {
-						errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
-					}
-				}
-			}
-			stmt := "DROP PRIMARY KEY"
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("DropPrimary: %s", err))
-			}
-			command.Callback(err)
+			grammarSQL.alterTableCreateIndex(table, command, sql, &stmts, &errs)
 			break
 		case "RenameIndex":
-			old := command.Params[0].(string)
-			new := command.Params[1].(string)
-			oldIndex := table.GetIndex(old)
-			if oldIndex == nil {
-				err := fmt.Errorf("RenameIndex: The index %s not found", old)
-				errs = append(errs, err)
-				command.Callback(err)
-				break
-			}
-
-			stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(old, grammarSQL.DB))
-			stmts = append(stmts, sql+stmt)
-			err := grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("RenameIndex: %s", err))
-				command.Callback(err)
-				break
-			}
-
-			newIndex := oldIndex
-			newIndex.Name = new
-			stmt = "ADD " + grammarSQL.SQLAddIndex(newIndex)
-			stmts = append(stmts, sql+stmt)
-			err = grammarSQL.ExecSQL(table, sql+stmt)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("RenameIndex: %s", err))
-			}
-			command.Callback(err)
-
-			// stmt := fmt.Sprintf("RENAME INDEX %s TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
-			// stmts = append(stmts, sql+stmt)
-			// err := grammarSQL.ExecSQL(db, table, sql+stmt)
-			// if err != nil {
-			// 	errs = append(errs, err)
-			// }
-			// command.Callback(err)
+			grammarSQL.alterTableRenameIndex(table, command, sql, &stmts, &errs)
+			break
+		case "DropIndex":
+			grammarSQL.alterTableDropIndex(table, command, sql, &stmts, &errs)
+			break
+		case "CreatePrimary":
+			grammarSQL.alterTableCreatePrimary(table, command, sql, &stmts, &errs)
+			break
+		case "DropPrimary":
+			grammarSQL.alterTableDropPrimary(table, command, sql, &stmts, &errs)
 			break
 		}
 	}
@@ -555,6 +443,157 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table) error {
 	}
 
 	return nil
+}
+
+func (grammarSQL SQL) alterTableAddColumn(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	column := command.Params[0].(*dbal.Column)
+	stmt := "ADD " + grammarSQL.SQLAddColumn(column)
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("AddColumn: %s", err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableChangeColumn(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	column := command.Params[0].(*dbal.Column)
+	stmt := "MODIFY " + grammarSQL.SQLAddColumn(column)
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("ChangeColumn %s: %s", column.Name, err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableRenameColumn(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	old := command.Params[0].(string)
+	new := command.Params[1].(string)
+	column, has := table.ColumnMap[old]
+	var err error
+	if !has {
+		err = fmt.Errorf("RenameColumn: The column %s not exists", old)
+		*errs = append(*errs, fmt.Errorf("RenameColumn: The column %s not exists", old))
+	} else {
+		column.Name = new
+		stmt := fmt.Sprintf("CHANGE COLUMN %s %s",
+			grammarSQL.ID(old, grammarSQL.DB),
+			grammarSQL.SQLAddColumn(column),
+		)
+		*stmts = append(*stmts, sql+stmt)
+		err = grammarSQL.ExecSQL(table, sql+stmt)
+		if err != nil {
+			*errs = append(*errs, fmt.Errorf("RenameColumn: %s", err))
+		}
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableDropColumn(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	name := command.Params[0].(string)
+	stmt := fmt.Sprintf("DROP COLUMN %s", grammarSQL.ID(name, grammarSQL.DB))
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("DropColumn: %s", err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableCreateIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	index := command.Params[0].(*dbal.Index)
+	stmt := "ADD " + grammarSQL.SQLAddIndex(index)
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("CreateIndex: %s", err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableRenameIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	old := command.Params[0].(string)
+	new := command.Params[1].(string)
+	oldIndex := table.GetIndex(old)
+	if oldIndex == nil {
+		err := fmt.Errorf("RenameIndex: The index %s not found", old)
+		*errs = append(*errs, err)
+		command.Callback(err)
+		return
+	}
+
+	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(old, grammarSQL.DB))
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("RenameIndex: %s", err))
+		command.Callback(err)
+		return
+	}
+
+	newIndex := oldIndex
+	newIndex.Name = new
+	stmt = "ADD " + grammarSQL.SQLAddIndex(newIndex)
+	*stmts = append(*stmts, sql+stmt)
+	err = grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("RenameIndex: %s", err))
+	}
+	command.Callback(err)
+
+	// stmt := fmt.Sprintf("RENAME INDEX %s TO %s", grammarSQL.Quoter.ID(old, db), grammarSQL.Quoter.ID(new, db))
+	// stmts = append(stmts, sql+stmt)
+	// err := grammarSQL.ExecSQL(db, table, sql+stmt)
+	// if err != nil {
+	// 	errs = append(errs, err)
+	// }
+	// command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableDropIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	name := command.Params[0].(string)
+	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(name, grammarSQL.DB))
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("DropIndex: %s", err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableCreatePrimary(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	primary := command.Params[0].(*dbal.Primary)
+	stmt := "ADD " + grammarSQL.SQLAddPrimary(primary)
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("CreateIndex: %s", err))
+	}
+	command.Callback(err)
+}
+
+func (grammarSQL SQL) alterTableDropPrimary(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
+	columns := command.Params[1].([]*dbal.Column)
+	for _, column := range columns {
+		// remove AutoIncrement
+		if utils.StringVal(column.Extra) == "AutoIncrement" {
+			column.Extra = nil
+			stmt := "MODIFY " + grammarSQL.SQLAddColumn(column)
+			*stmts = append(*stmts, sql+stmt)
+			err := grammarSQL.ExecSQL(table, sql+stmt)
+			if err != nil {
+				*errs = append(*errs, fmt.Errorf("DropPrimary: %s", err))
+			}
+		}
+	}
+	stmt := "DROP PRIMARY KEY"
+	*stmts = append(*stmts, sql+stmt)
+	err := grammarSQL.ExecSQL(table, sql+stmt)
+	if err != nil {
+		*errs = append(*errs, fmt.Errorf("DropPrimary: %s", err))
+	}
+	command.Callback(err)
 }
 
 // ExecSQL execute sql then update table structure
