@@ -387,6 +387,12 @@ func TestBuilderMustGetTables(t *testing.T) {
 	builder.DropTableIfExists("table_test_builder")
 	tables = builder.MustGetTables()
 	assert.False(t, utils.StringHave(tables, "table_test_builder"), "the return value should have not table_test_builder")
+
+	assert.Panics(t, func() {
+		builder := newBuilder(unit.Driver(), unit.DSN())
+		builder.DB().Close()
+		builder.MustGetTables()
+	})
 }
 
 func TestBuilderMustCreateTable(t *testing.T) {
