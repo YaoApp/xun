@@ -513,6 +513,19 @@ func TestBlueprintBinary(t *testing.T) {
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil)
 }
 
+func TestBlueprintBinaryWithL(t *testing.T) {
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name, 600) })
+	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil)
+	testCheckColumnsAfterCreate(unit.DriverIs("mysql"), t, "binary", testCheckLength600)
+	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testAlterTableSafe(unit.Not("sqlite3"), t,
+		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.Binary(name, 600) },
+	)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil)
+	testCheckColumnsAfterAlterTable(unit.DriverIs("mysql"), t, "binary", testCheckLength600)
+}
+
 func TestBlueprintDate(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Date(name) })
 	testCheckColumnsAfterCreate(unit.Always, t, "date", nil)
@@ -539,7 +552,7 @@ func TestBlueprintDateTime(t *testing.T) {
 
 func TestBlueprintDateTimeWithP(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
-		return table.DateTime(name).SetDateTimePrecision(6)
+		return table.DateTime(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "dateTime", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestamp", testCheckDateTimePrecision6)
@@ -548,7 +561,7 @@ func TestBlueprintDateTimeWithP(t *testing.T) {
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column {
-			return table.DateTime(name).SetDateTimePrecision(6)
+			return table.DateTime(name, 6)
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", testCheckDateTimePrecision6)
@@ -570,7 +583,7 @@ func TestBlueprintDateTimeTz(t *testing.T) {
 
 func TestBlueprintDateTimeTzWithP(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
-		return table.DateTimeTz(name).SetDateTimePrecision(6)
+		return table.DateTimeTz(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "dateTime", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
@@ -579,7 +592,7 @@ func TestBlueprintDateTimeTzWithP(t *testing.T) {
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column {
-			return table.DateTimeTz(name).SetDateTimePrecision(6)
+			return table.DateTimeTz(name, 6)
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", testCheckDateTimePrecision6)
@@ -599,7 +612,7 @@ func TestBlueprintTime(t *testing.T) {
 
 func TestBlueprintTimeWithP(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column {
-		return table.Time(name).SetDateTimePrecision(6)
+		return table.Time(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "time", nil)
@@ -607,7 +620,7 @@ func TestBlueprintTimeWithP(t *testing.T) {
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column {
-			return table.Time(name).SetDateTimePrecision(6)
+			return table.Time(name, 6)
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
@@ -1176,6 +1189,10 @@ func testCheckOptionO1O2O3(t *testing.T, name string, column *Column) {
 
 func testCheckDateTimePrecision6(t *testing.T, name string, column *Column) {
 	assert.Equal(t, 6, utils.IntVal(column.DateTimePrecision), "the column %s DateTimePrecision should be 6", name)
+}
+
+func testCheckLength600(t *testing.T, name string, column *Column) {
+	assert.Equal(t, 600, utils.IntVal(column.Length), "the column %s length should be 600", name)
 }
 
 func testCheckAutoIncrementing(t *testing.T, name string, column *Column) {
