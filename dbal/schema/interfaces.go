@@ -14,9 +14,9 @@ type Schema interface {
 	GetTables() ([]string, error)
 
 	GetTable(name string) (Blueprint, error)
-	CreateTable(name string, createFunc func(table Blueprint)) (Blueprint, error)
+	CreateTable(name string, createFunc func(table Blueprint)) error
 	DropTable(name string) error
-	AlterTable(name string, alterFunc func(table Blueprint)) (Blueprint, error)
+	AlterTable(name string, alterFunc func(table Blueprint)) error
 	HasTable(name string) (bool, error)
 	RenameTable(old string, new string) error
 	DropTableIfExists(name string) error
@@ -28,9 +28,9 @@ type Schema interface {
 	MustGetTables() []string
 
 	MustGetTable(name string) Blueprint
-	MustCreateTable(name string, createFunc func(table Blueprint)) Blueprint
+	MustCreateTable(name string, createFunc func(table Blueprint))
 	MustDropTable(name string)
-	MustAlterTable(name string, alterFunc func(table Blueprint)) Blueprint
+	MustAlterTable(name string, alterFunc func(table Blueprint))
 	MustHasTable(name string) bool
 	MustRenameTable(old string, new string) Blueprint
 	MustDropTableIfExists(name string)

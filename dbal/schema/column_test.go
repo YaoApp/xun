@@ -43,9 +43,10 @@ func TestColumnRenameColumn(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	NewTableForColumnTest()
-	table := builder.MustAlterTable("table_test_column", func(table Blueprint) {
+	builder.MustAlterTable("table_test_column", func(table Blueprint) {
 		table.RenameColumn("field2", "re_field2")
 	})
+	table := builder.MustGetTable("table_test_column")
 	assert.True(t, table.HasColumn("field1"), "the table table_test_column should have the field1 column")
 	assert.True(t, table.HasColumn("re_field2"), "the table table_test_column should have the re_field2 column")
 	assert.False(t, table.HasColumn("field2"), "the table table_test_column should not have the field2 column")
@@ -58,9 +59,10 @@ func TestColumnDropColumn(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	NewTableForColumnTest()
-	table := builder.MustAlterTable("table_test_column", func(table Blueprint) {
+	builder.MustAlterTable("table_test_column", func(table Blueprint) {
 		table.DropColumn("field2")
 	})
+	table := builder.MustGetTable("table_test_column")
 	assert.True(t, table.HasColumn("field1"), "the table table_test_column should have the field1 column")
 	assert.False(t, table.HasColumn("field2"), "the table table_test_column should not have the field2 column")
 }
@@ -178,11 +180,11 @@ func NewColumnsForTest(table *Table) {
 	table.pushColumn(col2)
 }
 
-func NewTableForColumnTest() Blueprint {
+func NewTableForColumnTest() {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_column")
-	return builder.MustCreateTable("table_test_column", func(table Blueprint) {
+	builder.MustCreateTable("table_test_column", func(table Blueprint) {
 		table.ID("id")
 		table.String("field1")
 		table.String("field2")

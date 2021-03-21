@@ -11,17 +11,14 @@ func TestPrimaryAddPrimary(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilderInstance()
 	builder.DropTableIfExists("table_test_primary")
-	table := builder.MustCreateTable("table_test_primary", func(table Blueprint) {
+	builder.MustCreateTable("table_test_primary", func(table Blueprint) {
 		table.BigIncrements("id")
 		table.String("field1", 40)
 		table.String("field2", 40)
 		table.AddPrimary("id")
 	})
-
+	table := builder.MustGetTable("table_test_primary")
 	primryKey := table.GetPrimary()
-	CheckPrimaryKey(t, primryKey)
-	table = builder.MustGetTable("table_test_primary")
-	primryKey = table.GetPrimary()
 	CheckPrimaryKey(t, primryKey)
 }
 
@@ -33,7 +30,7 @@ func TestPrimaryAddPrimaryFail(t *testing.T) {
 	builder := getTestBuilderInstance()
 	builder.DropTableIfExists("table_test_primary")
 	TestPrimaryAddPrimary(t)
-	_, err := builder.AlterTable("table_test_primary", func(table Blueprint) {
+	err := builder.AlterTable("table_test_primary", func(table Blueprint) {
 		table.Text("hello")
 		table.DropPrimary()
 		table.AddPrimary("id", "hello", "field1", "field2")
@@ -68,10 +65,11 @@ func TestPrimaryDropPrimary(t *testing.T) {
 	}
 	builder := getTestBuilderInstance()
 	TestPrimaryAddPrimary(t)
-	table := builder.MustAlterTable("table_test_primary", func(table Blueprint) {
+	builder.MustAlterTable("table_test_primary", func(table Blueprint) {
 		table.DropPrimary()
 	})
 
+	table := builder.MustGetTable("table_test_index")
 	primryKey := table.GetPrimary()
 	assert.True(t, primryKey == nil, "The primary key should be nil")
 

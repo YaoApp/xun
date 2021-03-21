@@ -178,43 +178,41 @@ func (builder *Builder) MustGetTable(name string) Blueprint {
 }
 
 // CreateTable create a new table on the schema.
-func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) (Blueprint, error) {
+func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) error {
 	table := builder.table(name)
 	callback(table)
 	err := builder.Grammar.CreateTable(table.Table)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return table, nil
+	return nil
 }
 
 // MustCreateTable create a new table on the schema.
-func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) Blueprint {
+func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) {
 	table := builder.table(name)
 	callback(table)
 	err := builder.Grammar.CreateTable(table.Table)
 	utils.PanicIF(err)
-	return table
 }
 
 // AlterTable alter a table on the schema.
-func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) (Blueprint, error) {
+func (builder *Builder) AlterTable(name string, callback func(table Blueprint)) error {
 	table := builder.MustGetTable(name)
 	callback(table)
 	err := builder.Grammar.AlterTable(table.Get().Table)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return table, nil
+	return nil
 }
 
 // MustAlterTable alter a table on the schema.
-func (builder *Builder) MustAlterTable(name string, callback func(table Blueprint)) Blueprint {
+func (builder *Builder) MustAlterTable(name string, callback func(table Blueprint)) {
 	table := builder.MustGetTable(name)
 	callback(table)
 	err := builder.Grammar.AlterTable(table.Get().Table)
 	utils.PanicIF(err)
-	return table
 }
 
 // DropTable Indicate that the table should be dropped.

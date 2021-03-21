@@ -95,7 +95,7 @@ func TestBuilderCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
-	table, err := builder.CreateTable("table_test_builder", func(table Blueprint) {
+	err := builder.CreateTable("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -107,7 +107,6 @@ func TestBuilderCreateTable(t *testing.T) {
 
 	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
 	assert.Equal(t, nil, err, "the return error should be nil")
-	assert.True(t, table != nil, "the return table should not be nil")
 
 	// @todo: the return value should be refreshed
 	// checkTable(t, table)
@@ -180,7 +179,7 @@ func TestBuilderAlterTable(t *testing.T) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
 	TestBuilderCreateTable(t)
-	table, err := builder.AlterTable("table_test_builder", func(table Blueprint) {
+	err := builder.AlterTable("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -198,7 +197,7 @@ func TestBuilderAlterTable(t *testing.T) {
 	// checkTableAlterTable(t, table)
 
 	// cheking the schema structure
-	table, err = builder.GetTable("table_test_builder")
+	table, err := builder.GetTable("table_test_builder")
 	assert.Equal(t, nil, err, "the return error should be nil")
 	checkTableAlterTable(t, table)
 	// builder.DropTable("table_test_builder")
@@ -280,7 +279,7 @@ func TestBuilderMustCreateTable(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_builder")
-	table := builder.MustCreateTable("table_test_builder", func(table Blueprint) {
+	builder.MustCreateTable("table_test_builder", func(table Blueprint) {
 		table.ID("id").Primary()
 		table.UnsignedBigInteger("counter").Index()
 		table.BigInteger("latest").Index()
@@ -290,7 +289,6 @@ func TestBuilderMustCreateTable(t *testing.T) {
 		table.AddIndex("name_counter", "name", "counter")
 	})
 	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
-	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 }
 
 func TestBuilderMustGetTable(t *testing.T) {
@@ -340,7 +338,7 @@ func TestBuilderMustAlterTable(t *testing.T) {
 	defer unit.Catch()
 	TestBuilderCreateTable(t)
 	builder := getTestBuilder()
-	table := builder.MustAlterTable("table_test_builder", func(table Blueprint) {
+	builder.MustAlterTable("table_test_builder", func(table Blueprint) {
 		table.String("nickname", 50)
 		table.String("unionid", 200)
 		table.DropIndex("unionid_unique")
@@ -350,7 +348,6 @@ func TestBuilderMustAlterTable(t *testing.T) {
 		table.RenameIndex("latest_index", "re_latest_index")
 	})
 	assert.True(t, builder.MustHasTable("table_test_builder"), "should return true")
-	assert.Equal(t, "table_test_builder", table.GetName(), "the table name should be table_test_builder")
 
 	// cheking the schema structure
 	table, err := builder.GetTable("table_test_builder")
