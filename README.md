@@ -101,15 +101,16 @@ func main(){
   db := capsule.New().AddConn("primary", "mysql",
             "root:123456@tcp(192.168.31.119:3307)/xun?charset=utf8mb4&parseTime=True&loc=Local",
         )
-
 ```
 
 `Connect to SQLite`
 
 ```golang
-  db := capsule.New().AddConn("primary","sqlite3",
-            "file:///data/xun.db",
-        )
+  db := capsule.New().AddConn("primary", "sqlite3", "file:///data/xun.db")
+```
+
+```golang
+  db := capsule.New().AddConn("primary", "sqlite3", ":memory:")
 ```
 
 `Multiple connections`
@@ -120,9 +121,8 @@ func main(){
             "root:123456@tcp(192.168.31.119:3307)/xun?charset=utf8mb4&parseTime=True&loc=Local",
         ).
         AddReadConn("secondary",  "mysql",
-            "readonly:123456@tcp(192.168.31.119:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local"
+            "readonly:123456@tcp(192.168.31.119:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local",
         ) // Add a readonly connection
-
 ```
 
 Read more [Xun Capsule References](docs/capsule.md)
@@ -169,7 +169,6 @@ func main(){
         table.Year("birthday")
     })
 }
-
 ```
 
 Read more [Xun Schema References](docs/schema.md)
