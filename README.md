@@ -192,18 +192,23 @@ func main(){
     // Get the query interface
     qb := db.Query()
 
+    // return []map[string]interface{}, error
     users, err := qb.Table("user").Where("weight", ">", 99.00 )->Get()
-    if err {
+    if err != nil {
         painic(err)
     }
 
+    // return []map[string]interface{}, error
     users, err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Get()
-    if err {
+    if err != nil  {
         painic(err)
     }
 
-    users = qb.Table("user").Where("weight", ">", 99.00 )->MustGet() // return []map[string]inteface{}
-    users = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustGet() // return []map[string]inteface{}
+    // return []map[string]interface{}
+    users = qb.Table("user").Where("weight", ">", 99.00 )->MustGet()
+
+    // return []map[string]interface{}
+    users = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustGet()
 
 }
 ```
@@ -222,12 +227,12 @@ type User struct {
 users := []User{}
 
 err := qb.Table("user").Where("weight", ">", 99.00 )->Bind(&users)
-if err {
+if err != nil  {
     painic(err)
 }
 
 err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Bind(&users)
-if err {
+if err != nil  {
     painic(err)
 }
 
