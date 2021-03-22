@@ -83,14 +83,14 @@ func main(){
             "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
         )
 
-    // Get the schema interface
-    schema := db.Schema()
-
     // Get the query interface
-    query := db.Query()
+    qb := db.Query()
+
+    // Get the schema interface
+    sch := db.Schema()
 
     // Get the model interface
-    model := db.Model()
+    mod := db.Model()
 
 }
 ```
@@ -144,10 +144,10 @@ func main(){
         )
 
     // Get the schema interface
-    schema := db.Schema()
+    sch := db.Schema()
 
     // Create table
-    builder.MustCreateTable("user", func(table schema.Blueprint) {
+    sch.MustCreateTable("user", func(table schema.Blueprint) {
         table.ID("id")
         table.String("name", 80).Index()
         table.String("nickname", 128).Unique()
@@ -161,7 +161,7 @@ func main(){
     })
 
     // Alter table
-    builder.MustAlterTable("user", func(table schema.Blueprint) {
+    sch.MustAlterTable("user", func(table schema.Blueprint) {
         table.Float("BMI", 3, 1).Index() // 20.3 Float(name string, total int, places int)
         table.Float("weight", 5, 2).Index()  // 103.17
         table.SmallInteger("height").Index()
@@ -176,7 +176,75 @@ Read more [Xun Schema References](docs/schema.md)
 ### Using The Query Interface
 
 ```golang
-// comming soon
+import (
+    "github.com/yaoapp/xun/capsule"
+    "github.com/yaoapp/xun/dbal/schema"
+    _ "github.com/yaoapp/xun/grammar/postgres"  // PostgreSQL
+)
+
+func main(){
+
+    db := capsule.New().AddConn("primary",
+            "postgres",
+            "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
+        )
+
+    // Get the query interface
+    qb := db.Query()
+
+    users, err := qb.Table("user").Where("weight", ">", 99.00 )->Get()
+    if err {
+        painic(err)
+    }
+
+    users, err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Get()
+    if err {
+        painic(err)
+    }
+
+    users = qb.Table("user").Where("weight", ">", 99.00 )->MustGet() // return []map[string]inteface{}
+    users = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustGet() // return []map[string]inteface{}
+
+}
+```
+
+`Type Binding`
+
+```golang
+type User struct {
+    ID int `json:"id"`
+    Name string `json:"name"`
+    Nickname string `json:"nickname"`
+    Weight float32 `json:"weight"`
+}
+
+
+users := []User{}
+
+err := qb.Table("user").Where("weight", ">", 99.00 )->Bind(&users)
+if err {
+    painic(err)
+}
+
+err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Bind(&users)
+if err {
+    painic(err)
+}
+
+qb.Table("user").Where("weight", ">", 99.00 )->MustBind(&users)
+qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustBind(&users)
+
+```
+
+`Print SQL`
+
+```golang
+sql := qb.Table("user").Where("weight", ">", 99.00 )->GetSQL()
+fmt.Println(sql)
+
+qb.Table("user").Where("weight", ">", 99.00 )->PrintSQL()
+qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->PrintSQL()
+
 ```
 
 Read more [Xun Query References](docs/query.md)
