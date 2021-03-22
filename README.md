@@ -25,8 +25,8 @@ $ go get -u github.com/yaoapp/xun
 import "github.com/yaoapp/xun/capsule"
 ```
 
-3. Import the database driver that your project used.
-   Xun package providing `MySQL`, `PostgreSQL` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](xun-grammar-driver.md)
+3. Import the grammar driver that your project used.
+   Xun package providing `MySQL`, `PostgreSQL` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](docs/contributing/xun-grammar-driver.md)
 
 `PostgreSQL`:
 
@@ -55,7 +55,7 @@ import (
 )
 ```
 
-if your project used several types database server, can also import them together.
+if your project used several types database, can also import them together.
 
 ```golang
 import (
@@ -119,10 +119,13 @@ func main(){
         table.ID("id")
         table.String("name", 80).Index()
         table.String("nickname", 128).Unique()
+        table.String("bio")
         table.TinyInteger("gender").Index()
         table.DateTime("birthday").Index()
         talbe.IpAddress("login_ip").Index()
         table.AddIndex("birthday_gender", "birthday", "gender")
+        table.SoftDeletes() // Add deleted_at field
+        table.Timestamps()  // Add created_at and updated_at fields
     })
 
     // Alter table
