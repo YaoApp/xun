@@ -25,8 +25,8 @@ $ go get -u github.com/yaoapp/xun
 import "github.com/yaoapp/xun/capsule"
 ```
 
-3. Import the database driver that your project used:
-   Xun package contains `MySQL`, `Postgres` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](xun-grammar-driver.md)
+3. Import the database driver that your project used.
+   Xun package providing `MySQL`, `Postgres` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](xun-grammar-driver.md)
 
 `PostgreSQL`:
 
