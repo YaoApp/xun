@@ -78,8 +78,7 @@ import (
 
 func main(){
 
-    db := capsule.New().AddConn("primary",
-            "postgres",
+    db := capsule.New().AddConn("primary", "postgres",
             "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
         )
 
@@ -94,6 +93,38 @@ func main(){
 
 }
 ```
+
+MySQL database
+
+```golang
+  db := capsule.New().AddConn("primary", "mysql",
+            "root:123456@tcp(192.168.31.119:3307)/xun?charset=utf8mb4&parseTime=True&loc=Local",
+        )
+
+```
+
+SQLite database
+
+```golang
+  db := capsule.New().AddConn("primary","sqlite3",
+            "file:///data/xun.db",
+        )
+```
+
+Multiple connections
+
+```golang
+  db := capsule.New().
+        AddConn("primary", "mysql",
+            "root:123456@tcp(192.168.31.119:3307)/xun?charset=utf8mb4&parseTime=True&loc=Local",
+        ).
+        AddReadConn("secondary",  "mysql",
+            "readonly:123456@tcp(192.168.31.119:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local"
+        )
+
+```
+
+Read more [Xun Capsule References](docs/capsule.md)
 
 ### Using The Schema Interface
 
