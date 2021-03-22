@@ -26,14 +26,14 @@ import "github.com/yaoapp/xun/capsule"
 ```
 
 3. Import the database driver that your project used.
-   Xun package providing `MySQL`, `Postgres` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](xun-grammar-driver.md)
+   Xun package providing `MySQL`, `PostgreSQL` and `SQLite` grammar drivers, you can also using the third-party grammar driver or written by yourself. See [how to write Xun grammar driver](xun-grammar-driver.md)
 
 `PostgreSQL`:
 
 ```golang
 import (
     "github.com/yaoapp/xun/capsule"
-    _ "github.com/yaoapp/xun/grammar/postgres" // Postgres
+    _ "github.com/yaoapp/xun/grammar/postgres" // PostgreSQL
 )
 ```
 
@@ -55,12 +55,12 @@ import (
 )
 ```
 
-if your project used several types database server, can also import them together:
+if your project used several types database server, can also import them together.
 
 ```golang
 import (
     "github.com/yaoapp/xun/capsule"
-    _ "github.com/yaoapp/xun/grammar/postgres"  // Postgres
+    _ "github.com/yaoapp/xun/grammar/postgres"  // PostgreSQL
     _ "github.com/yaoapp/xun/grammar/sqlite3"   // SQLite
     _ "github.com/third/party/clickhouse"       // third-party or yourself driver
 )
@@ -73,7 +73,7 @@ First, create a new "db" manager instance. capsule aims to make configuring the 
 ```golang
 import (
     "github.com/yaoapp/xun/capsule"
-    _ "github.com/yaoapp/xun/grammar/postgres"  // Postgres
+    _ "github.com/yaoapp/xun/grammar/postgres"  // PostgreSQL
 )
 
 func main(){
@@ -97,38 +97,44 @@ func main(){
 
 ### Using The Schema Interface
 
-[Xun Schema References](docs/schema.md)
-
 ```golang
+import (
+    "github.com/yaoapp/xun/capsule"
+    "github.com/yaoapp/xun/dbal/schema"
+    _ "github.com/yaoapp/xun/grammar/postgres"  // PostgreSQL
+)
 
-db := capsule.New().AddConn("primary",
-        "postgres",
-        "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
-    )
+func main(){
 
-// Get the schema interface
-schema := db.Schema()
+    db := capsule.New().AddConn("primary",
+            "postgres",
+            "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
+        )
 
-// Create table
-builder.MustCreateTable("user", func(table Blueprint) {
-	table.ID("id")
-	table.String("name", 80).Index()
-	table.String("nickname", 128).Unique()
-    table.TinyInteger("gender").Index()
-    table.DateTime("birthday").Index()
-    talbe.IpAddress("login_ip").Index()
-    table.AddIndex("birthday_gender", "birthday", "gender")
-})
+    // Get the schema interface
+    schema := db.Schema()
 
-// Alter table
-builder.MustAlterTable("user", func(table Blueprint) {
-	table.SmallInteger("tall").Index()
-    table.Year("birthday")
-})
+    // Create table
+    builder.MustCreateTable("user", func(table schema.Blueprint) {
+        table.ID("id")
+        table.String("name", 80).Index()
+        table.String("nickname", 128).Unique()
+        table.TinyInteger("gender").Index()
+        table.DateTime("birthday").Index()
+        talbe.IpAddress("login_ip").Index()
+        table.AddIndex("birthday_gender", "birthday", "gender")
+    })
+
+    // Alter table
+    builder.MustAlterTable("user", func(table schema.Blueprint) {
+        table.SmallInteger("tall").Index()
+        table.Year("birthday")
+    })
+}
 
 ```
 
-read more [Xun Schema References](docs/schema.md)
+Read more [Xun Schema References](docs/schema.md)
 
 ### Using The Query Interface
 
@@ -136,7 +142,7 @@ read more [Xun Schema References](docs/schema.md)
 // comming soon
 ```
 
-read more [Xun Query References](docs/query.md)
+Read more [Xun Query References](docs/query.md)
 
 ### Using The Model Interface
 
@@ -144,4 +150,4 @@ read more [Xun Query References](docs/query.md)
 // comming soon
 ```
 
-read more [Xun Model References](docs/model.md)
+Read more [Xun Model References](docs/model.md)
