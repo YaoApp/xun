@@ -193,22 +193,22 @@ func main(){
     qb := db.Query()
 
     // return []map[string]interface{}, error
-    users, err := qb.Table("user").Where("weight", ">", 99.00 )->Get()
+    users, err := qb.Table("user").Where("weight", ">", 99.00 ).Get()
     if err != nil {
         painic(err)
     }
 
     // return []map[string]interface{}, error
-    users, err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Get()
+    users, err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).Get()
     if err != nil  {
         painic(err)
     }
 
     // return []map[string]interface{}
-    users = qb.Table("user").Where("weight", ">", 99.00 )->MustGet()
+    users = qb.Table("user").Where("weight", ">", 99.00 ).MustGet()
 
     // return []map[string]interface{}
-    users = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustGet()
+    users = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).MustGet()
 
 }
 ```
@@ -226,29 +226,29 @@ type User struct {
 
 users := []User{}
 
-err := qb.Table("user").Where("weight", ">", 99.00 )->Bind(&users)
+err := qb.Table("user").Where("weight", ">", 99.00 ).Bind(&users)
 if err != nil  {
     painic(err)
 }
 
-err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->Bind(&users)
+err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).Bind(&users)
 if err != nil  {
     painic(err)
 }
 
-qb.Table("user").Where("weight", ">", 99.00 )->MustBind(&users)
-qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->MustBind(&users)
+qb.Table("user").Where("weight", ">", 99.00 ).MustBind(&users)
+qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).MustBind(&users)
 
 ```
 
 `Print SQL`
 
 ```golang
-sql := qb.Table("user").Where("weight", ">", 99.00 )->GetSQL()
+sql := qb.Table("user").Where("weight", ">", 99.00 ).GetSQL()
 fmt.Println(sql)
 
-qb.Table("user").Where("weight", ">", 99.00 )->PrintSQL()
-qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00)->PrintSQL()
+qb.Table("user").Where("weight", ">", 99.00 ).PrintSQL()
+qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).PrintSQL()
 
 ```
 
