@@ -78,6 +78,7 @@ import (
 
 func main(){
 
+    // Connect to PostgreSQL
     db := capsule.New().AddConn("primary", "postgres",
             "postgres://postgres:123456@127.0.0.1/xun?sslmode=disable&search_path=xun",
         )
@@ -94,7 +95,7 @@ func main(){
 }
 ```
 
-MySQL database
+`Connect to MySQL`
 
 ```golang
   db := capsule.New().AddConn("primary", "mysql",
@@ -103,7 +104,7 @@ MySQL database
 
 ```
 
-SQLite database
+`Connect to SQLite`
 
 ```golang
   db := capsule.New().AddConn("primary","sqlite3",
@@ -111,7 +112,7 @@ SQLite database
         )
 ```
 
-Multiple connections
+`Multiple connections`
 
 ```golang
   db := capsule.New().
@@ -120,7 +121,7 @@ Multiple connections
         ).
         AddReadConn("secondary",  "mysql",
             "readonly:123456@tcp(192.168.31.119:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local"
-        )
+        ) // Add a readonly connection
 
 ```
 
