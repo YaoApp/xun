@@ -127,8 +127,8 @@ func main(){
 
     // Alter table
     builder.MustAlterTable("user", func(table schema.Blueprint) {
-        table.Float("BMI", 2).Index()
-        table.Float("weight", 2).Index()
+        table.Float("BMI", 3, 1).Index()
+        table.Float("weight", 5, 2).Index()
         table.SmallInteger("height").Index()
         table.Year("birthday")
     })
