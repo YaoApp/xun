@@ -127,9 +127,10 @@ func main(){
 
     // Alter table
     builder.MustAlterTable("user", func(table schema.Blueprint) {
-        table.Float("BMI", 3, 1).Index()
-        table.Float("weight", 5, 2).Index()
+        table.Float("BMI", 3, 1).Index() // 20.3 Float(name string, total int, places int)
+        table.Float("weight", 5, 2).Index()  // 103.17
         table.SmallInteger("height").Index()
+        table.Float("distance").Index()  // 16981.62 The total default value is 10 , the places default value is 2.
         table.Year("birthday")
     })
 }
