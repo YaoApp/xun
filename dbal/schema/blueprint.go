@@ -381,16 +381,16 @@ func (table *Table) Year(name string) *Column {
 // Timestamps Add nullable creation and update timestamps to the table.
 func (table *Table) Timestamps(args ...int) map[string]*Column {
 	return map[string]*Column{
-		"created_at": table.Timestamp("created_at", args...).Null(),
-		"updated_at": table.Timestamp("updated_at", args...).Null(),
+		"created_at": table.Timestamp("created_at", args...).Null().Index(),
+		"updated_at": table.Timestamp("updated_at", args...).Null().Index(),
 	}
 }
 
 // TimestampsTz Add creation and update timestampTz columns to the table.
 func (table *Table) TimestampsTz(args ...int) map[string]*Column {
 	return map[string]*Column{
-		"created_at": table.TimestampTz("created_at", args...).Null(),
-		"updated_at": table.TimestampTz("updated_at", args...).Null(),
+		"created_at": table.TimestampTz("created_at", args...).Null().Index(),
+		"updated_at": table.TimestampTz("updated_at", args...).Null().Index(),
 	}
 }
 
@@ -406,12 +406,12 @@ func (table *Table) DropTimestampsTz() {
 
 // SoftDeletes Add a "deleted_at" timestamp for the table.
 func (table *Table) SoftDeletes(args ...int) *Column {
-	return table.Timestamp("deleted_at", args...).Null()
+	return table.Timestamp("deleted_at", args...).Null().Index()
 }
 
 // SoftDeletesTz Add a "deleted_at" timestampTz for the table.
 func (table *Table) SoftDeletesTz(args ...int) *Column {
-	return table.TimestampTz("deleted_at", args...).Null()
+	return table.TimestampTz("deleted_at", args...).Null().Index()
 }
 
 // DropSoftDeletes drop the "deleted_at" timestamp columns.

@@ -851,6 +851,7 @@ func TestBlueprintTimestamps(t *testing.T) {
 	updatedAt := table.GetColumn("updated_at")
 	assert.True(t, createdAt != nil, "the column created_at should be created")
 	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+	assert.True(t, table.HasIndex("created_at_index", "updated_at_index"), "the table should have created_at_index and updated_at_index indexes")
 
 	if createdAt != nil {
 		assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
@@ -876,6 +877,7 @@ func TestBlueprintTimestampsWithP(t *testing.T) {
 	updatedAt := table.GetColumn("updated_at")
 	assert.True(t, createdAt != nil, "the column created_at should be created")
 	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+	assert.True(t, table.HasIndex("created_at_index", "updated_at_index"), "the table should have created_at_index and updated_at_index indexes")
 
 	if createdAt != nil {
 		assert.Equal(t, "timestamp", createdAt.Type, "the column created_at type should be timestamp")
@@ -918,6 +920,7 @@ func TestBlueprintTimestampsTz(t *testing.T) {
 	updatedAt := table.GetColumn("updated_at")
 	assert.True(t, createdAt != nil, "the column created_at should be created")
 	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+	assert.True(t, table.HasIndex("created_at_index", "updated_at_index"), "the table should have created_at_index and updated_at_index indexes")
 
 	if createdAt != nil {
 		if unit.DriverIs("postgres") {
@@ -951,6 +954,7 @@ func TestBlueprintTimestampsTzWithP(t *testing.T) {
 	updatedAt := table.GetColumn("updated_at")
 	assert.True(t, createdAt != nil, "the column created_at should be created")
 	assert.True(t, updatedAt != nil, "the column updated_at should be created")
+	assert.True(t, table.HasIndex("created_at_index", "updated_at_index"), "the table should have created_at_index and updated_at_index indexes")
 
 	if createdAt != nil {
 		if unit.DriverIs("postgres") {
@@ -999,6 +1003,7 @@ func TestBlueprintSoftDeletes(t *testing.T) {
 	table := testGetTable()
 	deleteAt := table.GetColumn("deleted_at")
 	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+	assert.True(t, table.HasIndex("deleted_at_index"), "the table should has deleted_at_index index")
 
 	if deleteAt != nil {
 		assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
@@ -1017,6 +1022,7 @@ func TestBlueprintSoftDeletesWithP(t *testing.T) {
 	table := testGetTable()
 	deleteAt := table.GetColumn("deleted_at")
 	assert.True(t, deleteAt != nil, "the column deleted_at should be created")
+	assert.True(t, table.HasIndex("deleted_at_index"), "the table should has deleted_at_index index")
 
 	if deleteAt != nil {
 		assert.Equal(t, "timestamp", deleteAt.Type, "the column deleted_at type should be timestamp")
