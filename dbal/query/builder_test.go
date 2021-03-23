@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/yaoapp/xun/unit"
 )
 
-func TestCreate(t *testing.T) {
-	conn := &Connection{}
-	New(conn)
-	qb := NewBuilder(conn)
+func TestBuilderCreate(t *testing.T) {
+	qb := New(unit.Driver(), unit.DSN())
 	qb.Where()
 	qb.Join()
 	assert.True(t, true, "should return true")

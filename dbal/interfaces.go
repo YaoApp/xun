@@ -5,6 +5,8 @@ import "github.com/jmoiron/sqlx"
 // Grammar the SQL Grammar inteface
 type Grammar interface {
 	NewWith(db *sqlx.DB, config *Config, option *Option) (Grammar, error)
+	NewWithRead(write *sqlx.DB, writeConfig *Config, read *sqlx.DB, readConfig *Config, option *Option) (Grammar, error)
+
 	OnConnected() error
 
 	GetVersion() (*Version, error)

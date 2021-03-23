@@ -5,16 +5,13 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
-// Query The database Query interface
-type Query interface {
-	Where()
-	Join()
-}
-
 // Builder the dbal query builder
 type Builder struct {
-	Conn *Connection
-	Query
+	Conn     *Connection
+	Mode     string
+	Database string
+	Schema   string
+	dbal.Grammar
 }
 
 // Connection DB Connection

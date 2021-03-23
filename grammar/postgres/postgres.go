@@ -36,8 +36,8 @@ func init() {
 // 	grammarSQL.Schema = schema
 // }
 
-// Setup the method will be executed when db server was connected
-func (grammarSQL *Postgres) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+// setup the method will be executed when db server was connected
+func (grammarSQL *Postgres) setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -65,10 +65,22 @@ func (grammarSQL *Postgres) Setup(db *sqlx.DB, config *dbal.Config, option *dbal
 
 // NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
 func (grammarSQL Postgres) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
-	err := grammarSQL.Setup(db, config, option)
+	err := grammarSQL.setup(db, config, option)
 	if err != nil {
 		return nil, err
 	}
+	return grammarSQL, nil
+}
+
+// NewWithRead Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL Postgres) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read *sqlx.DB, readConfig *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.setup(write, writeConfig, option)
+	if err != nil {
+		return nil, err
+	}
+
+	grammarSQL.Read = read
+	grammarSQL.ReadConfig = readConfig
 	return grammarSQL, nil
 }
 

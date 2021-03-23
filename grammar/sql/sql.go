@@ -21,6 +21,8 @@ type SQL struct {
 	SchemaName   string
 	DB           *sqlx.DB
 	Config       *dbal.Config
+	Read         *sqlx.DB
+	ReadConfig   *dbal.Config
 	Option       *dbal.Option
 	dbal.Grammar
 	dbal.Quoter
@@ -82,8 +84,8 @@ func New(dsn string) dbal.Grammar {
 	return sql
 }
 
-// Setup the method will be executed when db server was connected
-func (grammarSQL *SQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
+// setup the method will be executed when db server was connected
+func (grammarSQL *SQL) setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
 
 	if db == nil {
 		return fmt.Errorf("db is nil")
@@ -107,10 +109,22 @@ func (grammarSQL *SQL) Setup(db *sqlx.DB, config *dbal.Config, option *dbal.Opti
 
 // NewWith Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
 func (grammarSQL SQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
-	err := grammarSQL.Setup(db, config, option)
+	err := grammarSQL.setup(db, config, option)
 	if err != nil {
 		return nil, err
 	}
+	return grammarSQL, nil
+}
+
+// NewWithRead Create a new grammar interface, using the given *sqlx.DB, *dbal.Config and *dbal.Option.
+func (grammarSQL SQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read *sqlx.DB, readConfig *dbal.Config, option *dbal.Option) (dbal.Grammar, error) {
+	err := grammarSQL.setup(write, writeConfig, option)
+	if err != nil {
+		return nil, err
+	}
+
+	grammarSQL.Read = read
+	grammarSQL.ReadConfig = readConfig
 	return grammarSQL, nil
 }
 
