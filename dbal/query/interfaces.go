@@ -121,5 +121,96 @@ type Query interface {
 	//
 
 	// Ordering, Grouping, Limit & Offset
+	// Ordering:
+	//		table(`users`).orderBy(`name`, `desc`)
+	//		table(`users`).orderBy(`email`, `asc`)
+	//		table(`users`).latest().first()
+	// 		table(`users`).oldest().first()
+	//		table(`inRandomOrder).first()
+	//
+	// 		qb := table(`users`).orderBy(`name`, `desc`)
+	//		rows := qb.reorder().get()   // Removing Existing Orderings
+	//
+	//		qb := table(`users`).orderBy(`name`, `desc`)
+	//  	rows := qb.reorder(`email`, `desc`).get() //remove all existing "order by" clauses and apply an entirely new order
+	// Grouping:
+	//		table(`users`).
+	// 			groupBy(`account_id`).
+	// 			having(`account_id`, `>`, 100)
+	//
+	//		table(`users`).
+	// 			groupBy(`first_name`, `status`).
+	// 			having(`account_id`, `>`, 100)
+	// Limit & Offset:
+	//		table(`users`).skip(10).take(5)
+	//		table(`users`).offset(10).limit(5)
 
+	// Conditional Clauses
+	// role := "admin"
+	// table(`users`).when( role != "", func( qb, role){
+	// 		return $qb.where(`role_id`, role)
+	// }, nil)
+	//
+	// sortBy := "votes"
+	// table(`users`).when( sort == "votes", func( qb, sortBy){
+	//		return qb.orderBy("votes")
+	// }, func( qb, sortBy){
+	//		return qb.orderBy("name")
+	// })
+
+	// Insert Statements
+	// table(`users`).insert([ `email` : `kayla@example.com`,`votes` : 0])
+	// table(`users`).insert(
+	// 		[`email` : `picard@example.com`, `votes` : 0],
+	// 		[`email` : `janeway@example.com`, `votes` : 0],
+	// )
+	// table(`users`).insertOrIgnore(
+	// 		[`id` : 1, `email` : `sisko@example.com`],
+	// 		[`id` : 2, `email` : `archer@example.com`],
+	// )
+	// id, err := table(`users`).insertGetId(
+	// 		[`email` : `john@example.com`, `votes` : 0]
+	// )
+
+	// Update Statements
+	// table(`users`).where("id", 1).update([`votes` : 1])
+	// table(`users`).where("id", 1).update([`options->enabled` : true])
+	// table(`users`).increment(`votes`)
+	// table(`users`).increment(`votes`, 5)
+	// table(`users`).incrementUpdate(`votes`, 1, ["name":"John"])
+	// table(`users`).decrement(`votes`)
+	// table(`users`).decrement(`votes`, 5)
+	// table(`users`).decrementUpdate(`votes`, 1, ["name":"John"])
+
+	// Update Or Insert Statements
+	// table(`flights`).upsert([
+	//     [`departure` : `Oakland`, `destination` : `San Diego`, `price` : 99],
+	//     [`departure` : `Chicago`, `destination` : `New York`, `price` : 150],
+	// ], [`departure`, `destination`], [`price`])
+	// table(`flights`).updateOrInsert(
+	// 		[`email` : `john@example.com`, `name` : `John`],
+	// 		[`votes` : `2`],
+	// )
+
+	// Delete Statements
+	// table(`users`).where("id", 1).delete()
+	// table(`users`).delete()
+	// table(`users`).truncate() // When truncating a PostgreSQL database, the CASCADE behavior will be applied. This means that all foreign key related records in other tables will be deleted as well.
+
+	// Pessimistic Locking
+	// table(`user`).
+	// 		where('votes', '>', 100).
+	//		sharedLock().
+	// 		get() // LOCK IN SHARE MODE
+	// table(`user`).
+	// 		where('votes', '>', 100).
+	//		lockForUpdate().  //  FOR UPDATE
+	// 		get()
+
+	// Debugging
+	// table(`user`).where('votes', '>', 100).DD()
+	// table(`user`).where('votes', '>', 100).Dump()
+
+	// Paginate
+	// table(`user`).where('votes', '>', 100).Paginate(15)
 }
