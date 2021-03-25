@@ -1,9 +1,18 @@
 package query
 
+import "github.com/jmoiron/sqlx"
+
 // Query The database Query interface
 type Query interface {
-	Where()
-	Join()
+	DB(readonly ...bool) *sqlx.DB
+	Table(name string) Query
+
+	// defined in the from.go file
+	From(name string) Query
+
+	// defined in the insert.go file
+	Insert(v interface{}) error
+	MustInsert(v interface{})
 
 	// @todo
 	// Chunking Results:

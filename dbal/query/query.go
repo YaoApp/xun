@@ -1,7 +1,10 @@
 package query
 
 // Table create a new statement and set from givn table
-func Table() {
+func (builder *Builder) Table(name string) Query {
+	builder.renewAttribute()
+	builder.From(name)
+	return builder
 }
 
 // Get Execute the query as a "select" statement.

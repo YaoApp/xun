@@ -1,11 +1,19 @@
 package query
 
+import (
+	"github.com/yaoapp/xun/utils"
+)
+
 // Insert Insert new records into the database.
-func (builder *Builder) Insert() {
+func (builder *Builder) Insert(v interface{}) error {
+	_, err := builder.Grammar.Insert(builder.Attr.From.TableFullName(), v)
+	return err
 }
 
 // MustInsert Insert new records into the database.
-func (builder *Builder) MustInsert() {
+func (builder *Builder) MustInsert(v interface{}) {
+	err := builder.Insert(v)
+	utils.PanicIF(err)
 }
 
 // InsertOrIgnore Insert new records into the database while ignoring errors.

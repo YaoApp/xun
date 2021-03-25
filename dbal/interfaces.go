@@ -1,6 +1,10 @@
 package dbal
 
-import "github.com/jmoiron/sqlx"
+import (
+	"database/sql"
+
+	"github.com/jmoiron/sqlx"
+)
 
 // Grammar the SQL Grammar inteface
 type Grammar interface {
@@ -13,6 +17,7 @@ type Grammar interface {
 	GetDatabase() string
 	GetSchema() string
 
+	// Grammar for migrating
 	GetTables() ([]string, error)
 
 	TableExists(name string) (bool, error)
@@ -23,6 +28,9 @@ type Grammar interface {
 	DropTableIfExists(name string) error
 	RenameTable(old string, new string) error
 	GetColumnListing(dbName string, tableName string) ([]*Column, error)
+
+	// Grammar for querying
+	Insert(tableName string, v interface{}) (sql.Result, error)
 }
 
 // Quoter the database quoting query text intrface

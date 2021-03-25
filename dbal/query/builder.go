@@ -23,6 +23,14 @@ func Use(conn *Connection) Query {
 	return builder
 }
 
+// DB Get the sqlx.DB pointer instance
+func (builder *Builder) DB(readonly ...bool) *sqlx.DB {
+	if len(readonly) == 1 && readonly[0] == true {
+		return builder.Conn.Read
+	}
+	return builder.Conn.Write
+}
+
 // newBuilder create a new schema builder interface using the given driver and DSN
 func newBuilder(driver string, dsn string) *Builder {
 	db, err := sqlx.Connect(driver, dsn)
@@ -57,6 +65,7 @@ func useBuilder(conn *Connection) *Builder {
 		Grammar:  grammar,
 		Database: grammar.GetDatabase(),
 		Schema:   grammar.GetSchema(),
+		Attr:     newAttribute(),
 	}
 }
 
@@ -77,4 +86,14 @@ func newGrammar(conn *Connection) dbal.Grammar {
 		panic(fmt.Errorf("the OnConnected event error. (%s)", err))
 	}
 	return grammar
+}
+
+// newAttribute create a new Attribute instance
+func newAttribute() Attribute {
+	return Attribute{}
+}
+
+// renewAttribute reset and create a new Attribute instance
+func (builder *Builder) renewAttribute() {
+	builder.Attr = newAttribute()
 }

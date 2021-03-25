@@ -8,10 +8,11 @@ import (
 // Builder the dbal query builder
 type Builder struct {
 	Conn     *Connection
+	Attr     Attribute
 	Mode     string
 	Database string
 	Schema   string
-	dbal.Grammar
+	Grammar  dbal.Grammar
 }
 
 // Connection DB Connection
@@ -21,4 +22,16 @@ type Connection struct {
 	Read        *sqlx.DB
 	ReadConfig  *dbal.Config
 	Option      *dbal.Option
+}
+
+// Table the from attribute
+type Table struct {
+	Prefix *string
+	Name   string
+	Alias  string
+}
+
+// Attribute the builder Attribute
+type Attribute struct {
+	From Table
 }
