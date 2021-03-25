@@ -78,11 +78,3 @@ func newGrammar(conn *Connection) dbal.Grammar {
 	}
 	return grammar
 }
-
-// Where Add a basic where clause to the query.
-func (builder *Builder) Where() {
-	// fmt.Printf("\nWhere DBAL: \n===\n%#v\n===\n", builder.Conn)
-}
-
-// Join Add a join clause to the query.
-func (builder *Builder) Join() {}

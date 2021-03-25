@@ -126,7 +126,7 @@ type Query interface {
 	//		table(`users`).orderBy(`email`, `asc`)
 	//		table(`users`).latest().first()
 	// 		table(`users`).oldest().first()
-	//		table(`inRandomOrder).first()
+	//		table(`users).InRandomOrder().first()
 	//
 	// 		qb := table(`users`).orderBy(`name`, `desc`)
 	//		rows := qb.reorder().get()   // Removing Existing Orderings
@@ -177,10 +177,10 @@ type Query interface {
 	// table(`users`).where("id", 1).update([`options->enabled` : true])
 	// table(`users`).increment(`votes`)
 	// table(`users`).increment(`votes`, 5)
-	// table(`users`).incrementUpdate(`votes`, 1, ["name":"John"])
+	// table(`users`).increment(`votes`, 1, ["name":"John"])
 	// table(`users`).decrement(`votes`)
 	// table(`users`).decrement(`votes`, 5)
-	// table(`users`).decrementUpdate(`votes`, 1, ["name":"John"])
+	// table(`users`).decrement(`votes`, 1, ["name":"John"])
 
 	// Update Or Insert Statements
 	// table(`flights`).upsert([
