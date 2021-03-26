@@ -146,6 +146,11 @@ func TestInsertMustInsertGetID(t *testing.T) {
 		assert.Equal(t, int64(4), id, "The return last id should be 4")
 	}
 
+	id = qb.Table("table_test_insert").MustInsertGetID(User{
+		Email: "Bee@example.com", Vote: 12,
+	}, "id")
+	assert.Equal(t, int64(6), id, "The return last id should be 6")
+
 	newQuery := New(unit.Driver(), unit.DSN())
 	newQuery.DB().Close()
 	_, err := newQuery.Table("table_test_insert").InsertGetID(users)
