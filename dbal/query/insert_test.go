@@ -12,13 +12,13 @@ import (
 func TestInsertMustInsert(t *testing.T) {
 
 	NewTableForColumnTest()
-
 	qb := getTestBuilder()
 
-	users := []struct {
+	type User struct {
 		Email string `json:"email"`
 		Vote  int    `json:"vote"`
-	}{}
+	}
+	users := []User{}
 
 	qb.Table("table_test_insert").MustInsert(xun.R{
 		"email": "kayla@example.com", "vote": 0,
@@ -44,7 +44,7 @@ func TestInsertMustInsert(t *testing.T) {
 		assert.Equal(t, 0, users[0].Vote, "The vote  of the first row should be 0")
 		assert.Equal(t, "picard@example.com", users[1].Email, "The email of the first row should be picard@example.com")
 		assert.Equal(t, 1, users[1].Vote, "The vote  of the first row should be 1")
-		assert.Equal(t, "janeway@example.com", users[2].Email, "The email of the first row should be picard@example.com")
+		assert.Equal(t, "janeway@example.com", users[2].Email, "The email of the first row should be  janeway@example.com")
 		assert.Equal(t, 2, users[2].Vote, "The vote  of the first row should be 2")
 	}
 
@@ -60,14 +60,11 @@ func TestInsertMustInsert(t *testing.T) {
 	assert.True(t, err == nil, "The return error should be nil")
 	assert.Equal(t, 4, len(users), "The return users should be 4")
 	if len(users) == 4 {
-		assert.Equal(t, "Jim@example.com", users[3].Email, "The email of the first row should be picard@example.com")
+		assert.Equal(t, "Jim@example.com", users[3].Email, "The email of the first row should be Jim@example.com")
 		assert.Equal(t, 3, users[3].Vote, "The vote  of the first row should be 3")
 	}
 
-	users = []struct {
-		Email string `json:"email"`
-		Vote  int    `json:"vote"`
-	}{
+	users = []User{
 		{Email: "King@example.com", Vote: 4},
 		{Email: "Max@example.com", Vote: 5},
 	}
@@ -77,12 +74,41 @@ func TestInsertMustInsert(t *testing.T) {
 	assert.True(t, err == nil, "The return error should be nil")
 	assert.Equal(t, 6, len(users), "The return users should be 4")
 	if len(users) == 6 {
-		assert.Equal(t, "King@example.com", users[4].Email, "The email of the first row should be picard@example.com")
+		assert.Equal(t, "King@example.com", users[4].Email, "The email of the first row should be King@example.com")
 		assert.Equal(t, 4, users[4].Vote, "The vote  of the first row should be 4")
-		assert.Equal(t, "Max@example.com", users[5].Email, "The email of the first row should be picard@example.com")
+		assert.Equal(t, "Max@example.com", users[5].Email, "The email of the first row should be Max@example.com")
 		assert.Equal(t, 5, users[5].Vote, "The vote  of the first row should be 5")
 	}
 
+}
+
+func TestInsertMustInsertOrIgnore(t *testing.T) {
+	NewTableForColumnTest()
+	qb := getTestBuilder()
+
+	type User struct {
+		Email string `json:"email"`
+		Vote  int    `json:"vote"`
+	}
+	users := []User{
+		{Email: "Max@example.com", Vote: 3},
+		{Email: "Max@example.com", Vote: 6},
+		{Email: "King@example.com", Vote: 9},
+	}
+
+	affected := qb.Table("table_test_insert").MustInsertOrIgnore(users)
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+
+	users = nil
+	err := qb.DB(true).Select(&users, "SELECT email,vote FROM table_test_insert LIMIT 20")
+	assert.True(t, err == nil, "The return error should be nil")
+	assert.Equal(t, 2, len(users), "The return users should be 2")
+	if len(users) == 2 {
+		assert.Equal(t, "Max@example.com", users[0].Email, "The email of the first row should be picard@example.com")
+		assert.Equal(t, 3, users[0].Vote, "The vote of the first row should be 3")
+		assert.Equal(t, "King@example.com", users[1].Email, "The email of the first row should be King@example.com")
+		assert.Equal(t, 9, users[1].Vote, "The vote of the first row should be 9")
+	}
 }
 
 // clean the test data
@@ -97,7 +123,7 @@ func NewTableForColumnTest() {
 	builder.DropTableIfExists("table_test_insert")
 	builder.MustCreateTable("table_test_insert", func(table schema.Blueprint) {
 		table.ID("id")
-		table.String("email").Index()
+		table.String("email").Unique()
 		table.Integer("vote")
 	})
 }

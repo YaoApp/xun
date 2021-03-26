@@ -19,11 +19,21 @@ func (builder *Builder) MustInsert(v interface{}) {
 }
 
 // InsertOrIgnore Insert new records into the database while ignoring errors.
-func (builder *Builder) InsertOrIgnore() {
+func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
+	values := xun.AnyToRows(v)
+	res, err := builder.Grammar.InsertIgnore(builder.Attr.From.TableFullName(), values)
+	if err != nil {
+		return 0, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected, err
 }
 
 // MustInsertOrIgnore Insert new records into the database while ignoring errors.
-func (builder *Builder) MustInsertOrIgnore() {
+func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
+	affected, err := builder.InsertOrIgnore(v)
+	utils.PanicIF(err)
+	return affected
 }
 
 // InsertGetID Insert a new record and get the value of the primary key.

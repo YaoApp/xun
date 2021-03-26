@@ -14,6 +14,9 @@ type Query interface {
 	Insert(v interface{}) error
 	MustInsert(v interface{})
 
+	InsertOrIgnore(v interface{}) (int64, error)
+	MustInsertOrIgnore(v interface{}) int64
+
 	// @todo
 	// Chunking Results:
 	// table(`users`).where("weight", ">", 99.00).chunk(100, func( users ){ ... } )

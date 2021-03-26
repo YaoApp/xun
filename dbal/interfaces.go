@@ -32,6 +32,7 @@ type Grammar interface {
 
 	// Grammar for querying
 	Insert(tableName string, values []xun.R) (sql.Result, error)
+	InsertIgnore(tableName string, values []xun.R) (sql.Result, error)
 }
 
 // Quoter the database quoting query text intrface
