@@ -25,8 +25,7 @@ func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	affected, _ := res.RowsAffected()
-	return affected, err
+	return res.RowsAffected()
 }
 
 // MustInsertOrIgnore Insert new records into the database while ignoring errors.

@@ -109,6 +109,11 @@ func TestInsertMustInsertOrIgnore(t *testing.T) {
 		assert.Equal(t, "King@example.com", users[1].Email, "The email of the first row should be King@example.com")
 		assert.Equal(t, 9, users[1].Vote, "The vote of the first row should be 9")
 	}
+
+	newQuery := New(unit.Driver(), unit.DSN())
+	newQuery.DB().Close()
+	_, err = newQuery.Table("table_test_insert").InsertOrIgnore(users)
+	assert.Error(t, err, "the return value sholud be error")
 }
 
 // clean the test data
