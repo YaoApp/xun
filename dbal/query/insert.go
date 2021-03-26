@@ -36,11 +36,20 @@ func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
 }
 
 // InsertGetID Insert a new record and get the value of the primary key.
-func (builder *Builder) InsertGetID() {
+func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, error) {
+	values := xun.AnyToRows(v)
+	seq := "id"
+	if len(sequence) == 1 {
+		seq = sequence[0]
+	}
+	return builder.Grammar.InsertGetID(builder.Attr.From.TableFullName(), values, seq)
 }
 
 // MustInsertGetID Insert a new record and get the value of the primary key.
-func (builder *Builder) MustInsertGetID() {
+func (builder *Builder) MustInsertGetID(v interface{}, sequence ...string) int64 {
+	lastID, err := builder.InsertGetID(v, sequence...)
+	utils.PanicIF(err)
+	return lastID
 }
 
 // InsertUsing Insert new records into the table using a subquery.

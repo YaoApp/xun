@@ -33,6 +33,7 @@ type Grammar interface {
 	// Grammar for querying
 	Insert(tableName string, values []xun.R) (sql.Result, error)
 	InsertIgnore(tableName string, values []xun.R) (sql.Result, error)
+	InsertGetID(tableName string, values []xun.R, sequence string) (int64, error)
 }
 
 // Quoter the database quoting query text intrface

@@ -116,6 +116,42 @@ func TestInsertMustInsertOrIgnore(t *testing.T) {
 	assert.Error(t, err, "the return value sholud be error")
 }
 
+func TestInsertMustInsertGetID(t *testing.T) {
+	NewTableForColumnTest()
+	qb := getTestBuilder()
+
+	type User struct {
+		Email string `json:"email"`
+		Vote  int    `json:"vote"`
+	}
+	users := []User{
+		{Email: "Max@example.com", Vote: 3},
+		{Email: "King@example.com", Vote: 9},
+	}
+	qb.Table("table_test_insert").MustInsert(users)
+
+	id := qb.Table("table_test_insert").MustInsertGetID(User{
+		Email: "Jim@example.com", Vote: 7,
+	})
+	assert.Equal(t, int64(3), id, "The return last id should be 3")
+
+	id = qb.Table("table_test_insert").MustInsertGetID([]User{
+		{Email: "Tom@example.com", Vote: 8},
+		{Email: "Gee@example.com", Vote: 10},
+	})
+
+	if unit.DriverIs("sqlite3") {
+		assert.Equal(t, int64(5), id, "The return last id should be 5")
+	} else {
+		assert.Equal(t, int64(4), id, "The return last id should be 4")
+	}
+
+	newQuery := New(unit.Driver(), unit.DSN())
+	newQuery.DB().Close()
+	_, err := newQuery.Table("table_test_insert").InsertGetID(users)
+	assert.Error(t, err, "the return value sholud be error")
+}
+
 // clean the test data
 func TestIndexClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
