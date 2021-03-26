@@ -3,7 +3,6 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -12,34 +11,7 @@ import (
 )
 
 // Insert Insert new records into the database.
-func (grammarSQL SQL) Insert(tableName string, v interface{}) (sql.Result, error) {
-
-	values := []xun.R{}
-	switch v.(type) {
-	case xun.R:
-		value := v.(xun.R)
-		values = append(values, value)
-		break
-	case []xun.R:
-		values = v.([]xun.R)
-		if len(values) < 1 {
-			return nil, fmt.Errorf("Insert into %s error. The input values is empty", tableName)
-		}
-		break
-	default:
-		var err error
-		var value xun.R
-		kind := reflect.TypeOf(v).Kind()
-		if kind == reflect.Slice || kind == reflect.Array {
-			values, err = xun.AnyToRs(v)
-		} else {
-			value, err = xun.AnyToR(v)
-			values = append(values, value)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("Insert into %s error. %s", tableName, err)
-		}
-	}
+func (grammarSQL SQL) Insert(tableName string, values []xun.R) (sql.Result, error) {
 
 	safeFields := []string{}
 	bindVars := []string{}

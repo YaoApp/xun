@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/yaoapp/xun"
 )
 
 // Grammar the SQL Grammar inteface
@@ -30,7 +31,7 @@ type Grammar interface {
 	GetColumnListing(dbName string, tableName string) ([]*Column, error)
 
 	// Grammar for querying
-	Insert(tableName string, v interface{}) (sql.Result, error)
+	Insert(tableName string, values []xun.R) (sql.Result, error)
 }
 
 // Quoter the database quoting query text intrface

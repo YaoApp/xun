@@ -1,12 +1,14 @@
 package query
 
 import (
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/utils"
 )
 
 // Insert Insert new records into the database.
 func (builder *Builder) Insert(v interface{}) error {
-	_, err := builder.Grammar.Insert(builder.Attr.From.TableFullName(), v)
+	values := xun.AnyToRows(v)
+	_, err := builder.Grammar.Insert(builder.Attr.From.TableFullName(), values)
 	return err
 }
 
