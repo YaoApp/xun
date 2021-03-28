@@ -11,7 +11,7 @@ import (
 
 func TestInsertMustInsert(t *testing.T) {
 
-	NewTableForColumnTest()
+	NewTableForInsertTest()
 	qb := getTestBuilder()
 
 	type User struct {
@@ -83,7 +83,7 @@ func TestInsertMustInsert(t *testing.T) {
 }
 
 func TestInsertMustInsertOrIgnore(t *testing.T) {
-	NewTableForColumnTest()
+	NewTableForInsertTest()
 	qb := getTestBuilder()
 
 	type User struct {
@@ -117,7 +117,7 @@ func TestInsertMustInsertOrIgnore(t *testing.T) {
 }
 
 func TestInsertMustInsertGetID(t *testing.T) {
-	NewTableForColumnTest()
+	NewTableForInsertTest()
 	qb := getTestBuilder()
 
 	type User struct {
@@ -158,12 +158,12 @@ func TestInsertMustInsertGetID(t *testing.T) {
 }
 
 // clean the test data
-func TestIndexClean(t *testing.T) {
+func TestInsertClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
 	builder.DropTableIfExists("table_test_insert")
 }
 
-func NewTableForColumnTest() {
+func NewTableForInsertTest() {
 	defer unit.Catch()
 	builder := getTestSchemaBuilder()
 	builder.DropTableIfExists("table_test_insert")

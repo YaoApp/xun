@@ -1,5 +1,10 @@
 package query
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Table create a new statement and set from givn table
 func (builder *Builder) Table(name string) Query {
 	builder.renewAttribute()
@@ -7,8 +12,31 @@ func (builder *Builder) Table(name string) Query {
 	return builder
 }
 
+var tabTmp = ""
+
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() {
+	fmt.Println(builder.GetSQL())
+}
+
+// GetSQL Get the SQL representation of the query.
+func (builder *Builder) GetSQL() string {
+	sql := ""
+	for _, where := range builder.Attr.Wheres {
+		if where.Query != nil {
+			tabBak := tabTmp
+			tabTmp = tabTmp + "\t"
+			sql = sql + where.Query.GetSQL()
+			tabTmp = tabBak
+		} else {
+			value := where.Value
+			if builder.isQueryable(value) {
+				value = "( SUB: " + strings.Trim(where.Value.(Query).GetSQL(), "\n") + " )"
+			}
+			sql = sql + fmt.Sprintf("%sSQL: %s %s %s %s %v\n", tabTmp, where.Type, where.Boolean, where.Column, where.Operator, value)
+		}
+	}
+	return sql
 }
 
 // MustGet Execute the query as a "select" statement.
@@ -77,10 +105,6 @@ func (builder *Builder) DoesntExist() {
 
 // MustDoesntExist Determine if no rows exist for the current query.
 func (builder *Builder) MustDoesntExist() {
-}
-
-// GetSQL Get the SQL representation of the query.
-func (builder *Builder) GetSQL() {
 }
 
 // PrintSQL Get and print the SQL representation of the query.

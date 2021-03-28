@@ -239,6 +239,7 @@ func NewTableForColumnTest() {
 		table.ID("id")
 		table.String("field1").Index()
 		table.String("field2")
+		table.String("field3").SetDefault("DefaultValue3")
 		table.AddIndex("field1_field2", "field1", "field2")
 	})
 }

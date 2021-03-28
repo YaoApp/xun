@@ -178,6 +178,12 @@ func (column *Column) SetComment(comment string) *Column {
 	return column
 }
 
+// SetDefault set the column default attribute to the given type name
+func (column *Column) SetDefault(v interface{}) *Column {
+	column.Default = v
+	return column
+}
+
 // SetDateTimePrecision set the column precision to the given value
 func (column *Column) SetDateTimePrecision(precision int) *Column {
 	if column.MaxDateTimePrecision == 0 {

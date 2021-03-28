@@ -7,8 +7,15 @@ type Query interface {
 	DB(readonly ...bool) *sqlx.DB
 	Table(name string) Query
 
+	// defined in the query.go file
+	Get()
+	GetSQL() string
+
 	// defined in the from.go file
 	From(name string) Query
+
+	// defined in the where.go file
+	Where(column interface{}, args ...interface{}) Query
 
 	// defined in the insert.go file
 	Insert(v interface{}) error

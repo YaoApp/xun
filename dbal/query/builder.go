@@ -31,6 +31,19 @@ func (builder *Builder) DB(readonly ...bool) *sqlx.DB {
 	return builder.Conn.Write
 }
 
+// clone create a new builder instance with current builder
+func (builder *Builder) clone() *Builder {
+	new := *builder
+	return &new
+}
+
+// new create a new builder instance
+func (builder *Builder) new() *Builder {
+	new := *builder
+	new.renewAttribute()
+	return &new
+}
+
 // newBuilder create a new schema builder interface using the given driver and DSN
 func newBuilder(driver string, dsn string) *Builder {
 	db, err := sqlx.Connect(driver, dsn)

@@ -31,7 +31,20 @@ type Table struct {
 	Alias  string
 }
 
+// Where The where constraint for the query.
+type Where struct {
+	Type     string // where, nested, sub
+	Column   string
+	Operator string
+	Value    interface{}
+	Boolean  string
+	Wheres   []Where
+	Query    *Builder
+}
+
 // Attribute the builder Attribute
 type Attribute struct {
-	From Table
+	From     Table
+	Bindings map[string][]interface{}
+	Wheres   []Where
 }
