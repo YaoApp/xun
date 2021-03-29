@@ -24,8 +24,8 @@ type Connection struct {
 	Option      *dbal.Option
 }
 
-// Table the from attribute
-type Table struct {
+// Name the from attribute
+type Name struct {
 	Prefix *string
 	Name   string
 	Alias  string
@@ -33,7 +33,7 @@ type Table struct {
 
 // Where The where constraint for the query.
 type Where struct {
-	Type     string // where, nested, sub
+	Type     string // basic, nested, sub
 	Column   string
 	Operator string
 	Value    interface{}
@@ -44,7 +44,8 @@ type Where struct {
 
 // Attribute the builder Attribute
 type Attribute struct {
-	From     Table
+	From     Name
 	Bindings map[string][]interface{}
 	Wheres   []Where
+	Columns  []Name
 }

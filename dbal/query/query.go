@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	"strings"
 )
 
 // Table create a new statement and set from givn table
@@ -16,27 +15,7 @@ var tabTmp = ""
 
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() {
-	fmt.Println(builder.GetSQL())
-}
-
-// GetSQL Get the SQL representation of the query.
-func (builder *Builder) GetSQL() string {
-	sql := ""
-	for _, where := range builder.Attr.Wheres {
-		if where.Query != nil {
-			tabBak := tabTmp
-			tabTmp = tabTmp + "\t"
-			sql = sql + where.Query.GetSQL()
-			tabTmp = tabBak
-		} else {
-			value := where.Value
-			if builder.isQueryable(value) {
-				value = "( SUB: " + strings.Trim(where.Value.(Query).GetSQL(), "\n") + " )"
-			}
-			sql = sql + fmt.Sprintf("%sSQL: %s %s %s %s %v\n", tabTmp, where.Type, where.Boolean, where.Column, where.Operator, value)
-		}
-	}
-	return sql
+	fmt.Println(builder.ToSQL())
 }
 
 // MustGet Execute the query as a "select" statement.

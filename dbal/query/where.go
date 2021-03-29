@@ -9,10 +9,15 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
 	typ := reflect.TypeOf(column)
 	kind := typ.Kind()
-	queryType := "where"
+	queryType := "basic"
 
 	operator, value, boolean := builder.getDefaultsOfWhere(args...)
 
+	// Where("vote", '>', func(sub Query) {
+	// 		sub.From("table_test_where").
+	// 			Where("score", ">", 5).
+	// 	 		Sum()
+	// })
 	// If the value is a Closure, it means the developer is performing an entire
 	// sub-select within the query and we will need to compile the sub-select
 	// within the where clause to get the appropriate query record results.

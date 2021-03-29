@@ -9,7 +9,7 @@ type Query interface {
 
 	// defined in the query.go file
 	Get()
-	GetSQL() string
+	ToSQL() string
 
 	// defined in the from.go file
 	From(name string) Query
