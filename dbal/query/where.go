@@ -1,7 +1,9 @@
 package query
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
@@ -10,23 +12,21 @@ import (
 // Where Add a basic where clause to the query.
 func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
-	typ := reflect.TypeOf(column)
-	columnKind := typ.Kind()
-	queryType := "basic"
+	columnKind := reflect.TypeOf(column).Kind()
+
+	// Here we will make some assumptions about the operator. If only 2 values are
+	// passed to the method, we will assume that the operator is an equals sign
+	// and keep going. Otherwise, we'll require the operator to be passed in.
+	operator, value, boolean := builder.wherePrepare(args...)
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
 	// and can add them each as a where clause. We will maintain the boolean we
 	// received when the method was called and pass it into the Wheres attribute.
 	if columnKind == reflect.Array || columnKind == reflect.Slice {
-		builder.addArrayOfWheres(queryType, column)
+		builder.addArrayOfWheres(column, boolean)
 		return builder
 	}
-
-	// Here we will make some assumptions about the operator. If only 2 values are
-	// passed to the method, we will assume that the operator is an equals sign
-	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, boolean := builder.wherePrepare(args...)
 
 	// Where( func(qb Query){  qb.Where("name", "Ken")... })
 	// Where( func(qb Query){  qb.Where("name", "Ken")... }, "and")
@@ -34,7 +34,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// If the columns is actually a Closure instance, we will assume the developer
 	// wants to begin a nested where statement which is wrapped in parenthesis.
 	// We'll add that Closure to the query then return back out immediately.
-	if builder.isClosure(column) && len(args) == 0 {
+	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isOperator(args[0]))) {
 		callback := column.(func(Query))
 		boolean := "and"
 		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
@@ -44,10 +44,16 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 		return builder
 	}
 
+	//  Where( func(qb Query){  qb.Where("name", "Ken")... }, ">", 5)
 	// If the column is a Closure instance and there is an operator value, we will
 	// assume the developer wants to run a subquery and then compare the result
 	// of that subquery with the given value that was provided to the method.
-	// if ($this->isQueryable($column) && ! is_null($operator)) {
+	if builder.isQueryable(column) && len(args) >= 1 {
+		sub, bindings := builder.createSub(column)
+		builder.Query.AddBinding("where", bindings)
+		builder.Where(fmt.Sprintf("(%s)", sub), operator, value, boolean)
+		return builder
+	}
 
 	// Where("vote", '>', func(sub Query) {
 	// 		sub.From("table_test_where").
@@ -69,13 +75,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 		return builder.WhereNull(column, boolean, operator != "=")
 	}
 
-	// // If the column is an string, we willpass it into the Wheres attribute.
-	// if columnKind == reflect.String {
-	// 	builder.addWhere(queryType, column.(string), operator, value, boolean)
-	// 	return builder
-	// }
-
-	queryType = "basic"
+	queryType := "basic"
 
 	// If the column is making a JSON reference we'll check to see if the value
 	// is a boolean. If it is, we'll add the raw boolean string as an actual
@@ -101,23 +101,59 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
 // Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10},})
 // addArrayOfWheres Add an array of where clauses to the query.
-func (builder *Builder) addArrayOfWheres(typ string, inputColumns interface{}) {
+func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean string) *Builder {
 
 	switch inputColumns.(type) {
 	case [][]interface{}:
-		reflectValue := reflect.ValueOf(inputColumns)
-		reflectValue = reflect.Indirect(reflectValue)
-		for i := 0; i < reflectValue.Len(); i++ {
-			args := reflectValue.Index(i).Interface().([]interface{})
-			if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
-				column := args[0].(string)
-				operator, value, boolean := builder.wherePrepare(args[1:]...)
-				builder.addWhere(typ, column, operator, value, boolean)
+		columns := inputColumns.([][]interface{})
+		return builder.whereNested(func(qb Query) {
+			for _, args := range columns {
+				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
+					column := args[0].(string)
+					operator, value, boolean := builder.wherePrepare(args[1:]...)
+					builder.Where(column, operator, value, boolean)
+				}
 			}
-		}
-		break
+		}, boolean)
 	}
 
+	return builder
+}
+
+// createSub Creates a subquery and parse it.
+func (builder *Builder) createSub(subquery interface{}) (string, []interface{}) {
+	if builder.isClosure(subquery) {
+		callback := subquery.(func(qb Query))
+		qb := builder.forSubQuery()
+		callback(qb)
+		subquery = qb
+	}
+	return builder.parseSub(subquery)
+}
+
+// Parse the subquery into SQL and bindings.
+func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}) {
+
+	switch subquery.(type) {
+	case *Builder:
+		qb := builder.prependDatabaseNameIfCrossDatabaseQuery(subquery.(*Builder))
+		return qb.ToSQL(), qb.GetBindings()
+	case Query:
+		qb := subquery.(Query)
+		return qb.ToSQL(), qb.GetBindings()
+	case string:
+		return subquery.(string), []interface{}{}
+	}
+
+	panic(fmt.Errorf("a subquery must be a query builder instance, a Closure, or a string"))
+}
+
+// prependDatabaseNameIfCrossDatabaseQuery Prepend the database name if the given query is on another database.
+func (builder *Builder) prependDatabaseNameIfCrossDatabaseQuery(subquery *Builder) *Builder {
+	// if (strpos($query->from, $databaseName) !== 0 && strpos($query->from, '.') === false) {
+	// 	$query->from($databaseName.'.'.$query->from);
+	// }
+	return subquery
 }
 
 // whereSub Add a full sub-select to the query.
@@ -196,7 +232,6 @@ func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, 
 	if len(args) >= 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 		operator = args[0].(string)
 	}
-
 	if len(args) >= 2 {
 		value = args[1]
 	}
@@ -218,6 +253,15 @@ func (builder *Builder) isClosure(v interface{}) bool {
 		typ.NumOut() == 0 &&
 		typ.NumIn() == 1 &&
 		typ.In(0).Kind() == reflect.Interface
+}
+
+func (builder *Builder) isOperator(v interface{}) bool {
+	switch v.(type) {
+	case string:
+		return utils.StringHave([]string{"and", "or"}, strings.ToLower(v.(string)))
+	default:
+		return false
+	}
 }
 
 // Determine if the value is a query builder instance or a Closure.

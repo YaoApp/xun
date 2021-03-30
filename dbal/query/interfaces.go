@@ -10,6 +10,7 @@ type Query interface {
 	// defined in the query.go file
 	Get()
 	ToSQL() string
+	GetBindings() []interface{}
 
 	// defined in the from.go file
 	From(name string) Query

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Table create a new statement and set from givn table
@@ -21,6 +22,11 @@ func (builder *Builder) Get() {
 // ToSQL Get the SQL representation of the query.
 func (builder *Builder) ToSQL() string {
 	return builder.Grammar.CompileSelect(builder.Query)
+}
+
+// GetBindings  Get the current query value bindings in a flattened array.
+func (builder *Builder) GetBindings() []interface{} {
+	return utils.Flatten(builder.Query.Bindings)
 }
 
 // MustGet Execute the query as a "select" statement.
