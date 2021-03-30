@@ -40,7 +40,7 @@ func (builder *Builder) clone() *Builder {
 // new create a new builder instance
 func (builder *Builder) new() *Builder {
 	new := *builder
-	new.renewAttribute()
+	new.Query = dbal.NewQuery()
 	return &new
 }
 
@@ -78,7 +78,7 @@ func useBuilder(conn *Connection) *Builder {
 		Grammar:  grammar,
 		Database: grammar.GetDatabase(),
 		Schema:   grammar.GetSchema(),
-		Attr:     newAttribute(),
+		Query:    dbal.NewQuery(),
 	}
 }
 
@@ -99,14 +99,4 @@ func newGrammar(conn *Connection) dbal.Grammar {
 		panic(fmt.Errorf("the OnConnected event error. (%s)", err))
 	}
 	return grammar
-}
-
-// newAttribute create a new Attribute instance
-func newAttribute() Attribute {
-	return Attribute{}
-}
-
-// renewAttribute reset and create a new Attribute instance
-func (builder *Builder) renewAttribute() {
-	builder.Attr = newAttribute()
 }

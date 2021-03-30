@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/TylerBrock/colorjson"
 	jsoniter "github.com/json-iterator/go"
@@ -109,4 +110,39 @@ func StringHave(source []string, one string) bool {
 		}
 	}
 	return false
+}
+
+// IsNil Check if an interface is nil
+func IsNil(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+
+	reflectValue := reflect.ValueOf(value)
+	if reflectValue.Kind() == reflect.Ptr {
+		return reflectValue.IsNil()
+	}
+
+	return false
+}
+
+// Flatten flattens a multi-dimensional array into a single level array:
+func Flatten(value interface{}) []interface{} {
+	reflectValue := reflect.ValueOf(value)
+	reflectValue = reflect.Indirect(reflectValue)
+	kind := reflectValue.Kind()
+	res := []interface{}{}
+	if kind == reflect.Array || kind == reflect.Slice {
+		for i := 0; i < reflectValue.Len(); i++ {
+			value := reflectValue.Index(i)
+			if value.Kind() == reflect.Array || kind == reflect.Slice {
+				res = append(res, Flatten(value.Interface()))
+			} else {
+				res = append(res, value)
+			}
+		}
+	} else {
+		res = append(res, value)
+	}
+	return res
 }

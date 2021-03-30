@@ -2,20 +2,25 @@ package query
 
 import (
 	"fmt"
+
+	"github.com/yaoapp/xun/dbal"
 )
 
 // Table create a new statement and set from givn table
 func (builder *Builder) Table(name string) Query {
-	builder.renewAttribute()
+	builder.Query = dbal.NewQuery()
 	builder.From(name)
 	return builder
 }
 
-var tabTmp = ""
-
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() {
 	fmt.Println(builder.ToSQL())
+}
+
+// ToSQL Get the SQL representation of the query.
+func (builder *Builder) ToSQL() string {
+	return builder.Grammar.CompileSelect(builder.Query)
 }
 
 // MustGet Execute the query as a "select" statement.

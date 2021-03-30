@@ -2,16 +2,52 @@ package query
 
 import (
 	"reflect"
+
+	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Where Add a basic where clause to the query.
 func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
 	typ := reflect.TypeOf(column)
-	kind := typ.Kind()
+	columnKind := typ.Kind()
 	queryType := "basic"
 
-	operator, value, boolean := builder.getDefaultsOfWhere(args...)
+	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
+	// If the column is an array, we will assume it is an array of key-value pairs
+	// and can add them each as a where clause. We will maintain the boolean we
+	// received when the method was called and pass it into the Wheres attribute.
+	if columnKind == reflect.Array || columnKind == reflect.Slice {
+		builder.addArrayOfWheres(queryType, column)
+		return builder
+	}
+
+	// Here we will make some assumptions about the operator. If only 2 values are
+	// passed to the method, we will assume that the operator is an equals sign
+	// and keep going. Otherwise, we'll require the operator to be passed in.
+	operator, value, boolean := builder.wherePrepare(args...)
+
+	// Where( func(qb Query){  qb.Where("name", "Ken")... })
+	// Where( func(qb Query){  qb.Where("name", "Ken")... }, "and")
+	// Where( func(qb Query){  qb.Where("name", "Ken")... }, "or")
+	// If the columns is actually a Closure instance, we will assume the developer
+	// wants to begin a nested where statement which is wrapped in parenthesis.
+	// We'll add that Closure to the query then return back out immediately.
+	if builder.isClosure(column) && len(args) == 0 {
+		callback := column.(func(Query))
+		boolean := "and"
+		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
+			boolean = args[0].(string)
+		}
+		builder.whereNested(callback, boolean)
+		return builder
+	}
+
+	// If the column is a Closure instance and there is an operator value, we will
+	// assume the developer wants to run a subquery and then compare the result
+	// of that subquery with the given value that was provided to the method.
+	// if ($this->isQueryable($column) && ! is_null($operator)) {
 
 	// Where("vote", '>', func(sub Query) {
 	// 		sub.From("table_test_where").
@@ -21,110 +57,131 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// If the value is a Closure, it means the developer is performing an entire
 	// sub-select within the query and we will need to compile the sub-select
 	// within the where clause to get the appropriate query record results.
-	if builder.isClosure(value) {
-		queryType = "sub"
-		cb := value.(func(Query))
-		valueBuilder := builder.new()
-		cb(valueBuilder)
-		value = valueBuilder
+	if columnKind == reflect.String && builder.isClosure(value) {
+		callback := value.(func(Query))
+		return builder.whereSub(column.(string), operator, callback, boolean)
 	}
+
+	// If the value is "null", we will just assume the developer wants to add a
+	// where null clause to the query. So, we will allow a short-cut here to
+	// that method for convenience so the developer doesn't have to check.
+	if utils.IsNil(value) {
+		return builder.WhereNull(column, boolean, operator != "=")
+	}
+
+	// // If the column is an string, we willpass it into the Wheres attribute.
+	// if columnKind == reflect.String {
+	// 	builder.addWhere(queryType, column.(string), operator, value, boolean)
+	// 	return builder
+	// }
+
+	queryType = "basic"
+
+	// If the column is making a JSON reference we'll check to see if the value
+	// is a boolean. If it is, we'll add the raw boolean string as an actual
+	// value to the query to ensure this is properly handled by the query.
+	//  if (Str::contains($column, '->') && is_bool($value)) {
 
 	// Where("email", "like", "%@yao.run")
-	// If the column is an string, we willpass it into the Wheres attribute.
-	if kind == reflect.String {
-		builder.addWhere(&builder.Attr.Wheres, queryType, column.(string), operator, value, boolean)
-		return builder
+	// Now that we are working with just a simple query we can put the elements
+	// in our array and add the query binding to our array of bindings that
+	// will be bound to each SQL statements when it is finally executed.
+	if columnKind == reflect.String {
+		builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+			Type:     queryType,
+			Column:   column.(string),
+			Operator: operator,
+			Boolean:  boolean,
+			Value:    value,
+		})
+		builder.Query.AddBinding("where", builder.flattenValue(value))
 	}
+	return builder
+}
 
-	// Where([]string{"score", "vote"}, ">", 5)
-	// Where([][]interface{}{
-	// 	{"score", ">", 64.56},
-	// 	{"vote", 10},
-	// })
-	// If the column is an array, we will assume it is an array of key-value pairs
-	// and can add them each as a where clause. We will maintain the boolean we
-	// received when the method was called and pass it into the Wheres attribute.
-	if kind == reflect.Array || kind == reflect.Slice {
-		builder.addWheres(&builder.Attr.Wheres, queryType, column, operator, value, boolean)
-		return builder
-	}
+// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10},})
+// addArrayOfWheres Add an array of where clauses to the query.
+func (builder *Builder) addArrayOfWheres(typ string, inputColumns interface{}) {
 
-	// Where( func(qb Query){
-	//	  qb.Where("name", "Ken")
-	//    ...
-	// })
-	// If the columns is actually a Closure instance, we will assume the developer
-	// wants to begin a nested where statement which is wrapped in parenthesis.
-	// We'll add that Closure to the query then return back out immediately.
-	if builder.isClosure(column) {
-
-		cb := column.(func(Query))
-		newBuilder := builder.new()
-		cb(newBuilder)
-
-		boolean := "and"
-		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
-			boolean = args[0].(string)
+	switch inputColumns.(type) {
+	case [][]interface{}:
+		reflectValue := reflect.ValueOf(inputColumns)
+		reflectValue = reflect.Indirect(reflectValue)
+		for i := 0; i < reflectValue.Len(); i++ {
+			args := reflectValue.Index(i).Interface().([]interface{})
+			if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
+				column := args[0].(string)
+				operator, value, boolean := builder.wherePrepare(args[1:]...)
+				builder.addWhere(typ, column, operator, value, boolean)
+			}
 		}
+		break
+	}
 
-		builder.addNestedWhere(&builder.Attr.Wheres, newBuilder, boolean)
-		return builder
+}
+
+// whereSub Add a full sub-select to the query.
+func (builder *Builder) whereSub(column string, operator string, callback func(qb Query), boolean string) *Builder {
+	new := builder.forSubQuery()
+	callback(new)
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:     "sub",
+		Column:   column,
+		Operator: operator,
+		Query:    new.Query,
+		Boolean:  boolean,
+	})
+	builder.Query.AddBinding("where", new.Query.Bindings["where"])
+	return builder
+}
+
+// forSubQuery Create a new query instance for a sub-query.
+func (builder *Builder) forSubQuery() *Builder {
+	new := builder.new()
+	return new
+}
+
+// whereNested  Add a nested where statement to the query.
+func (builder *Builder) whereNested(callback func(qb Query), boolean string) *Builder {
+	new := builder.forNestedWhere()
+	callback(new)
+	return builder.addNestedWhereQuery(new.Query, boolean)
+}
+
+// Add another query builder as a nested where to the query builder.
+func (builder *Builder) addNestedWhereQuery(query *dbal.Query, boolean string) *Builder {
+
+	if len(query.Wheres) > 0 {
+		builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+			Type:    "nested",
+			Query:   query,
+			Boolean: boolean,
+		})
+		builder.Query.AddBinding("where", query.Bindings["where"])
 	}
 
 	return builder
 }
 
-func (builder *Builder) addWheres(wheres *[]Where, typ string, inputColumns interface{}, operator string, value interface{}, boolean string) {
-
-	reflectValue := reflect.ValueOf(inputColumns)
-	reflectValue = reflect.Indirect(reflectValue)
-
-	switch inputColumns.(type) {
-
-	// Where([]string{"score", "vote"}, ">", 5)
-	case []string:
-		for i := 0; i < reflectValue.Len(); i++ {
-			column := reflectValue.Index(i)
-			if column.Kind() == reflect.String {
-				builder.addWhere(wheres, typ, column.String(), operator, value, boolean)
-			}
-		}
-		break
-
-	// Where([][]interface{}{
-	// 	{"score", ">", 64.56},
-	// 	{"vote", 10},
-	// })
-	case [][]interface{}:
-		for i := 0; i < reflectValue.Len(); i++ {
-			args := reflectValue.Index(i).Interface().([]interface{})
-			if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
-				column := args[0].(string)
-				operator, value, boolean := builder.getDefaultsOfWhere(args[1:]...)
-				builder.addWhere(wheres, typ, column, operator, value, boolean)
-			}
-		}
-		break
-	}
-
+// forNestedWhere Create a new query instance for nested where condition.
+func (builder *Builder) forNestedWhere() *Builder {
+	new := builder.new()
+	new.Query.From = builder.Query.From
+	return new
 }
 
-func (builder *Builder) addWhere(wheres *[]Where, typ string, column string, operator string, value interface{}, boolean string) {
-	*wheres = append(*wheres, Where{
+func (builder *Builder) addWhere(typ string, column string, operator string, value interface{}, boolean string) {
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
 		Type:     typ,
 		Column:   column,
 		Operator: operator,
-		Value:    value,
 		Boolean:  boolean,
-		Wheres:   []Where{},
+		Wheres:   []dbal.Where{},
 	})
 }
 
-func (builder *Builder) addNestedWhere(wheres *[]Where, child *Builder, boolean string) {
-	*wheres = append(*wheres, Where{Type: "nested", Query: child, Boolean: boolean})
-}
-
-func (builder *Builder) getDefaultsOfWhere(args ...interface{}) (string, interface{}, string) {
+// wherePrepare Prepare the value, operator and boolean for a where clause.
+func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, string) {
 	var operator string = "="
 	var value interface{} = nil
 	var boolean string = "and"
@@ -174,6 +231,22 @@ func (builder *Builder) isQueryable(value interface{}) bool {
 	}
 	return (kind == reflect.Interface && typ.Name() == "Query") ||
 		(kind == reflect.Struct && typ.Name() == "Builder")
+}
+
+func (builder *Builder) invalidOperator(operator string) bool {
+	return !utils.StringHave(builder.Query.Operators, operator) &&
+		!utils.StringHave(builder.Grammar.GetOperators(), operator)
+}
+
+func (builder *Builder) invalidOperatorAndValue(operator string, value interface{}) bool {
+	return value == nil &&
+		utils.StringHave(builder.Query.Operators, operator) &&
+		utils.StringHave([]string{"=", "<>", "!="}, operator)
+}
+
+func (builder *Builder) flattenValue(value interface{}) interface{} {
+	values := utils.Flatten(value)
+	return values[0]
 }
 
 // OrWhere Add an "or where" clause to the query.
@@ -237,19 +310,54 @@ func (builder *Builder) OrWhereNotIn() {
 }
 
 // WhereNull Add a "where null" clause to the query.
-func (builder *Builder) WhereNull() {
+func (builder *Builder) WhereNull(column interface{}, args ...interface{}) *Builder {
+	boolean, not, _ := builder.wherePrepare(args...)
+	typ := "null"
+	if !utils.IsNil(not) && reflect.TypeOf(not).Kind() == reflect.Bool {
+		if reflect.ValueOf(not).Bool() {
+			typ = "notnull"
+		}
+	}
+
+	reflectColumn := reflect.ValueOf(column)
+	columnKind := reflectColumn.Kind()
+
+	columns := []string{}
+	if columnKind == reflect.Array || columnKind == reflect.Slice {
+		reflectColumn = reflect.Indirect(reflectColumn)
+		for i := 0; i < reflectColumn.Len(); i++ {
+			if reflectColumn.Index(i).Kind() == reflect.String {
+				columns = append(columns, reflectColumn.Index(i).String())
+			}
+		}
+	} else if columnKind == reflect.String {
+		columns = append(columns, reflectColumn.String())
+	}
+
+	for _, col := range columns {
+		builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+			Column:  col,
+			Type:    typ,
+			Boolean: boolean,
+		})
+	}
+	return builder
 }
 
 // OrWhereNull Add an "or where null" clause to the query.
-func (builder *Builder) OrWhereNull() {
+func (builder *Builder) OrWhereNull(column interface{}) *Builder {
+	return builder.WhereNull(column, "or")
 }
 
 // WhereNull Add a "where not null" clause to the query.
-func (builder *Builder) whereNotNull() {
+func (builder *Builder) whereNotNull(column interface{}, args ...interface{}) *Builder {
+	boolean, _, _ := builder.wherePrepare(args...)
+	return builder.WhereNull(column, boolean, true)
 }
 
 // OrWhereNotNull Add an "or where not null" clause to the query.
-func (builder *Builder) OrWhereNotNull() {
+func (builder *Builder) OrWhereNotNull(column interface{}) *Builder {
+	return builder.WhereNull(column, "or", true)
 }
 
 // WhereDate Add a "where date" statement to the query.

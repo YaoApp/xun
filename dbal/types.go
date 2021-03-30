@@ -143,3 +143,30 @@ type Command struct {
 	Success func()        // Success callback function
 	Fail    func()        // Fail callback function
 }
+
+// Name the from attribute ( table_name as t1,  column_name as c1...)
+type Name struct {
+	Prefix string
+	Name   string
+	Alias  string
+}
+
+// Where The where constraint for the query.
+type Where struct {
+	Type     string // basic, nested, sub
+	Column   string
+	Operator string
+	Boolean  string
+	Wheres   []Where
+	Query    *Query
+	Value    interface{}
+}
+
+// Query the query builder
+type Query struct {
+	Operators []string                 // All of the available clause operators.
+	From      Name                     // The table which the query is targeting.
+	Columns   []Name                   // The columns that should be returned.
+	Wheres    []Where                  // The where constraints for the query.
+	Bindings  map[string][]interface{} // The current query value bindings.
+}

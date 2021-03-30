@@ -1,5 +1,11 @@
 package dbal
 
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
+
 // Grammars loaded grammar driver
 var Grammars = map[string]Grammar{}
 
@@ -13,7 +19,7 @@ func (table *Table) GetName() string {
 	return table.TableName
 }
 
-// NewConstraint create a new constraint intstance
+// NewConstraint make a new constraint intstance
 func NewConstraint(schemaName string, tableName string, columnName string) *Constraint {
 	return &Constraint{
 		TableName:  tableName,
@@ -23,7 +29,7 @@ func NewConstraint(schemaName string, tableName string, columnName string) *Cons
 	}
 }
 
-// NewTable create a grammar table
+// NewTable make a grammar table
 func NewTable(name string, schemaName string, dbName string) *Table {
 	return &Table{
 		DBName:     dbName,
@@ -36,6 +42,48 @@ func NewTable(name string, schemaName string, dbName string) *Table {
 		IndexMap:   map[string]*Index{},
 		Commands:   []*Command{},
 	}
+}
+
+// NewName make a new Name instance
+func NewName(fullname string, prefix ...string) Name {
+	name := Name{}
+	if len(prefix) > 0 {
+		name.Prefix = prefix[0]
+	}
+	namer := strings.Split(strings.ToLower(fullname), " as ")
+	if len(namer) == 2 {
+		name.Name = strings.Trim(namer[0], " ")
+		name.Alias = strings.Trim(namer[1], " ")
+		return name
+	}
+	name.Name = strings.Trim(fullname, " ")
+	return name
+}
+
+// NewQuery make a new Query instance
+func NewQuery() *Query {
+	query := Query{
+		Operators: []string{
+			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+			"like", "like binary", "not like", "ilike",
+			"&", "|", "^", "<<", ">>",
+			"rlike", "not rlike", "regexp", "not regexp",
+			"~", "~*", "!~", "!~*", "similar to",
+			"not similar to", "not ilike", "~~*", "!~~*",
+		},
+		Bindings: map[string][]interface{}{
+			"select":     {},
+			"from":       {},
+			"join":       {},
+			"where":      {},
+			"groupBy":    {},
+			"having":     {},
+			"order":      {},
+			"union":      {},
+			"unionOrder": {},
+		},
+	}
+	return &query
 }
 
 // NewPrimary create a new primary intstance
@@ -158,4 +206,45 @@ func (index *Index) AddColumn(column *Column) {
 		}
 	}
 	index.Columns = append(index.Columns, column)
+}
+
+// Fullname get the name name with prefix
+func (name Name) Fullname() string {
+	return fmt.Sprintf("%s%s", name.Prefix, name.Name)
+}
+
+// As get the alias of name
+func (name Name) As() string {
+	return name.Alias
+}
+
+// Clone clone the query instance
+func (query *Query) Clone() *Query {
+	new := *query
+	return &new
+}
+
+// AddColumn add a column to query
+func (query *Query) AddColumn(column string) *Query {
+	query.Columns = append(query.Columns, NewName(column))
+	return query
+}
+
+// AddBinding Add a binding to the query.
+func (query *Query) AddBinding(typ string, value interface{}) {
+	if _, has := query.Bindings[typ]; !has {
+		panic(fmt.Errorf("Invalid binding type: %s", typ))
+	}
+
+	valueKind := reflect.TypeOf(value).Kind()
+	if valueKind == reflect.Array || valueKind == reflect.Slice {
+		reflectValue := reflect.ValueOf(value)
+		reflectValue = reflect.Indirect(reflectValue)
+		for i := 0; i < reflectValue.Len(); i++ {
+			value = reflectValue.Index(i).Interface()
+			query.Bindings[typ] = append(query.Bindings[typ], value)
+		}
+	} else {
+		query.Bindings[typ] = append(query.Bindings[typ], value)
+	}
 }

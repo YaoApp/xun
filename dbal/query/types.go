@@ -8,7 +8,7 @@ import (
 // Builder the dbal query builder
 type Builder struct {
 	Conn     *Connection
-	Attr     Attribute
+	Query    *dbal.Query
 	Mode     string
 	Database string
 	Schema   string
@@ -22,30 +22,4 @@ type Connection struct {
 	Read        *sqlx.DB
 	ReadConfig  *dbal.Config
 	Option      *dbal.Option
-}
-
-// Name the from attribute
-type Name struct {
-	Prefix *string
-	Name   string
-	Alias  string
-}
-
-// Where The where constraint for the query.
-type Where struct {
-	Type     string // basic, nested, sub
-	Column   string
-	Operator string
-	Value    interface{}
-	Boolean  string
-	Wheres   []Where
-	Query    *Builder
-}
-
-// Attribute the builder Attribute
-type Attribute struct {
-	From     Name
-	Bindings map[string][]interface{}
-	Wheres   []Where
-	Columns  []Name
 }

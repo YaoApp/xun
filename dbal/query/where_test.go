@@ -13,7 +13,6 @@ func TestWhereColumnIsArray(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
-		Where([]string{"score", "vote"}, ">", 5).
 		Where([][]interface{}{
 			{"score", ">", 64.56},
 			{"vote", 10},
