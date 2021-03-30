@@ -61,3 +61,8 @@ func (grammarSQL SQL) GetOperators() []string {
 		"not similar to", "not ilike", "~~*", "!~~*",
 	}
 }
+
+//GetSelectComponents Get The components that make up a select clause.
+func (grammarSQL SQL) GetSelectComponents() []string {
+	return []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"}
+}

@@ -1,6 +1,8 @@
 package query
 
-import "github.com/jmoiron/sqlx"
+import (
+	"github.com/jmoiron/sqlx"
+)
 
 // Query The database Query interface
 type Query interface {
@@ -8,7 +10,7 @@ type Query interface {
 	Table(name string) Query
 
 	// defined in the query.go file
-	Get()
+	Get() ([]map[string]interface{}, error)
 	ToSQL() string
 	GetBindings() []interface{}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/utils"
 )
 
 // Table create a new statement and set from givn table
@@ -15,8 +14,23 @@ func (builder *Builder) Table(name string) Query {
 }
 
 // Get Execute the query as a "select" statement.
-func (builder *Builder) Get() {
-	fmt.Println(builder.ToSQL())
+func (builder *Builder) Get() ([]map[string]interface{}, error) {
+
+	res := []map[string]interface{}{}
+	rows, err := builder.Conn.Read.Queryx(builder.ToSQL(), builder.GetBindings()...)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return nil, err
+	}
+
+	for rows.Next() {
+		row := map[string]interface{}{}
+		rows.MapScan(row)
+		res = append(res, row)
+	}
+
+	fmt.Printf("%s\nGet: %v\n", builder.ToSQL(), res)
+	return res, nil
 }
 
 // ToSQL Get the SQL representation of the query.
@@ -24,9 +38,16 @@ func (builder *Builder) ToSQL() string {
 	return builder.Grammar.CompileSelect(builder.Query)
 }
 
-// GetBindings  Get the current query value bindings in a flattened array.
+// GetBindings Get the current query value bindings in a flattened array.
 func (builder *Builder) GetBindings() []interface{} {
-	return utils.Flatten(builder.Query.Bindings)
+	bindings := []interface{}{}
+	for _, name := range builder.Query.BindingKeys {
+		values, has := builder.Query.Bindings[name]
+		if has && len(values) > 0 {
+			bindings = append(bindings, values...)
+		}
+	}
+	return bindings
 }
 
 // MustGet Execute the query as a "select" statement.

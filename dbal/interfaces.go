@@ -18,6 +18,7 @@ type Grammar interface {
 	GetDatabase() string
 	GetSchema() string
 	GetOperators() []string
+	GetSelectComponents() []string
 
 	// Grammar for migrating
 	GetTables() ([]string, error)

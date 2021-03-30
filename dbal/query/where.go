@@ -111,7 +111,7 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 					column := args[0].(string)
 					operator, value, boolean := builder.wherePrepare(args[1:]...)
-					builder.Where(column, operator, value, boolean)
+					qb.Where(column, operator, value, boolean)
 				}
 			}
 		}, boolean)
@@ -204,16 +204,6 @@ func (builder *Builder) forNestedWhere() *Builder {
 	new := builder.new()
 	new.Query.From = builder.Query.From
 	return new
-}
-
-func (builder *Builder) addWhere(typ string, column string, operator string, value interface{}, boolean string) {
-	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
-		Type:     typ,
-		Column:   column,
-		Operator: operator,
-		Boolean:  boolean,
-		Wheres:   []dbal.Where{},
-	})
 }
 
 // wherePrepare Prepare the value, operator and boolean for a where clause.

@@ -18,7 +18,7 @@ func TestWhereColumnIsArray(t *testing.T) {
 			{"vote", 10},
 		})
 
-	//  AND  `email` LIKE '%@yao.run' AND `score` > 5 AND `vote` > 5 AND `score` > 64.56 AND `vote` = 10
+	// select `*` from `table_test_where` where `email` like ? and (`score` > ? and `vote` = ?)
 	qb.Get()
 }
 

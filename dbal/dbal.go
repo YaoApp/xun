@@ -63,6 +63,7 @@ func NewName(fullname string, prefix ...string) Name {
 // NewQuery make a new Query instance
 func NewQuery() *Query {
 	query := Query{
+		Distinct: false,
 		Operators: []string{
 			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
 			"like", "like binary", "not like", "ilike",
@@ -70,6 +71,12 @@ func NewQuery() *Query {
 			"rlike", "not rlike", "regexp", "not regexp",
 			"~", "~*", "!~", "!~*", "similar to",
 			"not similar to", "not ilike", "~~*", "!~~*",
+		},
+		BindingKeys: []string{
+			"select", "from", "join", "where",
+			"groupBy", "having",
+			"order",
+			"union", "unionOrder",
 		},
 		Bindings: map[string][]interface{}{
 			"select":     {},
@@ -216,6 +223,11 @@ func (name Name) Fullname() string {
 // As get the alias of name
 func (name Name) As() string {
 	return name.Alias
+}
+
+// GetValue Get the value of the expression.
+func (expression Expression) GetValue() string {
+	return fmt.Sprintf("%v", expression.Value)
 }
 
 // Clone clone the query instance

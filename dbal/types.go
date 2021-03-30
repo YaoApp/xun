@@ -151,6 +151,11 @@ type Name struct {
 	Alias  string
 }
 
+// Expression the raw query expression.
+type Expression struct {
+	Value interface{}
+}
+
 // Where The where constraint for the query.
 type Where struct {
 	Type     string // basic, nested, sub
@@ -164,9 +169,11 @@ type Where struct {
 
 // Query the query builder
 type Query struct {
-	Operators []string                 // All of the available clause operators.
-	From      Name                     // The table which the query is targeting.
-	Columns   []Name                   // The columns that should be returned.
-	Wheres    []Where                  // The where constraints for the query.
-	Bindings  map[string][]interface{} // The current query value bindings.
+	Operators   []string                 // All of the available clause operators.
+	From        Name                     // The table which the query is targeting.
+	Columns     []Name                   // The columns that should be returned.
+	Wheres      []Where                  // The where constraints for the query.
+	Bindings    map[string][]interface{} // The current query value bindings.
+	BindingKeys []string                 // The  query bindings keys
+	Distinct    bool                     //  Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false
 }
