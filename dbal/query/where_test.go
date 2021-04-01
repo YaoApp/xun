@@ -106,14 +106,37 @@ func TestWhereValueIsClosure(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
-		Where("vote", '>', func(sub Query) {
+		Where("vote", ">", func(sub Query) {
 			sub.From("table_test_where").
-				Where("score", ">", 5)
-			//   Sum()
+				SelectRaw("MIN(vote) as vote").
+				Where("score", ">", 90.00)
 		})
 
-	qb.Get()
-	// AND  `email` LIKE '%@yao.run' AND `score` > 5 AND ( `vote` > 10 AND `name` = 'Ken'  AND (`created_at` > '2021-03-25 08:00:00' AND `created_at` < '2021-03-25 19:00:00' ) )
+	// select * from `table_test_where` where `email` like ? and `vote` > (select MIN(vote) as vote from `table_test_where` where `score` > ?)
+	// select * from "table_test_where" where "email" like $1 and "vote" > (select MIN(vote) as vote from "table_test_where" where "score" > $1)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and "vote" > (select MIN(vote) as vote from "table_test_where" where "score" > $2)`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and `vote` > (select MIN(vote) as vote from `table_test_where` where `score` > ?)", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 2, len(bindings), "the bindings should have 3 items")
+	if len(bindings) == 2 {
+		assert.Equal(t, "%@yao.run", bindings[0].(string), "the 1st binding should be %@yao.run")
+		assert.Equal(t, float64(90.00), bindings[1].(float64), "the 1st binding should be %@yao.run")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should has 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
+	}
+
 }
 
 // clean the test data

@@ -17,6 +17,10 @@ type Query interface {
 	ToSQL() string
 	GetBindings() []interface{}
 
+	// defined in the select.go file
+	Select(columns ...interface{}) Query
+	SelectRaw(expression string, bindings ...interface{}) Query
+
 	// defined in the from.go file
 	From(name string) Query
 

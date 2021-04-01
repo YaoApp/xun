@@ -100,6 +100,11 @@ func NewExpression(value interface{}) Expression {
 	}
 }
 
+// Raw make a new expression instance
+func Raw(value interface{}) Expression {
+	return NewExpression(value)
+}
+
 // NewPrimary create a new primary intstance
 func (table *Table) NewPrimary(name string, columns ...*Column) *Primary {
 	return &Primary{
