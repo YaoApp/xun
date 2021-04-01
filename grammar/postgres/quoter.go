@@ -5,11 +5,14 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/yaoapp/xun/grammar/sql"
 	"github.com/yaoapp/xun/utils"
 )
 
 // Quoter the database quoting query text SQL type
-type Quoter struct{}
+type Quoter struct {
+	sql.Quoter
+}
 
 // ID quoting query Identifier (`id`)
 func (quoter Quoter) ID(name string, db *sqlx.DB) string {

@@ -69,6 +69,7 @@ func (grammarSQL Postgres) NewWith(db *sqlx.DB, config *dbal.Config, option *dba
 	if err != nil {
 		return nil, err
 	}
+	grammarSQL.Quoter.Bind(db)
 	return grammarSQL, nil
 }
 
@@ -81,13 +82,14 @@ func (grammarSQL Postgres) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config,
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	grammarSQL.Quoter.Bind(write, read)
 	return grammarSQL, nil
 }
 
 // New Create a new mysql grammar inteface
 func New() dbal.Grammar {
 	pg := Postgres{
-		SQL: sql.NewSQL(Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}),
 	}
 	pg.Driver = "postgres"
 	pg.IndexTypes = map[string]string{

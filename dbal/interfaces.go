@@ -42,6 +42,7 @@ type Grammar interface {
 
 // Quoter the database quoting query text intrface
 type Quoter interface {
+	Bind(db *sqlx.DB, dbRead ...*sqlx.DB) Quoter
 	ID(name string, db *sqlx.DB) string
 	VAL(v interface{}, db *sqlx.DB) string // operates on both string and []byte and int or other types.
 }

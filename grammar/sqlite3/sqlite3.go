@@ -65,6 +65,7 @@ func (grammarSQL SQLite3) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal
 	if err != nil {
 		return nil, err
 	}
+	grammarSQL.Quoter.Bind(db)
 	return grammarSQL, nil
 }
 
@@ -77,13 +78,14 @@ func (grammarSQL SQLite3) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, 
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	grammarSQL.Quoter.Bind(write, read)
 	return grammarSQL, nil
 }
 
 // New Create a new mysql grammar inteface
 func New() dbal.Grammar {
 	sqlite := SQLite3{
-		SQL: sql.NewSQL(sql.Quoter{}),
+		SQL: sql.NewSQL(&sql.Quoter{}),
 	}
 	sqlite.Driver = "sqlite3"
 	sqlite.IndexTypes = map[string]string{

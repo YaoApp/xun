@@ -76,7 +76,7 @@ func NewSQL(quoter dbal.Quoter) SQL {
 
 // New Create a new mysql grammar inteface
 func New(dsn string) dbal.Grammar {
-	sql := NewSQL(Quoter{})
+	sql := NewSQL(&Quoter{})
 	flipTypes, ok := utils.MapFilp(sql.Types)
 	if ok {
 		sql.FlipTypes = flipTypes.(map[string]string)
@@ -113,6 +113,8 @@ func (grammarSQL SQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Opt
 	if err != nil {
 		return nil, err
 	}
+
+	grammarSQL.Quoter.Bind(db)
 	return grammarSQL, nil
 }
 
@@ -125,6 +127,7 @@ func (grammarSQL SQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	grammarSQL.Quoter.Bind(write, read)
 	return grammarSQL, nil
 }
 

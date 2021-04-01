@@ -5,14 +5,17 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/yaoapp/xun/grammar/sql"
 	"github.com/yaoapp/xun/utils"
 )
 
 // Quoter the database quoting query text SQL type
-type Quoter struct{}
+type Quoter struct {
+	sql.Quoter
+}
 
 // ID quoting query Identifier (`id`)
-func (quoter Quoter) ID(name string, db *sqlx.DB) string {
+func (quoter *Quoter) ID(name string, db *sqlx.DB) string {
 	name = strings.ReplaceAll(name, "`", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
@@ -20,7 +23,7 @@ func (quoter Quoter) ID(name string, db *sqlx.DB) string {
 }
 
 // VAL quoting query value ( 'value' )
-func (quoter Quoter) VAL(v interface{}, db *sqlx.DB) string {
+func (quoter *Quoter) VAL(v interface{}, db *sqlx.DB) string {
 	input := ""
 	switch v.(type) {
 	case *string:

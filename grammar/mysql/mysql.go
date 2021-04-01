@@ -49,6 +49,7 @@ func (grammarSQL MySQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.O
 	if err != nil {
 		return nil, err
 	}
+	grammarSQL.Quoter.Bind(db)
 	return grammarSQL, nil
 }
 
@@ -61,6 +62,7 @@ func (grammarSQL MySQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, re
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	grammarSQL.Quoter.Bind(write, read)
 	return grammarSQL, nil
 }
 
@@ -85,10 +87,9 @@ func (grammarSQL MySQL) OnConnected() error {
 // New Create a new MySQL grammar inteface
 func New() dbal.Grammar {
 	my := MySQL{
-		SQL: sql.NewSQL(Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}),
 	}
 	my.Driver = "mysql"
-	my.Quoter = Quoter{}
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(my.Types)
 	if ok {
