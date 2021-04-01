@@ -93,6 +93,13 @@ func NewQuery() *Query {
 	return &query
 }
 
+// NewExpression make a new expression instance
+func NewExpression(value interface{}) Expression {
+	return Expression{
+		Value: value,
+	}
+}
+
 // NewPrimary create a new primary intstance
 func (table *Table) NewPrimary(name string, columns ...*Column) *Primary {
 	return &Primary{
@@ -237,8 +244,13 @@ func (query *Query) Clone() *Query {
 }
 
 // AddColumn add a column to query
-func (query *Query) AddColumn(column string) *Query {
-	query.Columns = append(query.Columns, NewName(column))
+func (query *Query) AddColumn(column interface{}) *Query {
+	switch column.(type) {
+	case Expression:
+		query.Columns = append(query.Columns, column)
+	case string:
+		query.Columns = append(query.Columns, NewName(column.(string)))
+	}
 	return query
 }
 

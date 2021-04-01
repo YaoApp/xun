@@ -2,7 +2,9 @@ package query
 
 import (
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
@@ -18,8 +20,39 @@ func TestWhereColumnIsArray(t *testing.T) {
 			{"vote", 10},
 		})
 
-	// select `*` from `table_test_where` where `email` like ? and (`score` > ? and `vote` = ?)
-	qb.Get()
+	// checking sql
+	//select * from `table_test_where` where `email` like ? and (`score` > ? and `vote` = ?)
+	//select * from "table_test_where" where "email" like $1 and ("score" > $2 and "vote" = $3)
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and ("score" > $2 and "vote" = $3)`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and (`score` > ? and `vote` = ?)", sql, "the query sql not equal")
+	}
+
+	// checking bindings
+	bindings := qb.GetBindings()
+	assert.Equal(t, 3, len(bindings), "the bindings should have 3 items")
+	if len(bindings) == 3 {
+		assert.Equal(t, "%@yao.run", bindings[0].(string), "the 1st binding should be %@yao.run")
+		assert.Equal(t, float64(64.56), bindings[1].(float64), "the 2nd binding should be 64.56")
+		assert.Equal(t, int(10), bindings[2].(int), "the 3rd binding should be 10")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should has 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, "john@yao.run", rows[0]["email"].(string), "the email of first row should be john@yao.run")
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the email of first row should be 1")
+		assert.Equal(t, "WAITING", rows[0]["status"].(string), "the email of first row should be WAITING")
+		if unit.DriverIs("sqlite3") {
+			assert.Equal(t, "2021-03-25 00:21:16", rows[0]["created_at"].(string), "the email of first row should be WAITING")
+		} else {
+			assert.Equal(t, "2021-03-25T00:21:16", rows[0]["created_at"].(time.Time).Format("2006-01-02T15:04:05"), "the email of first row should be WAITING")
+		}
+
+	}
 }
 
 func TestWhereColumnIsClosure(t *testing.T) {

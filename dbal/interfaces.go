@@ -46,7 +46,7 @@ type Quoter interface {
 	ID(name string) string
 	VAL(v interface{}) string // operates on both string and []byte and int or other types.
 	IsExpression(value interface{}) bool
-	Parameter(value interface{}) string
-	Parameterize(values []interface{}) string
-	Columnize(columns []Name) string
+	Parameter(value interface{}, num int) string
+	Parameterize(values []interface{}, offset int) string
+	Columnize(columns []interface{}) string
 }

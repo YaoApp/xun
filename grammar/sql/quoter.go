@@ -75,7 +75,7 @@ func (quoter *Quoter) IsExpression(value interface{}) bool {
 }
 
 // Parameter Get the appropriate query parameter place-holder for a value.
-func (quoter *Quoter) Parameter(value interface{}) string {
+func (quoter *Quoter) Parameter(value interface{}, num int) string {
 	if quoter.IsExpression(value) {
 		return value.(dbal.Expression).GetValue()
 	}
@@ -83,19 +83,24 @@ func (quoter *Quoter) Parameter(value interface{}) string {
 }
 
 // Parameterize Create query parameter place-holders for an array.
-func (quoter *Quoter) Parameterize(values []interface{}) string {
+func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
-	for _, value := range values {
-		params = append(params, quoter.Parameter(value))
+	for idx, value := range values {
+		params = append(params, quoter.Parameter(value, offset+idx+1))
 	}
 	return strings.Join(params, ",")
 }
 
 // Columnize Convert an array of column names into a delimited string.
-func (quoter *Quoter) Columnize(columns []dbal.Name) string {
+func (quoter *Quoter) Columnize(columns []interface{}) string {
 	wrapColumns := []string{}
 	for _, col := range columns {
-		wrapColumns = append(wrapColumns, quoter.ID(col.Name))
+		switch col.(type) {
+		case dbal.Name:
+			wrapColumns = append(wrapColumns, quoter.ID(col.(dbal.Name).Name))
+		case dbal.Expression:
+			wrapColumns = append(wrapColumns, col.(dbal.Expression).GetValue())
+		}
 	}
 	return strings.Join(wrapColumns, ", ")
 }

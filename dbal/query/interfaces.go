@@ -2,6 +2,7 @@ package query
 
 import (
 	"github.com/jmoiron/sqlx"
+	"github.com/yaoapp/xun"
 )
 
 // Query The database Query interface
@@ -10,7 +11,9 @@ type Query interface {
 	Table(name string) Query
 
 	// defined in the query.go file
-	Get() ([]map[string]interface{}, error)
+	Get() ([]xun.R, error)
+	MustGet() []xun.R
+
 	ToSQL() string
 	GetBindings() []interface{}
 

@@ -1,6 +1,7 @@
 package xun
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -83,4 +84,22 @@ func AnyToRows(v interface{}) []R {
 		}
 	}
 	return values
+}
+
+// MapToR map[string]inteface{} to R{}, and cast []int8 to string
+func MapToR(row map[string]interface{}) R {
+	res := R{}
+	for key, value := range row {
+		switch value.(type) {
+		case []uint8:
+			bytes := ""
+			for _, v := range value.([]uint8) {
+				bytes = fmt.Sprintf("%s%s", bytes, string(v))
+			}
+			res[key] = bytes
+		default:
+			res[key] = value
+		}
+	}
+	return res
 }

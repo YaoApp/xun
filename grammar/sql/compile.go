@@ -10,6 +10,7 @@ import (
 // CompileSelect Compile a select query into SQL.
 func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 
+	bindingNum := 0
 	sqls := map[string]string{}
 
 	// If the query does not have any columns set, we'll set the columns to the
@@ -17,7 +18,7 @@ func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 	// can build the query and concatenate all the pieces together as one.
 	columns := query.Columns
 	if len(columns) == 0 {
-		query.AddColumn("*")
+		query.AddColumn(grammarSQL.Raw("*"))
 	}
 
 	// To compile the query, we'll spin through each component of the query and
@@ -28,7 +29,7 @@ func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
 	// sqls["joins"] = grammarSQL.compileJoins()
-	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres)
+	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, &bindingNum)
 	// sqls["groups"] = grammarSQL.compileGroups()
 	// sqls["havings"] = grammarSQL.compileHavings()
 	// sqls["orders"] = grammarSQL.compileOrders()
@@ -50,7 +51,7 @@ func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 }
 
 // compileColumns Compile the "select *" portion of the query.
-func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []dbal.Name) string {
+func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}) string {
 
 	// If the query is actually performing an aggregating select, we will let that
 	// compiler handle the building of the select clauses, as it will need some
@@ -74,7 +75,7 @@ func (grammarSQL SQL) compileFrom(query *dbal.Query, table dbal.Name) string {
 	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname()))
 }
 
-func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where) string {
+func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingNum *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
 	// for actually creating the where clauses SQL. This helps keep the code nice
@@ -92,13 +93,13 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where) stri
 		boolen := strings.ToLower(where.Boolean)
 		switch where.Type {
 		case "basic":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(where)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(query, where, bindingNum)))
 			break
 		case "sub":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub()))
 			break
 		case "nested":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNested(query, where)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNested(query, where, bindingNum)))
 			break
 		}
 	}
@@ -108,8 +109,9 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where) stri
 	return fmt.Sprintf("%s %s", conjunction, grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
-func (grammarSQL SQL) whereBasic(where dbal.Where) string {
-	value := grammarSQL.Parameter(where.Value)
+func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingNum *int) string {
+	*bindingNum = *bindingNum + 1
+	value := grammarSQL.Parameter(where.Value, *bindingNum)
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
 	return fmt.Sprintf("%s %s %s", grammarSQL.ID(where.Column), operator, value)
 }
@@ -118,11 +120,11 @@ func (grammarSQL SQL) whereSub() string {
 	return "whereSub"
 }
 
-func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where) string {
+func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingNum *int) string {
 
 	// $offset = $query instanceof JoinClause ? 3 : 6;
 	offset := 6
-	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres)
+	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres, bindingNum)
 	end := len(sql)
 	if end > offset {
 		sql = sql[offset:end]
@@ -137,4 +139,9 @@ func (grammarSQL SQL) RemoveLeadingBoolean(value string) string {
 	value = strings.TrimLeft(value, "and ")
 	value = strings.TrimLeft(value, "or ")
 	return value
+}
+
+// Raw make a new expression
+func (grammarSQL SQL) Raw(value string) dbal.Expression {
+	return dbal.NewExpression(value)
 }

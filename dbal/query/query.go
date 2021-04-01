@@ -1,9 +1,9 @@
 package query
 
 import (
-	"fmt"
-
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Table create a new statement and set from givn table
@@ -14,22 +14,20 @@ func (builder *Builder) Table(name string) Query {
 }
 
 // Get Execute the query as a "select" statement.
-func (builder *Builder) Get() ([]map[string]interface{}, error) {
+func (builder *Builder) Get() ([]xun.R, error) {
 
-	res := []map[string]interface{}{}
+	res := []xun.R{}
 	rows, err := builder.Conn.Read.Queryx(builder.ToSQL(), builder.GetBindings()...)
 	if err != nil {
-		fmt.Printf("%s\n", err)
 		return nil, err
 	}
 
 	for rows.Next() {
 		row := map[string]interface{}{}
 		rows.MapScan(row)
-		res = append(res, row)
+		res = append(res, xun.MapToR(row))
 	}
 
-	fmt.Printf("%s\nGet: %v\n", builder.ToSQL(), res)
 	return res, nil
 }
 
@@ -51,7 +49,10 @@ func (builder *Builder) GetBindings() []interface{} {
 }
 
 // MustGet Execute the query as a "select" statement.
-func (builder *Builder) MustGet() {
+func (builder *Builder) MustGet() []xun.R {
+	res, err := builder.Get()
+	utils.PanicIF(err)
+	return res
 }
 
 // Find Execute a query for a single record by ID.
