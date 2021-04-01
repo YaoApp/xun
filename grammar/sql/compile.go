@@ -69,9 +69,9 @@ func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []dbal.Name) str
 //  Compile the "from" portion of the query.
 func (grammarSQL SQL) compileFrom(query *dbal.Query, table dbal.Name) string {
 	if table.As() != "" {
-		return fmt.Sprintf("from %s as %s", grammarSQL.ID(table.Fullname(), grammarSQL.DB), grammarSQL.ID(table.As(), grammarSQL.DB))
+		return fmt.Sprintf("from %s as %s", grammarSQL.ID(table.Fullname()), grammarSQL.ID(table.As()))
 	}
-	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname(), grammarSQL.DB))
+	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname()))
 }
 
 func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where) string {
@@ -111,7 +111,7 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where) stri
 func (grammarSQL SQL) whereBasic(where dbal.Where) string {
 	value := grammarSQL.Parameter(where.Value)
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
-	return fmt.Sprintf("%s %s %s", grammarSQL.ID(where.Column, grammarSQL.DB), operator, value)
+	return fmt.Sprintf("%s %s %s", grammarSQL.ID(where.Column), operator, value)
 }
 
 func (grammarSQL SQL) whereSub() string {
@@ -132,41 +132,9 @@ func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where) string {
 
 // Utils for compiling
 
-// IsExpression Determine if the given value is a raw expression.
-func (grammarSQL SQL) IsExpression(value interface{}) bool {
-	return false
-}
-
-// Parameter Get the appropriate query parameter place-holder for a value.
-func (grammarSQL SQL) Parameter(value interface{}) string {
-	if grammarSQL.IsExpression(value) {
-		return value.(dbal.Expression).GetValue()
-	}
-	return "?"
-}
-
-// Parameterize Create query parameter place-holders for an array.
-func (grammarSQL SQL) Parameterize(values []interface{}) string {
-	params := []string{}
-	for _, value := range values {
-		params = append(params, grammarSQL.Parameter(value))
-	}
-	return strings.Join(params, ",")
-}
-
 // RemoveLeadingBoolean Remove the leading boolean from a statement.
 func (grammarSQL SQL) RemoveLeadingBoolean(value string) string {
 	value = strings.TrimLeft(value, "and ")
 	value = strings.TrimLeft(value, "or ")
 	return value
-}
-
-// Columnize Convert an array of column names into a delimited string.
-func (grammarSQL SQL) Columnize(columns []dbal.Name) string {
-	wrapColumns := []string{}
-	for _, col := range columns {
-		wrapColumns = append(wrapColumns, grammarSQL.ID(col.Name, grammarSQL.DB))
-	}
-
-	return strings.Join(wrapColumns, ", ")
 }

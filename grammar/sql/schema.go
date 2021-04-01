@@ -61,7 +61,7 @@ func (grammarSQL SQL) GetTables() ([]string, error) {
 
 // TableExists check if the table exists
 func (grammarSQL SQL) TableExists(name string) (bool, error) {
-	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.VAL(name, grammarSQL.DB))
+	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.VAL(name))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
@@ -175,8 +175,8 @@ func (grammarSQL SQL) GetIndexListing(dbName string, tableName string) ([]*dbal.
 			ORDER BY SEQ_IN_INDEX;
 		`,
 		strings.Join(selectColumns, ","),
-		grammarSQL.VAL(dbName, grammarSQL.DB),
-		grammarSQL.VAL(tableName, grammarSQL.DB),
+		grammarSQL.VAL(dbName),
+		grammarSQL.VAL(tableName),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	indexes := []*dbal.Index{}
@@ -238,8 +238,8 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string) ([]*dbal
 			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s;
 		`,
 		strings.Join(selectColumns, ","),
-		grammarSQL.Quoter.VAL(dbName, grammarSQL.DB),
-		grammarSQL.Quoter.VAL(tableName, grammarSQL.DB),
+		grammarSQL.Quoter.VAL(dbName),
+		grammarSQL.Quoter.VAL(tableName),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	columns := []*dbal.Column{}
@@ -280,7 +280,7 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string) ([]*dbal
 
 // CreateTable create a new table on the schema
 func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
-	name := grammarSQL.ID(table.TableName, grammarSQL.DB)
+	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
@@ -361,7 +361,7 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 
 // DropTable a table from the schema.
 func (grammarSQL SQL) DropTable(name string) error {
-	sql := fmt.Sprintf("DROP TABLE %s", grammarSQL.ID(name, grammarSQL.DB))
+	sql := fmt.Sprintf("DROP TABLE %s", grammarSQL.ID(name))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
@@ -369,7 +369,7 @@ func (grammarSQL SQL) DropTable(name string) error {
 
 // DropTableIfExists if the table exists, drop it from the schema.
 func (grammarSQL SQL) DropTableIfExists(name string) error {
-	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammarSQL.ID(name, grammarSQL.DB))
+	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammarSQL.ID(name))
 	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
@@ -377,7 +377,7 @@ func (grammarSQL SQL) DropTableIfExists(name string) error {
 
 // RenameTable rename a table on the schema.
 func (grammarSQL SQL) RenameTable(old string, new string) error {
-	sql := fmt.Sprintf("ALTER TABLE %s RENAME %s", grammarSQL.ID(old, grammarSQL.DB), grammarSQL.ID(new, grammarSQL.DB))
+	sql := fmt.Sprintf("ALTER TABLE %s RENAME %s", grammarSQL.ID(old), grammarSQL.ID(new))
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
@@ -386,7 +386,7 @@ func (grammarSQL SQL) RenameTable(old string, new string) error {
 // AlterTable alter a table on the schema
 func (grammarSQL SQL) AlterTable(table *dbal.Table) error {
 
-	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.ID(table.TableName, grammarSQL.DB))
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.ID(table.TableName))
 	stmts := []string{}
 	errs := []error{}
 
@@ -478,7 +478,7 @@ func (grammarSQL SQL) alterTableRenameColumn(table *dbal.Table, command *dbal.Co
 	} else {
 		column.Name = new
 		stmt := fmt.Sprintf("CHANGE COLUMN %s %s",
-			grammarSQL.ID(old, grammarSQL.DB),
+			grammarSQL.ID(old),
 			grammarSQL.SQLAddColumn(column),
 		)
 		*stmts = append(*stmts, sql+stmt)
@@ -492,7 +492,7 @@ func (grammarSQL SQL) alterTableRenameColumn(table *dbal.Table, command *dbal.Co
 
 func (grammarSQL SQL) alterTableDropColumn(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
 	name := command.Params[0].(string)
-	stmt := fmt.Sprintf("DROP COLUMN %s", grammarSQL.ID(name, grammarSQL.DB))
+	stmt := fmt.Sprintf("DROP COLUMN %s", grammarSQL.ID(name))
 	*stmts = append(*stmts, sql+stmt)
 	err := grammarSQL.ExecSQL(table, sql+stmt)
 	if err != nil {
@@ -523,7 +523,7 @@ func (grammarSQL SQL) alterTableRenameIndex(table *dbal.Table, command *dbal.Com
 		return
 	}
 
-	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(old, grammarSQL.DB))
+	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(old))
 	*stmts = append(*stmts, sql+stmt)
 	err := grammarSQL.ExecSQL(table, sql+stmt)
 	if err != nil {
@@ -553,7 +553,7 @@ func (grammarSQL SQL) alterTableRenameIndex(table *dbal.Table, command *dbal.Com
 
 func (grammarSQL SQL) alterTableDropIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
 	name := command.Params[0].(string)
-	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(name, grammarSQL.DB))
+	stmt := fmt.Sprintf("DROP INDEX %s", grammarSQL.ID(name))
 	*stmts = append(*stmts, sql+stmt)
 	err := grammarSQL.ExecSQL(table, sql+stmt)
 	if err != nil {

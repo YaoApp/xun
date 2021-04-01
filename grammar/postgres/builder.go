@@ -10,7 +10,6 @@ import (
 
 // SQLAddColumn return the add column sql for table create
 func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
-	db := grammarSQL.DB
 	types := grammarSQL.Types
 	quoter := grammarSQL.Quoter
 
@@ -37,8 +36,8 @@ func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
 
 	unsigned := ""
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
-	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default, db)), "").(string)
-	// comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default)), "").(string)
+	// comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment)), "").(string)
 	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := ""
 	if utils.StringVal(column.Extra) != "" {
@@ -61,7 +60,7 @@ func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
 
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s",
-		quoter.ID(column.Name, db), typ, unsigned, nullable, defaultValue, extra, collation)
+		quoter.ID(column.Name), typ, unsigned, nullable, defaultValue, extra, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -69,22 +68,21 @@ func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
 
 // SQLAddComment return the add comment sql for table create
 func (grammarSQL Postgres) SQLAddComment(column *dbal.Column) string {
-	db := grammarSQL.DB
 	comment := utils.GetIF(
 		utils.StringVal(column.Comment) != "",
 		fmt.Sprintf(
 			"COMMENT on column %s.%s is %s;",
-			grammarSQL.ID(column.TableName, db),
-			grammarSQL.ID(column.Name, db),
-			grammarSQL.VAL(column.Comment, db),
+			grammarSQL.ID(column.TableName),
+			grammarSQL.ID(column.Name),
+			grammarSQL.VAL(column.Comment),
 		), "").(string)
 
 	mappingTypes := []string{"ipAddress", "year"}
 	if utils.StringHave(mappingTypes, column.Type) {
 		comment = fmt.Sprintf("COMMENT on column %s.%s is %s;",
-			grammarSQL.ID(column.TableName, db),
-			grammarSQL.ID(column.Name, db),
-			grammarSQL.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db),
+			grammarSQL.ID(column.TableName),
+			grammarSQL.ID(column.Name),
+			grammarSQL.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))),
 		)
 	}
 	return comment
@@ -92,7 +90,6 @@ func (grammarSQL Postgres) SQLAddComment(column *dbal.Column) string {
 
 // SQLAddIndex  return the add index sql for table create
 func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
-	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 	indexTypes := grammarSQL.IndexTypes
 	typ, has := indexTypes[index.Type]
@@ -105,7 +102,7 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	columns := []string{}
 	isJSON := false
 	for _, column := range index.Columns {
-		columns = append(columns, quoter.ID(column.Name, db))
+		columns = append(columns, quoter.ID(column.Name))
 		if column.Type == "json" || column.Type == "jsonb" {
 			isJSON = true
 		}
@@ -116,9 +113,9 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 
 	comment := ""
 	if index.Comment != nil {
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment))
 	}
-	name := quoter.ID(index.Name, db)
+	name := quoter.ID(index.Name)
 
 	sql := ""
 	if typ == "PRIMARY KEY" {
@@ -128,7 +125,7 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	} else {
 		sql = fmt.Sprintf(
 			"CREATE %s %s ON %s (%s)",
-			typ, name, quoter.ID(index.TableName, db), strings.Join(columns, ","))
+			typ, name, quoter.ID(index.TableName), strings.Join(columns, ","))
 	}
 	return sql
 }
@@ -140,13 +137,13 @@ func (grammarSQL Postgres) SQLAddPrimary(primary *dbal.Primary) string {
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range primary.Columns {
-		columns = append(columns, quoter.ID(column.Name, grammarSQL.DB))
+		columns = append(columns, quoter.ID(column.Name))
 	}
 
 	sql := fmt.Sprintf(
 		// "CONSTRAINT %s PRIMARY KEY (%s)",
 		"PRIMARY KEY (%s)",
-		// grammarSQL.ID(primary.Name, db),
+		// grammarSQL.ID(primary.Name),
 		strings.Join(columns, ","))
 
 	return sql

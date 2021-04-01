@@ -39,7 +39,7 @@ func (quoter *Quoter) Write() dbal.Quoter {
 }
 
 // ID quoting query Identifier (`id`)
-func (quoter *Quoter) ID(name string, db *sqlx.DB) string {
+func (quoter *Quoter) ID(name string) string {
 	name = strings.ReplaceAll(name, "`", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
@@ -47,7 +47,7 @@ func (quoter *Quoter) ID(name string, db *sqlx.DB) string {
 }
 
 // VAL quoting query value ( 'value' )
-func (quoter *Quoter) VAL(v interface{}, db *sqlx.DB) string {
+func (quoter *Quoter) VAL(v interface{}) string {
 	input := ""
 	switch v.(type) {
 	case *string:
@@ -67,4 +67,35 @@ func (quoter *Quoter) VAL(v interface{}, db *sqlx.DB) string {
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\r", "")
 	return "'" + input + "'"
+}
+
+// IsExpression Determine if the given value is a raw expression.
+func (quoter *Quoter) IsExpression(value interface{}) bool {
+	return false
+}
+
+// Parameter Get the appropriate query parameter place-holder for a value.
+func (quoter *Quoter) Parameter(value interface{}) string {
+	if quoter.IsExpression(value) {
+		return value.(dbal.Expression).GetValue()
+	}
+	return "?"
+}
+
+// Parameterize Create query parameter place-holders for an array.
+func (quoter *Quoter) Parameterize(values []interface{}) string {
+	params := []string{}
+	for _, value := range values {
+		params = append(params, quoter.Parameter(value))
+	}
+	return strings.Join(params, ",")
+}
+
+// Columnize Convert an array of column names into a delimited string.
+func (quoter *Quoter) Columnize(columns []dbal.Name) string {
+	wrapColumns := []string{}
+	for _, col := range columns {
+		wrapColumns = append(wrapColumns, quoter.ID(col.Name))
+	}
+	return strings.Join(wrapColumns, ", ")
 }

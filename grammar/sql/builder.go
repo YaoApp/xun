@@ -11,7 +11,6 @@ import (
 
 // SQLAddColumn return the add column sql for table create
 func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
-	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 
 	// `id` bigint(20) unsigned NOT NULL,
@@ -19,8 +18,8 @@ func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 
 	unsigned := utils.GetIF(column.IsUnsigned, "UNSIGNED", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
-	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default, db)), "").(string)
-	comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment, db)), "").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default)), "").(string)
+	comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment)), "").(string)
 	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := utils.GetIF(utils.StringVal(column.Extra) != "", "AUTO_INCREMENT", "")
 
@@ -36,30 +35,30 @@ func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 	if typ == "JSON" || typ == "JSONB" {
 		mysql5_7_8, _ := semver.Make("5.7.8")
 		version, err := grammarSQL.GetVersion()
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		if err != nil || version.LT(mysql5_7_8) {
 			typ = "TEXT"
 		} else {
 			typ = "JSON"
 		}
 	} else if typ == "UUID" { // UUID
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		typ = "VARCHAR(36)"
 	} else if typ == "IPADDRESS" { // ipAddress
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		typ = "integer"
 	} else if typ == "MACADDRESS" { // macAddress 08:00:2b:01:02:03:04:05  bigint unsigned (8 bytes)
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		typ = "BIGINT"
 		unsigned = "UNSIGNED"
 	} else if typ == "YEAR" { // 2021 -1046 smallInt (2-byte)
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment)), db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		typ = "SMALLINT"
 	}
 
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s %s %s",
-		quoter.ID(column.Name, db), typ, unsigned, nullable, defaultValue, extra, comment, collation)
+		quoter.ID(column.Name), typ, unsigned, nullable, defaultValue, extra, comment, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -88,7 +87,6 @@ func (grammarSQL SQL) getType(column *dbal.Column) string {
 
 // SQLAddIndex  return the add index sql for table create
 func (grammarSQL SQL) SQLAddIndex(index *dbal.Index) string {
-	db := grammarSQL.DB
 	maxKeyLength := 256
 	indexTypes := grammarSQL.IndexTypes
 	quoter := grammarSQL.Quoter
@@ -102,17 +100,17 @@ func (grammarSQL SQL) SQLAddIndex(index *dbal.Index) string {
 	columns := []string{}
 	for _, column := range index.Columns {
 		if column.Type == "text" || column.Type == "mediumText" || column.Type == "longText" {
-			columns = append(columns, fmt.Sprintf("%s(%d)", quoter.ID(column.Name, db), maxKeyLength))
+			columns = append(columns, fmt.Sprintf("%s(%d)", quoter.ID(column.Name), maxKeyLength))
 		} else if column.Type == "json" || column.Type == "jsonb" { // ignore json and jsonb
 			continue
 		} else {
-			columns = append(columns, quoter.ID(column.Name, db))
+			columns = append(columns, quoter.ID(column.Name))
 		}
 	}
 
 	comment := ""
 	if index.Comment != nil {
-		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment, db))
+		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment))
 	}
 
 	if len(columns) == 0 {
@@ -121,7 +119,7 @@ func (grammarSQL SQL) SQLAddIndex(index *dbal.Index) string {
 
 	sql := fmt.Sprintf(
 		"%s %s (%s) %s",
-		typ, quoter.ID(index.Name, db), strings.Join(columns, ","), comment)
+		typ, quoter.ID(index.Name), strings.Join(columns, ","), comment)
 
 	return sql
 }
@@ -134,13 +132,13 @@ func (grammarSQL SQL) SQLAddPrimary(primary *dbal.Primary) string {
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range primary.Columns {
-		columns = append(columns, quoter.ID(column.Name, grammarSQL.DB))
+		columns = append(columns, quoter.ID(column.Name))
 	}
 
 	sql := fmt.Sprintf(
 		// "PRIMARY KEY %s (%s)",
 		"PRIMARY KEY(%s)",
-		// quoter.ID(primary.Name, grammarSQL.DB),
+		// quoter.ID(primary.Name, ),
 		strings.Join(columns, ","))
 
 	return sql

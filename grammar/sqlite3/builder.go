@@ -10,7 +10,6 @@ import (
 
 // SQLAddIndex  return the add index sql for table create
 func (grammarSQL SQLite3) SQLAddIndex(index *dbal.Index) string {
-	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 	indexTypes := grammarSQL.IndexTypes
 	typ, has := indexTypes[index.Type]
@@ -25,25 +24,24 @@ func (grammarSQL SQLite3) SQLAddIndex(index *dbal.Index) string {
 	// UNIQUE KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range index.Columns {
-		columns = append(columns, quoter.ID(column.Name, db))
+		columns = append(columns, quoter.ID(column.Name))
 	}
 
 	sql := fmt.Sprintf(
 		"CREATE %s %s ON %s (%s)",
-		typ, quoter.ID(index.Name, db), quoter.ID(index.TableName, db), strings.Join(columns, ","))
+		typ, quoter.ID(index.Name), quoter.ID(index.TableName), strings.Join(columns, ","))
 
 	return sql
 }
 
 // SQLAddColumn return the add column sql for table create
 func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
-	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 
 	// `id` bigint(20) unsigned NOT NULL,
 	typ := grammarSQL.getType(column)
 
-	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default, db)), "").(string)
+	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default)), "").(string)
 	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
@@ -68,7 +66,7 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 
 	sql := fmt.Sprintf(
 		"%s %s %s %s %s %s",
-		quoter.ID(column.Name, db), typ, nullable, defaultValue, extra, collation)
+		quoter.ID(column.Name), typ, nullable, defaultValue, extra, collation)
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -91,7 +89,7 @@ func (grammarSQL SQLite3) getType(column *dbal.Column) string {
 		typ = "BLOB"
 	} else if typ == "ENUM" {
 		option := fmt.Sprintf("('%s')", strings.Join(column.Option, "','"))
-		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", grammarSQL.ID(column.Name, grammarSQL.DB), option)
+		typ = fmt.Sprintf("TEXT CHECK( %s IN %s )", grammarSQL.ID(column.Name), option)
 	} else if column.Length != nil {
 		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
 	}
@@ -119,19 +117,18 @@ func (grammarSQL SQLite3) getType(column *dbal.Column) string {
 
 // SQLAddPrimary return the add primary key sql for table create
 func (grammarSQL SQLite3) SQLAddPrimary(primary *dbal.Primary) string {
-	db := grammarSQL.DB
 	quoter := grammarSQL.Quoter
 
 	// PRIMARY KEY `unionid` (`unionid`) COMMENT 'xxxx'
 	columns := []string{}
 	for _, column := range primary.Columns {
-		columns = append(columns, quoter.ID(column.Name, db))
+		columns = append(columns, quoter.ID(column.Name))
 	}
 
 	sql := fmt.Sprintf(
 		// "CONSTRAINT %s PRIMARY KEY (%s)",
 		"PRIMARY KEY (%s)",
-		// quoter.ID(primary.Table.GetName()+"_pkey", db),
+		// quoter.ID(primary.Table.GetName()+"_pkey"),
 		strings.Join(columns, ","))
 
 	return sql

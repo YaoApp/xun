@@ -52,7 +52,7 @@ func (grammarSQL SQLite3) GetTables() ([]string, error) {
 
 // TableExists check if the table exists
 func (grammarSQL SQLite3) TableExists(name string) (bool, error) {
-	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.VAL(name, grammarSQL.DB))
+	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.VAL(name))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
@@ -68,7 +68,7 @@ func (grammarSQL SQLite3) TableExists(name string) (bool, error) {
 // CreateTable create a new table on the schema
 func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
 
-	name := grammarSQL.ID(table.TableName, grammarSQL.DB)
+	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
 	stmts := []string{}
 
@@ -149,7 +149,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
 
 // RenameTable rename a table on the schema.
 func (grammarSQL SQLite3) RenameTable(old string, new string) error {
-	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old, grammarSQL.DB), grammarSQL.ID(new, grammarSQL.DB))
+	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old), grammarSQL.ID(new))
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
@@ -275,9 +275,9 @@ func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string) ([]*d
 			ORDER BY seq_in_index,index_name,seq_in_column
 		`,
 		strings.Join(selectColumns, ","),
-		grammarSQL.VAL(tableName, grammarSQL.DB),
-		grammarSQL.VAL(tableName, grammarSQL.DB),
-		grammarSQL.VAL(tableName, grammarSQL.DB),
+		grammarSQL.VAL(tableName),
+		grammarSQL.VAL(tableName),
+		grammarSQL.VAL(tableName),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	indexes := []*dbal.Index{}
@@ -329,7 +329,7 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string) 
 			WHERE m.type = 'table' and table_name=%s
 		`,
 		strings.Join(selectColumns, ","),
-		grammarSQL.VAL(tableName, grammarSQL.DB),
+		grammarSQL.VAL(tableName),
 	)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	columns := []*dbal.Column{}
@@ -370,7 +370,7 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string) 
 // AlterTable alter a table on the schema
 func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 
-	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.ID(table.TableName, grammarSQL.DB))
+	sql := fmt.Sprintf("ALTER TABLE %s ", grammarSQL.ID(table.TableName))
 	stmts := []string{}
 	errs := []error{}
 
@@ -401,8 +401,8 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			new := command.Params[1].(string)
 			stmt := fmt.Sprintf("%s RENAME COLUMN %s TO %s",
 				sql,
-				grammarSQL.ID(old, grammarSQL.DB),
-				grammarSQL.ID(new, grammarSQL.DB),
+				grammarSQL.ID(old),
+				grammarSQL.ID(new),
 			)
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(table, stmt)
@@ -423,7 +423,7 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			break
 		case "DropIndex":
 			name := command.Params[0].(string)
-			stmt := fmt.Sprintf("DROP INDEX IF EXISTS %s", grammarSQL.ID(name, grammarSQL.DB))
+			stmt := fmt.Sprintf("DROP INDEX IF EXISTS %s", grammarSQL.ID(name))
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(table, stmt)
 			if err != nil {

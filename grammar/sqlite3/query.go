@@ -17,10 +17,10 @@ func (grammarSQL SQLite3) InsertIgnore(tableName string, values []xun.R) (sql.Re
 	bindVars := []string{}
 	for field := range values[0] {
 		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field, grammarSQL.DB))
+		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
 
-	sql := fmt.Sprintf(`INSERT OR IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName, grammarSQL.DB), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT OR IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 

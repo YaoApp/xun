@@ -17,9 +17,9 @@ func (grammarSQL Postgres) InsertIgnore(tableName string, values []xun.R) (sql.R
 	bindVars := []string{}
 	for field := range values[0] {
 		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field, grammarSQL.DB))
+		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName, grammarSQL.DB), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	sql, args, _ := grammarSQL.DB.BindNamed(sql, values)
 	sql = sql + " ON CONFLICT DO NOTHING"
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
@@ -32,11 +32,11 @@ func (grammarSQL Postgres) InsertGetID(tableName string, values []xun.R, sequenc
 	bindVars := []string{}
 	for field := range values[0] {
 		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field, grammarSQL.DB))
+		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName, grammarSQL.DB), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	sql, args, _ := grammarSQL.DB.BindNamed(sql, values)
-	sql = sql + " RETURNING " + grammarSQL.ID(sequence, grammarSQL.DB)
+	sql = sql + " RETURNING " + grammarSQL.ID(sequence)
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	var seq int64
 	err := grammarSQL.DB.Get(&seq, sql, args...)

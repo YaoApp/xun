@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/grammar/sql"
 	"github.com/yaoapp/xun/utils"
 )
@@ -15,7 +14,7 @@ type Quoter struct {
 }
 
 // ID quoting query Identifier (`id`)
-func (quoter *Quoter) ID(name string, db *sqlx.DB) string {
+func (quoter *Quoter) ID(name string) string {
 	name = strings.ReplaceAll(name, "`", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
@@ -23,7 +22,7 @@ func (quoter *Quoter) ID(name string, db *sqlx.DB) string {
 }
 
 // VAL quoting query value ( 'value' )
-func (quoter *Quoter) VAL(v interface{}, db *sqlx.DB) string {
+func (quoter *Quoter) VAL(v interface{}) string {
 	input := ""
 	switch v.(type) {
 	case *string:
