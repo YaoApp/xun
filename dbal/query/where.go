@@ -97,7 +97,9 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 		Value:    value,
 		Offset:   offset,
 	})
-	builder.Query.AddBinding("where", builder.flattenValue(value))
+	if !builder.isExpression(value) {
+		builder.Query.AddBinding("where", builder.flattenValue(value))
+	}
 	return builder
 }
 
@@ -260,6 +262,16 @@ func (builder *Builder) isOperator(v interface{}) bool {
 	switch v.(type) {
 	case string:
 		return utils.StringHave([]string{"and", "or"}, strings.ToLower(v.(string)))
+	default:
+		return false
+	}
+}
+
+// isExpression Determine if the given value is a raw expression.
+func (builder *Builder) isExpression(value interface{}) bool {
+	switch value.(type) {
+	case dbal.Expression:
+		return true
 	default:
 		return false
 	}

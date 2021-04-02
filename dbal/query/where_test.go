@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
 )
@@ -176,6 +177,40 @@ func TestWhereValueIsClosure(t *testing.T) {
 	if len(rows) == 1 {
 		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
 	}
+
+}
+
+func TestWhereValueIsExpression(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("email", "like", "%@yao.run").
+		Where("created_at", "<", dbal.Raw("NOW()"))
+
+	if unit.DriverIs("sqlite3") {
+		qb.Table("table_test_where").
+			Where("email", "like", "%@yao.run").
+			Where("created_at", "<", dbal.Raw("DATE('now')"))
+	}
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and "created_at" < NOW()`, sql, "the query sql not equal")
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and `created_at` < DATE('now')", sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and `created_at` < NOW()", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 1, len(bindings), "the bindings should have 1 item")
+	if len(bindings) == 1 {
+		assert.Equal(t, "%@yao.run", bindings[0].(string), "the 1st binding should be %@yao.run")
+	}
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
 
 }
 
