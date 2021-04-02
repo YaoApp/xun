@@ -43,10 +43,11 @@ type Grammar interface {
 
 // Quoter the database quoting query text intrface
 type Quoter interface {
-	Bind(db *sqlx.DB, dbRead ...*sqlx.DB) Quoter
+	Bind(db *sqlx.DB, prefix string, dbRead ...*sqlx.DB) Quoter
 	ID(value string) string
 	VAL(value interface{}) string // operates on both string and []byte and int or other types.
 	Wrap(value interface{}) string
+	WrapTable(value interface{}) string
 	IsExpression(value interface{}) bool
 	Parameter(value interface{}, num int) string
 	Parameterize(values []interface{}, offset int) string

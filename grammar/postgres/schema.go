@@ -752,7 +752,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 					if err != nil {
 						return nil, err
 					}
-					optionStr := strings.TrimLeft(optionRange[0], "{")
+					optionStr := strings.TrimPrefix(optionRange[0], "{")
 					optionStr = strings.TrimRight(optionStr, "}")
 					enumOptions[column.TypeName] = strings.Split(optionStr, ",")
 				}

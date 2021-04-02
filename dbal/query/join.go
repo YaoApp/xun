@@ -21,6 +21,7 @@ func (builder *Builder) Join(table string, first interface{}, args ...interface{
 // forJoinClause Create a new query instance for a join clause.
 func (builder *Builder) forJoinClause() *Builder {
 	new := builder.new()
+	new.Query.IsJoinClause = true
 	return new
 }
 

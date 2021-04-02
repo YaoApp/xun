@@ -33,7 +33,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// sqls["aggregate"] = grammarSQL.compileAggregate()
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
-	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins)
+	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	// sqls["groups"] = grammarSQL.compileGroups()
 	// sqls["havings"] = grammarSQL.compileHavings()
@@ -56,9 +56,25 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 }
 
 // compileJoins Compile the "join" portions of the query.
-func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join) string {
-	fmt.Println("Joins", len(joins))
-	return ""
+func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join, offset *int) string {
+	sql := ""
+	for _, join := range joins {
+		table := grammarSQL.WrapTable(join.Table)
+		nestedJoins := " "
+		if len(join.Query.Joins) > 0 {
+			nestedJoins = grammarSQL.compileJoins(query, join.Query.Joins, offset)
+		}
+		tableAndNestedJoins := table
+		if len(join.Query.Joins) > 0 {
+			tableAndNestedJoins = fmt.Sprintf("(%s%s)", table, nestedJoins)
+		}
+
+		return strings.Trim(
+			fmt.Sprintf("%s join %s %s", join.Type, tableAndNestedJoins, grammarSQL.compileWheres(join.Query, join.Query.Wheres, offset)),
+			" ",
+		)
+	}
+	return sql
 }
 
 // compileColumns Compile the "select *" portion of the query.
@@ -121,8 +137,11 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		}
 	}
 
-	// $conjunction = $query instanceof JoinClause ? 'on' : 'where'; ( offset 3 / 6)
 	conjunction := "where"
+	if query.IsJoinClause {
+		conjunction = "on"
+	}
+
 	return fmt.Sprintf("%s %s", conjunction, grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
@@ -142,8 +161,11 @@ func (grammarSQL SQL) whereColumn(query *dbal.Query, where dbal.Where) string {
 // whereNested Compile a nested where clause.
 func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 
-	// $offset = $query instanceof JoinClause ? 3 : 6;
-	offset := 6
+	offset := 6 // - where
+	if query.IsJoinClause {
+		offset = 3 // - on
+	}
+
 	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres, bindingOffset)
 	end := len(sql)
 	if end > offset {
@@ -172,8 +194,8 @@ func (grammarSQL SQL) whereNotNull(query *dbal.Query, where dbal.Where) string {
 
 // RemoveLeadingBoolean Remove the leading boolean from a statement.
 func (grammarSQL SQL) RemoveLeadingBoolean(value string) string {
-	value = strings.TrimLeft(value, "and ")
-	value = strings.TrimLeft(value, "or ")
+	value = strings.TrimPrefix(value, "and ")
+	value = strings.TrimPrefix(value, "or ")
 	return value
 }
 

@@ -65,7 +65,7 @@ func (grammarSQL SQLite3) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal
 	if err != nil {
 		return nil, err
 	}
-	grammarSQL.Quoter.Bind(db)
+	grammarSQL.Quoter.Bind(db, option.Prefix)
 	return grammarSQL, nil
 }
 
@@ -78,7 +78,7 @@ func (grammarSQL SQLite3) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, 
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
-	grammarSQL.Quoter.Bind(write, read)
+	grammarSQL.Quoter.Bind(write, option.Prefix, read)
 	return grammarSQL, nil
 }
 

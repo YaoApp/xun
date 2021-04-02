@@ -114,7 +114,7 @@ func (grammarSQL SQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Opt
 		return nil, err
 	}
 
-	grammarSQL.Quoter.Bind(db)
+	grammarSQL.Quoter.Bind(db, option.Prefix)
 	return grammarSQL, nil
 }
 
@@ -127,7 +127,7 @@ func (grammarSQL SQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
-	grammarSQL.Quoter.Bind(write, read)
+	grammarSQL.Quoter.Bind(write, option.Prefix, read)
 	return grammarSQL, nil
 }
 

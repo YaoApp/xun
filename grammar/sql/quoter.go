@@ -14,12 +14,14 @@ type Quoter struct {
 	DB         *sqlx.DB
 	DBPrimary  *sqlx.DB
 	DBReadOnly *sqlx.DB
+	Prefix     string
 }
 
 //Bind make a new Quoter inteface
-func (quoter *Quoter) Bind(db *sqlx.DB, dbRead ...*sqlx.DB) dbal.Quoter {
+func (quoter *Quoter) Bind(db *sqlx.DB, prefix string, dbRead ...*sqlx.DB) dbal.Quoter {
 	quoter.DBPrimary = db
 	quoter.DB = db
+	quoter.Prefix = prefix
 	if len(dbRead) > 0 && dbRead[0] != nil {
 		quoter.DBReadOnly = dbRead[0]
 	}
@@ -77,9 +79,9 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {
-			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+			return fmt.Sprintf("%s as %s", quoter.ID(col.Name), col.As())
 		}
-		return quoter.ID(value.(dbal.Name).Fullname())
+		return quoter.ID(value.(dbal.Name).Name)
 	case string:
 		str := value.(string)
 		if strings.Contains(str, ".") {
@@ -87,10 +89,32 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 			tab := arrs[0]
 			col := dbal.NewName(arrs[1])
 			if col.As() != "" {
-				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Fullname()), quoter.ID(col.As()))
+				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Name), quoter.ID(col.As()))
 			}
-			return fmt.Sprintf("%s.%s", quoter.ID(tab), quoter.ID(col.Fullname()))
+			name := col.Name
+			if name != "*" {
+				name = quoter.ID(col.Name)
+			}
+			return fmt.Sprintf("%s.%s", quoter.ID(tab), name)
 		}
+		return quoter.ID(dbal.NewName(value.(string)).Name)
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
+// WrapTable Wrap a table in keyword identifiers.
+func (quoter *Quoter) WrapTable(value interface{}) string {
+	switch value.(type) {
+	case dbal.Expression:
+		return value.(dbal.Expression).GetValue()
+	case dbal.Name:
+		col := value.(dbal.Name)
+		if col.As() != "" {
+			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+		}
+		return quoter.ID(value.(dbal.Name).Fullname())
+	case string:
 		return quoter.ID(dbal.NewName(value.(string)).Fullname())
 	default:
 		return fmt.Sprintf("%v", value)

@@ -52,9 +52,9 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {
-			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+			return fmt.Sprintf("%s as %s", quoter.ID(col.Name), col.As())
 		}
-		return quoter.ID(value.(dbal.Name).Fullname())
+		return quoter.ID(value.(dbal.Name).Name)
 	case string:
 		str := value.(string)
 		if strings.Contains(str, ".") {
@@ -62,10 +62,32 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 			tab := arrs[0]
 			col := dbal.NewName(arrs[1])
 			if col.As() != "" {
-				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Fullname()), quoter.ID(col.As()))
+				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Name), quoter.ID(col.As()))
 			}
-			return fmt.Sprintf("%s.%s", quoter.ID(tab), quoter.ID(col.Fullname()))
+			name := col.Name
+			if name != "*" {
+				name = quoter.ID(col.Name)
+			}
+			return fmt.Sprintf("%s.%s", quoter.ID(tab), name)
 		}
+		return quoter.ID(dbal.NewName(value.(string)).Name)
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
+// WrapTable Wrap a table in keyword identifiers.
+func (quoter *Quoter) WrapTable(value interface{}) string {
+	switch value.(type) {
+	case dbal.Expression:
+		return value.(dbal.Expression).GetValue()
+	case dbal.Name:
+		col := value.(dbal.Name)
+		if col.As() != "" {
+			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+		}
+		return quoter.ID(value.(dbal.Name).Fullname())
+	case string:
 		return quoter.ID(dbal.NewName(value.(string)).Fullname())
 	default:
 		return fmt.Sprintf("%v", value)
@@ -87,4 +109,13 @@ func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 		quoter.Parameter(value, idx+1+offset)
 	}
 	return strings.Join(params, ",")
+}
+
+// Columnize Convert an array of column names into a delimited string.
+func (quoter *Quoter) Columnize(columns []interface{}) string {
+	wrapColumns := []string{}
+	for _, col := range columns {
+		wrapColumns = append(wrapColumns, quoter.Wrap(col))
+	}
+	return strings.Join(wrapColumns, ", ")
 }

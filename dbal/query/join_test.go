@@ -1,9 +1,9 @@
 package query
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
@@ -15,9 +15,37 @@ func TestJoinColumnIsString(t *testing.T) {
 	qb.Table("table_test_join_t1 as t1").
 		Join("table_test_join_t2 as t2", "t2.t1_id", "=", "t1.id").
 		Where("t2.status", "=", "PUBLISHED").
-		Select("t1.*", "t2.title as title", "t2.content as content")
+		Select("t1.*", "t2.t1_id", "t2.title as title", "t2.content as content")
 
-	fmt.Println(qb.ToSQL())
+	// select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join table_test_join_t2 as t2 on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?
+	// select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join table_test_join_t2 as t2 on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join table_test_join_t2 as t2 on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join table_test_join_t2 as t2 on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 1, len(bindings), "the bindings should have 1 item")
+	if len(bindings) == 1 {
+		assert.Equal(t, "PUBLISHED", bindings[0].(string), "the 1st binding should be PUBLISHED")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should has 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(1), rows[0]["t1_id"].(int64), "the t1_id of first row should be 1")
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
+		assert.Equal(t, "A Psychological Trick to Evoke An Interesting Conversation", rows[0]["title"].(string), "the title of first row should be A Psychological Trick to Evoke An Interesting Conversation")
+		assert.Equal(t, int64(3), rows[1]["t1_id"].(int64), "the t1_id of 2nd row should be 1")
+		assert.Equal(t, int64(3), rows[1]["id"].(int64), "the id of first 2nd should be 1")
+		assert.Equal(t, "The Future of Dashboards is Dashboardless", rows[1]["title"].(string), "the title of 2nd row should be The Future of Dashboards is Dashboardless")
+	}
+
 }
 
 // clean the test data
@@ -64,7 +92,7 @@ func NewTableFoJoinTest() {
 			"t1_id": 1,
 			"title": "A Psychological Trick to Evoke An Interesting Conversation",
 			"content": `
-				Imagine you pass by a question that asks “the Titanic got invaded by aliens, right?” 
+				Imagine you pass by a question that asks “the Titanic got invaded by aliens, right?
 				One one hand you’re holding in a chuckle and slightly in disbelief; on the other hand, 
 				you went through the pain of researching and answering the question into such enormous detail. So, what happened?
 			`,
