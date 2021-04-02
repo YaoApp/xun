@@ -1,6 +1,8 @@
 package query
 
-import "github.com/yaoapp/xun/dbal"
+import (
+	"github.com/yaoapp/xun/dbal"
+)
 
 // Select Set the columns to be selected.
 // Select("field1", "field2")

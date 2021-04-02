@@ -115,8 +115,7 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	if index.Comment != nil {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment))
 	}
-	name := quoter.ID(index.Name)
-
+	name := quoter.ID(fmt.Sprintf("%s_%s", index.TableName, index.Name))
 	sql := ""
 	if typ == "PRIMARY KEY" {
 		sql = fmt.Sprintf(

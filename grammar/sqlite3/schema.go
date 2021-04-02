@@ -291,6 +291,7 @@ func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string) ([]*d
 		index.Nullable = true
 		index.DBName = dbName
 		index.Type = index.IndexType
+		index.Name = strings.TrimPrefix(index.Name, tableName+"_")
 		// utils.Println(index)
 	}
 	return indexes, nil
@@ -422,7 +423,7 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			command.Callback(err)
 			break
 		case "DropIndex":
-			name := command.Params[0].(string)
+			name := fmt.Sprintf("%s_%s", table.TableName, command.Params[0])
 			stmt := fmt.Sprintf("DROP INDEX IF EXISTS %s", grammarSQL.ID(name))
 			stmts = append(stmts, stmt)
 			err := grammarSQL.ExecSQL(table, stmt)

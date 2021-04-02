@@ -50,8 +50,22 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 	case dbal.Expression:
 		return value.(dbal.Expression).GetValue()
 	case dbal.Name:
+		col := value.(dbal.Name)
+		if col.As() != "" {
+			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+		}
 		return quoter.ID(value.(dbal.Name).Fullname())
 	case string:
+		str := value.(string)
+		if strings.Contains(str, ".") {
+			arrs := strings.Split(str, ".")
+			tab := arrs[0]
+			col := dbal.NewName(arrs[1])
+			if col.As() != "" {
+				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Fullname()), quoter.ID(col.As()))
+			}
+			return fmt.Sprintf("%s.%s", quoter.ID(tab), quoter.ID(col.Fullname()))
+		}
 		return quoter.ID(dbal.NewName(value.(string)).Fullname())
 	default:
 		return fmt.Sprintf("%v", value)

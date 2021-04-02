@@ -467,7 +467,7 @@ func (grammarSQL Postgres) alterTableCreateIndex(table *dbal.Table, command *dba
 }
 
 func (grammarSQL Postgres) alterTableDropIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
-	name := command.Params[0].(string)
+	name := fmt.Sprintf("%s_%s", table.TableName, command.Params[0])
 	stmt := fmt.Sprintf(
 		"DROP INDEX %s",
 		grammarSQL.ID(name),
@@ -506,8 +506,8 @@ func (grammarSQL Postgres) alterTableDropPrimary(table *dbal.Table, command *dba
 }
 
 func (grammarSQL Postgres) alterTableRenameIndex(table *dbal.Table, command *dbal.Command, sql string, stmts *[]string, errs *[]error) {
-	old := command.Params[0].(string)
-	new := command.Params[1].(string)
+	old := fmt.Sprintf("%s_%s", table.TableName, command.Params[0])
+	new := fmt.Sprintf("%s_%s", table.TableName, command.Params[1])
 	stmt := fmt.Sprintf(
 		"ALTER INDEX IF EXISTS %s RENAME TO %s",
 		grammarSQL.ID(old),
@@ -670,6 +670,7 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string) ([]*
 		} else {
 			index.Type = "index"
 		}
+		index.Name = strings.TrimPrefix(index.Name, tableName+"_")
 	}
 	return indexes, nil
 }

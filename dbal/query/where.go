@@ -103,6 +103,44 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	return builder
 }
 
+// WhereColumn Add a "where" clause comparing two columns to the query.
+func (builder *Builder) WhereColumn(first interface{}, args ...interface{}) Query {
+
+	columnKind := reflect.TypeOf(first).Kind()
+
+	// Here we will make some assumptions about the operator. If only 2 values are
+	// passed to the method, we will assume that the operator is an equals sign
+	// and keep going. Otherwise, we'll require the operator to be passed in.
+	operator, second, boolean, offset := builder.wherePrepare(args...)
+
+	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
+	// If the column is an array, we will assume it is an array of key-value pairs
+	// and can add them each as a where clause. We will maintain the boolean we
+	// received when the method was called and pass it into the Wheres attribute.
+	if columnKind == reflect.Array || columnKind == reflect.Slice {
+		builder.addArrayOfWheres(first, boolean)
+		return builder
+	}
+
+	// Finally, we will add this where clause into this array of clauses that we
+	// are building for the query. All of them will be compiled via a grammar
+	// once the query is about to be executed and run against the database.
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:     "column",
+		Second:   second,
+		First:    first,
+		Operator: operator,
+		Boolean:  boolean,
+		Offset:   offset,
+	})
+
+	return builder
+}
+
+// OrWhereColumn Add an "or where" clause comparing two columns to the query.
+func (builder *Builder) OrWhereColumn() {
+}
+
 // Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10},})
 // addArrayOfWheres Add an array of where clauses to the query.
 func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean string) *Builder {
@@ -457,14 +495,6 @@ func (builder *Builder) WhereTime() {
 
 // OrWhereTime Add an "or where time" statement to the query.
 func (builder *Builder) OrWhereTime() {
-}
-
-// WhereColumn Add a "where" clause comparing two columns to the query.
-func (builder *Builder) WhereColumn() {
-}
-
-// OrWhereColumn Add an "or where" clause comparing two columns to the query.
-func (builder *Builder) OrWhereColumn() {
 }
 
 // WhereExists Add an exists clause to the query.

@@ -33,7 +33,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// sqls["aggregate"] = grammarSQL.compileAggregate()
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
-	// sqls["joins"] = grammarSQL.compileJoins()
+	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	// sqls["groups"] = grammarSQL.compileGroups()
 	// sqls["havings"] = grammarSQL.compileHavings()
@@ -53,6 +53,12 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// reset columns
 	query.Columns = columns
 	return strings.Trim(sql, " ")
+}
+
+// compileJoins Compile the "join" portions of the query.
+func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join) string {
+	fmt.Println("Joins", len(joins))
+	return ""
 }
 
 // compileColumns Compile the "select *" portion of the query.
@@ -104,6 +110,8 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNull(query, where)))
 		case "notnull":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNotNull(query, where)))
+		case "column":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereColumn(query, where)))
 		case "sub":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub(query, where, bindingOffset)))
 			break
@@ -118,6 +126,7 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 	return fmt.Sprintf("%s %s", conjunction, grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
+// whereBasic Compile a date based where clause.
 func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	*bindingOffset = *bindingOffset + where.Offset
 	value := grammarSQL.Parameter(where.Value, *bindingOffset)
@@ -125,19 +134,12 @@ func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOff
 	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
 }
 
-func (grammarSQL SQL) whereNull(query *dbal.Query, where dbal.Where) string {
-	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
+// whereColumn Compile a where clause comparing two columns.
+func (grammarSQL SQL) whereColumn(query *dbal.Query, where dbal.Where) string {
+	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.First), where.Operator, grammarSQL.Wrap(where.Second))
 }
 
-func (grammarSQL SQL) whereNotNull(query *dbal.Query, where dbal.Where) string {
-	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
-}
-
-func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
-	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
-}
-
+// whereNested Compile a nested where clause.
 func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 
 	// $offset = $query instanceof JoinClause ? 3 : 6;
@@ -148,6 +150,22 @@ func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOf
 		sql = sql[offset:end]
 	}
 	return fmt.Sprintf("(%s)", sql)
+}
+
+// whereSub Compile a where condition with a sub-select.
+func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
+	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
+}
+
+// whereNull Compile a "where null" clause.
+func (grammarSQL SQL) whereNull(query *dbal.Query, where dbal.Where) string {
+	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
+}
+
+// whereNotNull Compile a "where not null" clause.
+func (grammarSQL SQL) whereNotNull(query *dbal.Query, where dbal.Where) string {
+	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
 }
 
 // Utils for compiling

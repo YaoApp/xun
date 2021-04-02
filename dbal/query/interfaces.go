@@ -24,8 +24,12 @@ type Query interface {
 	// defined in the from.go file
 	From(name string) Query
 
+	// defined in the join.go file
+	Join(table string, first interface{}, args ...interface{}) Query
+
 	// defined in the where.go file
 	Where(column interface{}, args ...interface{}) Query
+	WhereColumn(first interface{}, args ...interface{}) Query
 	WhereNull(column interface{}, args ...interface{}) Query
 	WhereNotNull(column interface{}, args ...interface{}) Query
 

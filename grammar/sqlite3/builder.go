@@ -27,9 +27,10 @@ func (grammarSQL SQLite3) SQLAddIndex(index *dbal.Index) string {
 		columns = append(columns, quoter.ID(column.Name))
 	}
 
+	name := fmt.Sprintf("%s_%s", index.TableName, index.Name)
 	sql := fmt.Sprintf(
 		"CREATE %s %s ON %s (%s)",
-		typ, quoter.ID(index.Name), quoter.ID(index.TableName), strings.Join(columns, ","))
+		typ, quoter.ID(name), quoter.ID(index.TableName), strings.Join(columns, ","))
 
 	return sql
 }
