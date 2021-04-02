@@ -38,13 +38,15 @@ type Grammar interface {
 	InsertGetID(tableName string, values []xun.R, sequence string) (int64, error)
 
 	CompileSelect(query *Query) string
+	CompileSelectOffset(query *Query, offset *int) string
 }
 
 // Quoter the database quoting query text intrface
 type Quoter interface {
 	Bind(db *sqlx.DB, dbRead ...*sqlx.DB) Quoter
-	ID(name string) string
-	VAL(v interface{}) string // operates on both string and []byte and int or other types.
+	ID(value string) string
+	VAL(value interface{}) string // operates on both string and []byte and int or other types.
+	Wrap(value interface{}) string
 	IsExpression(value interface{}) bool
 	Parameter(value interface{}, num int) string
 	Parameterize(values []interface{}, offset int) string

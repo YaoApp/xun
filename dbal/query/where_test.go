@@ -84,7 +84,7 @@ func TestWhereColumnIsClosure(t *testing.T) {
 
 	// checking bindings
 	bindings := qb.GetBindings()
-	assert.Equal(t, 6, len(bindings), "the bindings should have 3 items")
+	assert.Equal(t, 6, len(bindings), "the bindings should have 6 items")
 	if len(bindings) == 6 {
 		assert.Equal(t, "%@yao.run", bindings[0].(string), "the 1st binding should be %@yao.run")
 		assert.Equal(t, int(10), bindings[1].(int), "the 2nd binding should be 10")
@@ -101,6 +101,46 @@ func TestWhereColumnIsClosure(t *testing.T) {
 		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
 	}
 }
+
+func TestWhereColumnIsQueryable(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("email", "like", "%@yao.run").
+		Where(func(sub Query) {
+			sub.From("table_test_where").
+				SelectRaw("AVG(score) as score").
+				Where("score", ">", 49.15)
+		}, "<", 90.15).
+		Where("score", ">", 97.15)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and (select AVG(score) as score from "table_test_where" where "score" > $2) < $3 and "score" > $4`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and (select AVG(score) as score from `table_test_where` where `score` > ?) < ? and `score` > ?", sql, "the query sql not equal")
+	}
+
+	// checking bindings
+	bindings := qb.GetBindings()
+	assert.Equal(t, 4, len(bindings), "the bindings should have 4 items")
+	if len(bindings) == 4 {
+		assert.Equal(t, "%@yao.run", bindings[0].(string), "the 1st binding should be %@yao.run")
+		assert.Equal(t, float64(49.15), bindings[1].(float64), "the 2nd binding should be 49.15")
+		assert.Equal(t, float64(90.15), bindings[2].(float64), "the 2nd binding should be 90.15")
+		assert.Equal(t, float64(97.15), bindings[3].(float64), "the 2nd binding should be 97.15")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should has 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
+	}
+
+}
+
 func TestWhereValueIsClosure(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()

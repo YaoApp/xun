@@ -17,7 +17,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, boolean := builder.wherePrepare(args...)
+	operator, value, boolean, offset := builder.wherePrepare(args...)
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
@@ -44,14 +44,17 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 		return builder
 	}
 
-	//  Where( func(qb Query){  qb.Where("name", "Ken")... }, ">", 5)
+	// Where( func(qb Query){ qb.Where("name", "Ken")... }, 5)
+	// Where( func(qb Query){ qb.Where("name", "Ken")... }, 5, "or")
+	// Where( func(qb Query){ qb.Where("name", "Ken")... }, ">", 5)
+	// Where( func(qb Query){ qb.Where("name", "Ken")... }, ">", 5, "or")
 	// If the column is a Closure instance and there is an operator value, we will
 	// assume the developer wants to run a subquery and then compare the result
 	// of that subquery with the given value that was provided to the method.
 	if builder.isQueryable(column) && len(args) >= 1 {
-		sub, bindings := builder.createSub(column)
+		sub, bindings, whereOffset := builder.createSub(column)
 		builder.Query.AddBinding("where", bindings)
-		builder.Where(fmt.Sprintf("(%s)", sub), operator, value, boolean)
+		builder.Where(dbal.Raw(fmt.Sprintf("(%s)", sub)), operator, value, boolean, whereOffset)
 		return builder
 	}
 
@@ -86,16 +89,15 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Now that we are working with just a simple query we can put the elements
 	// in our array and add the query binding to our array of bindings that
 	// will be bound to each SQL statements when it is finally executed.
-	if columnKind == reflect.String {
-		builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
-			Type:     queryType,
-			Column:   column.(string),
-			Operator: operator,
-			Boolean:  boolean,
-			Value:    value,
-		})
-		builder.Query.AddBinding("where", builder.flattenValue(value))
-	}
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:     queryType,
+		Column:   column,
+		Operator: operator,
+		Boolean:  boolean,
+		Value:    value,
+		Offset:   offset,
+	})
+	builder.Query.AddBinding("where", builder.flattenValue(value))
 	return builder
 }
 
@@ -110,8 +112,8 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 			for _, args := range columns {
 				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 					column := args[0].(string)
-					operator, value, boolean := builder.wherePrepare(args[1:]...)
-					qb.Where(column, operator, value, boolean)
+					operator, value, boolean, offset := builder.wherePrepare(args[1:]...)
+					qb.Where(column, operator, value, boolean, offset)
 				}
 			}
 		}, boolean)
@@ -121,7 +123,7 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 }
 
 // createSub Creates a subquery and parse it.
-func (builder *Builder) createSub(subquery interface{}) (string, []interface{}) {
+func (builder *Builder) createSub(subquery interface{}) (string, []interface{}, int) {
 	if builder.isClosure(subquery) {
 		callback := subquery.(func(qb Query))
 		qb := builder.forSubQuery()
@@ -132,17 +134,19 @@ func (builder *Builder) createSub(subquery interface{}) (string, []interface{}) 
 }
 
 // Parse the subquery into SQL and bindings.
-func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}) {
+func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}, int) {
 
 	switch subquery.(type) {
 	case *Builder:
 		qb := builder.prependDatabaseNameIfCrossDatabaseQuery(subquery.(*Builder))
-		return qb.ToSQL(), qb.GetBindings()
-	case Query:
-		qb := subquery.(Query)
-		return qb.ToSQL(), qb.GetBindings()
+		offset := len(utils.Flatten(builder.Query.Bindings))
+		bindings := qb.GetBindings()
+		whereOffset := offset + len(utils.Flatten(bindings))
+		return builder.Grammar.CompileSelectOffset(qb.Query, &offset), bindings, whereOffset
+	case dbal.Expression:
+		return subquery.(dbal.Expression).GetValue(), []interface{}{}, 0
 	case string:
-		return subquery.(string), []interface{}{}
+		return subquery.(string), []interface{}{}, 0
 	}
 
 	panic(fmt.Errorf("a subquery must be a query builder instance, a Closure, or a string"))
@@ -206,16 +210,18 @@ func (builder *Builder) forNestedWhere() *Builder {
 	return new
 }
 
-// wherePrepare Prepare the value, operator and boolean for a where clause.
-func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, string) {
+// wherePrepare Prepare the value, operator, boolean and offset for a where clause.
+func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, string, int) {
+
 	var operator string = "="
 	var value interface{} = nil
 	var boolean string = "and"
+	var offset = 1
 
 	// Where("score", 5)
 	if len(args) == 1 {
 		value = args[0]
-		return operator, value, boolean
+		return operator, value, boolean, offset
 	}
 
 	// Where("vote", ">", 5)
@@ -231,7 +237,12 @@ func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, 
 		boolean = args[2].(string)
 	}
 
-	return operator, value, boolean
+	// Where("vote", ">", 5, "and", 5)
+	if len(args) == 4 && reflect.TypeOf(args[3]).Kind() == reflect.Int {
+		offset = args[3].(int)
+	}
+
+	return operator, value, boolean, offset
 }
 
 func (builder *Builder) isClosure(v interface{}) bool {
@@ -263,7 +274,9 @@ func (builder *Builder) isQueryable(value interface{}) bool {
 		typ = reflectValue.Type()
 		kind = typ.Kind()
 	}
-	return (kind == reflect.Interface && typ.Name() == "Query") ||
+
+	return builder.isClosure(value) ||
+		(kind == reflect.Interface && typ.Name() == "Query") ||
 		(kind == reflect.Struct && typ.Name() == "Builder")
 }
 
@@ -345,7 +358,7 @@ func (builder *Builder) OrWhereNotIn() {
 
 // WhereNull Add a "where null" clause to the query.
 func (builder *Builder) WhereNull(column interface{}, args ...interface{}) *Builder {
-	boolean, not, _ := builder.wherePrepare(args...)
+	boolean, not, _, _ := builder.wherePrepare(args...)
 	typ := "null"
 	if !utils.IsNil(not) && reflect.TypeOf(not).Kind() == reflect.Bool {
 		if reflect.ValueOf(not).Bool() {
@@ -385,7 +398,7 @@ func (builder *Builder) OrWhereNull(column interface{}) *Builder {
 
 // WhereNull Add a "where not null" clause to the query.
 func (builder *Builder) whereNotNull(column interface{}, args ...interface{}) *Builder {
-	boolean, _, _ := builder.wherePrepare(args...)
+	boolean, _, _, _ := builder.wherePrepare(args...)
 	return builder.WhereNull(column, boolean, true)
 }
 

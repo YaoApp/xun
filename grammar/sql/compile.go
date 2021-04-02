@@ -7,14 +7,14 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
-// CompileSelect Compile a select query into SQL. ( Interface )
+// CompileSelect Compile a select query into SQL.
 func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
-	bindingNum := 0
-	return grammarSQL.compileSelect(query, &bindingNum)
+	bindingOffset := 0
+	return grammarSQL.CompileSelectOffset(query, &bindingOffset)
 }
 
-// compileSelect Compile a select query into SQL.
-func (grammarSQL SQL) compileSelect(query *dbal.Query, bindingNum *int) string {
+// CompileSelectOffset Compile a select query into SQL.
+func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string {
 
 	sqls := map[string]string{}
 
@@ -34,7 +34,7 @@ func (grammarSQL SQL) compileSelect(query *dbal.Query, bindingNum *int) string {
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
 	// sqls["joins"] = grammarSQL.compileJoins()
-	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, bindingNum)
+	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	// sqls["groups"] = grammarSQL.compileGroups()
 	// sqls["havings"] = grammarSQL.compileHavings()
 	// sqls["orders"] = grammarSQL.compileOrders()
@@ -80,7 +80,7 @@ func (grammarSQL SQL) compileFrom(query *dbal.Query, table dbal.Name) string {
 	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname()))
 }
 
-func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingNum *int) string {
+func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
 	// for actually creating the where clauses SQL. This helps keep the code nice
@@ -98,13 +98,13 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		boolen := strings.ToLower(where.Boolean)
 		switch where.Type {
 		case "basic":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(query, where, bindingNum)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(query, where, bindingOffset)))
 			break
 		case "sub":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub(query, where, bindingNum)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub(query, where, bindingOffset)))
 			break
 		case "nested":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNested(query, where, bindingNum)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNested(query, where, bindingOffset)))
 			break
 		}
 	}
@@ -114,23 +114,23 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 	return fmt.Sprintf("%s %s", conjunction, grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
-func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingNum *int) string {
-	*bindingNum = *bindingNum + 1
-	value := grammarSQL.Parameter(where.Value, *bindingNum)
+func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	*bindingOffset = *bindingOffset + where.Offset
+	value := grammarSQL.Parameter(where.Value, *bindingOffset)
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
-	return fmt.Sprintf("%s %s %s", grammarSQL.ID(where.Column), operator, value)
+	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
 }
 
-func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingNum *int) string {
-	selectSQL := grammarSQL.compileSelect(where.Query, bindingNum)
-	return fmt.Sprintf("%s %s (%s)", grammarSQL.ID(where.Column), where.Operator, selectSQL)
+func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
+	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
 }
 
-func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingNum *int) string {
+func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 
 	// $offset = $query instanceof JoinClause ? 3 : 6;
 	offset := 6
-	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres, bindingNum)
+	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres, bindingOffset)
 	end := len(sql)
 	if end > offset {
 		sql = sql[offset:end]

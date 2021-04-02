@@ -159,12 +159,13 @@ type Expression struct {
 // Where The where constraint for the query.
 type Where struct {
 	Type     string // basic, nested, sub
-	Column   string
+	Column   interface{}
 	Operator string
 	Boolean  string
 	Wheres   []Where
 	Query    *Query
 	Value    interface{}
+	Offset   int
 }
 
 // Query the query builder

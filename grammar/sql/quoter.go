@@ -39,28 +39,28 @@ func (quoter *Quoter) Write() dbal.Quoter {
 }
 
 // ID quoting query Identifier (`id`)
-func (quoter *Quoter) ID(name string) string {
-	name = strings.ReplaceAll(name, "`", "")
-	name = strings.ReplaceAll(name, "\n", "")
-	name = strings.ReplaceAll(name, "\r", "")
-	return "`" + name + "`"
+func (quoter *Quoter) ID(value string) string {
+	value = strings.ReplaceAll(value, "`", "")
+	value = strings.ReplaceAll(value, "\n", "")
+	value = strings.ReplaceAll(value, "\r", "")
+	return "`" + value + "`"
 }
 
 // VAL quoting query value ( 'value' )
-func (quoter *Quoter) VAL(v interface{}) string {
+func (quoter *Quoter) VAL(value interface{}) string {
 	input := ""
-	switch v.(type) {
+	switch value.(type) {
 	case *string:
-		input = fmt.Sprintf("%s", utils.StringVal(v.(*string)))
+		input = fmt.Sprintf("%s", utils.StringVal(value.(*string)))
 		break
 	case string:
-		input = fmt.Sprintf("%s", v)
+		input = fmt.Sprintf("%s", value)
 		break
 	case int, int16, int32, int64, float64, float32:
-		input = fmt.Sprintf("%d", v)
+		input = fmt.Sprintf("%d", value)
 		break
 	default:
-		input = fmt.Sprintf("%v", v)
+		input = fmt.Sprintf("%v", value)
 	}
 
 	input = strings.ReplaceAll(input, "'", "\\'")
@@ -69,9 +69,28 @@ func (quoter *Quoter) VAL(v interface{}) string {
 	return "'" + input + "'"
 }
 
+// Wrap a value in keyword identifiers.
+func (quoter *Quoter) Wrap(value interface{}) string {
+	switch value.(type) {
+	case dbal.Expression:
+		return value.(dbal.Expression).GetValue()
+	case dbal.Name:
+		return quoter.ID(value.(dbal.Name).Fullname())
+	case string:
+		return quoter.ID(dbal.NewName(value.(string)).Fullname())
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
 // IsExpression Determine if the given value is a raw expression.
 func (quoter *Quoter) IsExpression(value interface{}) bool {
-	return false
+	switch value.(type) {
+	case dbal.Expression:
+		return true
+	default:
+		return false
+	}
 }
 
 // Parameter Get the appropriate query parameter place-holder for a value.

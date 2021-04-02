@@ -44,6 +44,20 @@ func (quoter Quoter) VAL(v interface{}) string {
 	return "'" + input + "'"
 }
 
+// Wrap a value in keyword identifiers.
+func (quoter *Quoter) Wrap(value interface{}) string {
+	switch value.(type) {
+	case dbal.Expression:
+		return value.(dbal.Expression).GetValue()
+	case dbal.Name:
+		return quoter.ID(value.(dbal.Name).Fullname())
+	case string:
+		return quoter.ID(dbal.NewName(value.(string)).Fullname())
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
 // Parameter Get the appropriate query parameter place-holder for a value.
 func (quoter *Quoter) Parameter(value interface{}, num int) string {
 	if quoter.IsExpression(value) {
