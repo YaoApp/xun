@@ -214,6 +214,50 @@ func TestWhereValueIsExpression(t *testing.T) {
 
 }
 
+func TestWhereNull(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("deleted_at", nil)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "deleted_at" is null`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `deleted_at` is null", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 0, len(bindings), "the bindings should have none item")
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
+
+func TestWhereNotNull(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		WhereNotNull("email")
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" is not null`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` is not null", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 0, len(bindings), "the bindings should have none item")
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
+
 // clean the test data
 func TestWhereClean(t *testing.T) {
 	builder := getTestSchemaBuilder()

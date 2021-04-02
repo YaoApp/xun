@@ -100,6 +100,10 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		case "basic":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(query, where, bindingOffset)))
 			break
+		case "null":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNull(query, where)))
+		case "notnull":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNotNull(query, where)))
 		case "sub":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub(query, where, bindingOffset)))
 			break
@@ -119,6 +123,14 @@ func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOff
 	value := grammarSQL.Parameter(where.Value, *bindingOffset)
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
 	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
+}
+
+func (grammarSQL SQL) whereNull(query *dbal.Query, where dbal.Where) string {
+	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
+}
+
+func (grammarSQL SQL) whereNotNull(query *dbal.Query, where dbal.Where) string {
+	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
 }
 
 func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {

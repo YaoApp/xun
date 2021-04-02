@@ -369,8 +369,8 @@ func (builder *Builder) OrWhereNotIn() {
 }
 
 // WhereNull Add a "where null" clause to the query.
-func (builder *Builder) WhereNull(column interface{}, args ...interface{}) *Builder {
-	boolean, not, _, _ := builder.wherePrepare(args...)
+func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query {
+	_, not, boolean, _ := builder.wherePrepare(args...)
 	typ := "null"
 	if !utils.IsNil(not) && reflect.TypeOf(not).Kind() == reflect.Bool {
 		if reflect.ValueOf(not).Bool() {
@@ -381,7 +381,7 @@ func (builder *Builder) WhereNull(column interface{}, args ...interface{}) *Buil
 	reflectColumn := reflect.ValueOf(column)
 	columnKind := reflectColumn.Kind()
 
-	columns := []string{}
+	columns := []interface{}{}
 	if columnKind == reflect.Array || columnKind == reflect.Slice {
 		reflectColumn = reflect.Indirect(reflectColumn)
 		for i := 0; i < reflectColumn.Len(); i++ {
@@ -404,18 +404,18 @@ func (builder *Builder) WhereNull(column interface{}, args ...interface{}) *Buil
 }
 
 // OrWhereNull Add an "or where null" clause to the query.
-func (builder *Builder) OrWhereNull(column interface{}) *Builder {
+func (builder *Builder) OrWhereNull(column interface{}) Query {
 	return builder.WhereNull(column, "or")
 }
 
-// WhereNull Add a "where not null" clause to the query.
-func (builder *Builder) whereNotNull(column interface{}, args ...interface{}) *Builder {
+// WhereNotNull Add a "where not null" clause to the query.
+func (builder *Builder) WhereNotNull(column interface{}, args ...interface{}) Query {
 	boolean, _, _, _ := builder.wherePrepare(args...)
 	return builder.WhereNull(column, boolean, true)
 }
 
 // OrWhereNotNull Add an "or where not null" clause to the query.
-func (builder *Builder) OrWhereNotNull(column interface{}) *Builder {
+func (builder *Builder) OrWhereNotNull(column interface{}) Query {
 	return builder.WhereNull(column, "or", true)
 }
 

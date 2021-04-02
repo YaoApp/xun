@@ -26,6 +26,8 @@ type Query interface {
 
 	// defined in the where.go file
 	Where(column interface{}, args ...interface{}) Query
+	WhereNull(column interface{}, args ...interface{}) Query
+	WhereNotNull(column interface{}, args ...interface{}) Query
 
 	// defined in the insert.go file
 	Insert(v interface{}) error
