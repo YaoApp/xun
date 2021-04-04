@@ -38,7 +38,7 @@ func (builder *Builder) MustMin(columns ...interface{}) xun.N {
 
 // Max Retrieve the maximum value of a given column.
 func (builder *Builder) Max(columns ...interface{}) (xun.N, error) {
-	return builder.numericAggregate("min", columns)
+	return builder.numericAggregate("max", columns)
 }
 
 // MustMax Retrieve the maximum value of a given column.
@@ -50,7 +50,7 @@ func (builder *Builder) MustMax(columns ...interface{}) xun.N {
 
 // Sum Retrieve the sum of the values of a given column.
 func (builder *Builder) Sum(columns ...interface{}) (xun.N, error) {
-	return builder.numericAggregate("min", columns)
+	return builder.numericAggregate("sum", columns)
 }
 
 // MustSum Retrieve the sum of the values of a given column.
@@ -62,7 +62,7 @@ func (builder *Builder) MustSum(columns ...interface{}) xun.N {
 
 // Avg Retrieve the average of the values of a given column.
 func (builder *Builder) Avg(columns ...interface{}) (xun.N, error) {
-	return builder.numericAggregate("min", columns)
+	return builder.numericAggregate("avg", columns)
 }
 
 // MustAvg Retrieve the average of the values of a given column.

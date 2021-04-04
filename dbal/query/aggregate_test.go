@@ -19,13 +19,46 @@ func TestAggregateMustCount(t *testing.T) {
 	assert.Equal(t, int64(4), value, "the return value should be 4")
 }
 
-// @todo: test union
+func TestAggregateMustMin(t *testing.T) {
+	NewTableFoAggregateTest()
+	qb := getTestBuilder()
+	value := qb.Table("table_test_aggregate_t1").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "name").
+		MustMin("score")
 
-// @todo: test unionOrders
+	assert.Equal(t, float64(48.12), value.MustToFixed(2), "the return value should be 48.12")
+}
 
-// @todo: test unionLimit
+func TestAggregateMustMax(t *testing.T) {
+	NewTableFoAggregateTest()
+	qb := getTestBuilder()
+	value := qb.Table("table_test_aggregate_t1").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "name").
+		MustMax("vote")
+	assert.Equal(t, 125, value.MustInt(), "the return value should be 125")
+}
+func TestAggregateMustSum(t *testing.T) {
+	NewTableFoAggregateTest()
+	qb := getTestBuilder()
+	value := qb.Table("table_test_aggregate_t1").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "name").
+		MustSum("score")
 
-// @todo: test unionOffset
+	assert.Equal(t, float64(308.27), value.MustToFixed(2), "the return value should be 308.27")
+}
+
+func TestAggregateMustAvg(t *testing.T) {
+	NewTableFoAggregateTest()
+	qb := getTestBuilder()
+	value := qb.Table("table_test_aggregate_t1").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "name").
+		MustAvg("score")
+	assert.Equal(t, float64(77.07), value.MustToFixed(2), "the return value should be 77.07")
+}
 
 // clean the test data
 func TestAggregateClean(t *testing.T) {

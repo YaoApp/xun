@@ -17,6 +17,14 @@ type Query interface {
 	// defined in the aggregate.go file
 	Count(columns ...interface{}) (int64, error)
 	MustCount(columns ...interface{}) int64
+	Min(columns ...interface{}) (xun.N, error)
+	MustMin(columns ...interface{}) xun.N
+	Max(columns ...interface{}) (xun.N, error)
+	MustMax(columns ...interface{}) xun.N
+	Sum(columns ...interface{}) (xun.N, error)
+	MustSum(columns ...interface{}) xun.N
+	Avg(columns ...interface{}) (xun.N, error)
+	MustAvg(columns ...interface{}) xun.N
 
 	ToSQL() string
 	GetBindings() []interface{}
