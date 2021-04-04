@@ -174,8 +174,14 @@ type Where struct {
 type Join struct {
 	Type       string // inner, left, right, cross
 	Table      Name   // The table the join clause is joining to.
-	TableQuery *Query // Join sub query
 	Query      *Query
+	TableQuery *Query // Join sub query
+}
+
+// Union the query union statement
+type Union struct {
+	All   bool // Union all
+	Query *Query
 }
 
 // Query the query builder
@@ -185,6 +191,10 @@ type Query struct {
 	Columns      []interface{}            // The columns that should be returned. (Name or Expression)
 	Wheres       []Where                  // The where constraints for the query.
 	Joins        []Join                   // The table joins for the query.
+	Unions       []Union                  // The query union statements.
+	UnionLimit   int                      // The maximum number of union records to return.
+	UnionOffset  int                      // The number of union records to skip.
+	UnionOrders  []string                 // The orderings for the union query.
 	Bindings     map[string][]interface{} // The current query value bindings.
 	BindingKeys  []string                 // The  query bindings keys
 	Distinct     bool                     // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false

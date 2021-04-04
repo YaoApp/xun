@@ -24,6 +24,10 @@ type Query interface {
 	// defined in the from.go file
 	From(name string) Query
 
+	// defined in the union.go file
+	Union(query interface{}, all ...bool) Query
+	UnionAll(query interface{}) Query
+
 	// defined in the join.go file
 	Join(table string, first interface{}, args ...interface{}) Query
 

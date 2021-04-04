@@ -121,6 +121,11 @@ func (quoter *Quoter) WrapTable(value interface{}) string {
 	}
 }
 
+// WrapUnion a union subquery in parentheses.
+func (quoter *Quoter) WrapUnion(sql string) string {
+	return fmt.Sprintf("(%s)", sql)
+}
+
 // IsExpression Determine if the given value is a raw expression.
 func (quoter *Quoter) IsExpression(value interface{}) bool {
 	switch value.(type) {

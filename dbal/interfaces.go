@@ -48,6 +48,7 @@ type Quoter interface {
 	VAL(value interface{}) string // operates on both string and []byte and int or other types.
 	Wrap(value interface{}) string
 	WrapTable(value interface{}) string
+	WrapUnion(sql string) string
 	IsExpression(value interface{}) bool
 	Parameter(value interface{}, num int) string
 	Parameterize(values []interface{}, offset int) string

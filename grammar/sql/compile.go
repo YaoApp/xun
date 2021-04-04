@@ -50,9 +50,39 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 		}
 	}
 
+	// Compile unions
+	if len(query.Unions) > 0 {
+		sql = fmt.Sprintf("%s %s", grammarSQL.WrapUnion(sql), grammarSQL.compileUnions(query, query.Unions, offset))
+	}
+
 	// reset columns
 	query.Columns = columns
 	return strings.Trim(sql, " ")
+}
+
+// compileUnions  Compile the "union" queries attached to the main query.
+func (grammarSQL SQL) compileUnions(query *dbal.Query, unions []dbal.Union, offset *int) string {
+	sql := ""
+	for _, union := range unions {
+		sql = sql + grammarSQL.compileUnion(query, union, offset)
+	}
+
+	// unionOrders
+
+	// unionLimit
+
+	// unionOffset
+
+	return strings.TrimPrefix(sql, " ")
+}
+
+// compileUnion Compile a single union statement.
+func (grammarSQL SQL) compileUnion(query *dbal.Query, union dbal.Union, offset *int) string {
+	conjunction := "union "
+	if union.All {
+		conjunction = "union all "
+	}
+	return fmt.Sprintf("%s%s", conjunction, grammarSQL.WrapUnion(grammarSQL.CompileSelectOffset(union.Query, offset)))
 }
 
 // compileJoins Compile the "join" portions of the query.

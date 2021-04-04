@@ -85,7 +85,7 @@ func (grammarSQL SQLite3) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, 
 // New Create a new mysql grammar inteface
 func New() dbal.Grammar {
 	sqlite := SQLite3{
-		SQL: sql.NewSQL(&sql.Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}),
 	}
 	sqlite.Driver = "sqlite3"
 	sqlite.IndexTypes = map[string]string{
