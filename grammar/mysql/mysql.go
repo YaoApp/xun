@@ -81,6 +81,9 @@ func (grammarSQL MySQL) OnConnected() error {
 		grammarSQL.DB.Exec("SET GLOBAL innodb_file_per_table=`ON`;")
 		grammarSQL.DB.Exec("SET GLOBAL innodb_large_prefix=`ON`;")
 	}
+
+	// Auto set sql mode
+	grammarSQL.DB.Exec("SET GLOBAL sql_mode=`STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION`;")
 	return nil
 }
 

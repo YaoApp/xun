@@ -49,6 +49,10 @@ type Query interface {
 	WhereNull(column interface{}, args ...interface{}) Query
 	WhereNotNull(column interface{}, args ...interface{}) Query
 
+	// defined in the group.go file
+	GroupBy(groups ...interface{}) Query
+	GroupByRaw(expression string, bindings ...interface{}) Query
+
 	// defined in the insert.go file
 	Insert(v interface{}) error
 	MustInsert(v interface{})

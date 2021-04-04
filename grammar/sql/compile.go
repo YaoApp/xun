@@ -39,7 +39,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
 	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
-	// sqls["groups"] = grammarSQL.compileGroups()
+	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
 	// sqls["havings"] = grammarSQL.compileHavings()
 	// sqls["orders"] = grammarSQL.compileOrders()
 	// sqls["limit"] = grammarSQL.compileLimit()
@@ -162,6 +162,13 @@ func (grammarSQL SQL) compileFrom(query *dbal.Query, table dbal.Name) string {
 		return fmt.Sprintf("from %s as %s", grammarSQL.ID(table.Fullname()), grammarSQL.ID(table.As()))
 	}
 	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname()))
+}
+
+func (grammarSQL SQL) compileGroups(query *dbal.Query, groups []interface{}) string {
+	if len(groups) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("group by %s", grammarSQL.Columnize(groups))
 }
 
 func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {

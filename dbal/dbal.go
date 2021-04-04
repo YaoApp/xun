@@ -66,7 +66,10 @@ func NewQuery() *Query {
 		IsJoinClause:    false,
 		Distinct:        false,
 		DistinctColumns: []interface{}{},
+		Columns:         []interface{}{},
 		Aggregate:       Aggregate{},
+		Groups:          []interface{}{},
+		Havings:         []Having{},
 		Operators: []string{
 			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
 			"like", "like binary", "not like", "ilike",

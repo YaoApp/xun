@@ -190,6 +190,13 @@ type Aggregate struct {
 	Columns []interface{} // The columns for Aggregate
 }
 
+// Having The having constraints for the query.
+type Having struct {
+	Column   interface{}
+	Operator string
+	Boolean  string
+}
+
 // Query the query builder
 type Query struct {
 	Operators       []string                 // All of the available clause operators.
@@ -202,6 +209,8 @@ type Query struct {
 	UnionLimit      int                      // The maximum number of union records to return.
 	UnionOffset     int                      // The number of union records to skip.
 	UnionOrders     []string                 // The orderings for the union query.
+	Groups          []interface{}            // The groupings for the query.
+	Havings         []Having                 // The having constraints for the query.
 	Bindings        map[string][]interface{} // The current query value bindings.
 	BindingKeys     []string                 // The  query bindings keys
 	Distinct        bool                     // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false

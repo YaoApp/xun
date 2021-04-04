@@ -1,11 +1,21 @@
 package query
 
+import "github.com/yaoapp/xun/dbal"
+
 // GroupBy Add a "group by" clause to the query.
-func (builder *Builder) GroupBy() {
+func (builder *Builder) GroupBy(groups ...interface{}) Query {
+	builder.Query.Groups = append(builder.Query.Groups, groups...)
+	return builder
 }
 
 // GroupByRaw Add a raw groupBy clause to the query.
-func (builder *Builder) GroupByRaw() {
+func (builder *Builder) GroupByRaw(expression string, bindings ...interface{}) Query {
+	builder.Query.Groups = []interface{}{}
+	builder.Query.Groups = append(builder.Query.Groups, dbal.Raw(expression))
+	if len(bindings) > 0 {
+		builder.Query.AddBinding("groupBy", bindings)
+	}
+	return builder
 }
 
 // Having Add a "having" clause to the query.

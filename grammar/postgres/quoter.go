@@ -57,6 +57,9 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 		return quoter.ID(value.(dbal.Name).Name)
 	case string:
 		str := value.(string)
+		if str == "*" {
+			return str
+		}
 		if strings.Contains(str, ".") {
 			arrs := strings.Split(str, ".")
 			tab := arrs[0]
