@@ -184,19 +184,27 @@ type Union struct {
 	Query *Query
 }
 
+// Aggregate An aggregate function and column to be run.
+type Aggregate struct {
+	Func    string        // AVG, COUNT, MIN, MAX, SUM
+	Columns []interface{} // The columns for Aggregate
+}
+
 // Query the query builder
 type Query struct {
-	Operators    []string                 // All of the available clause operators.
-	From         Name                     // The table which the query is targeting.
-	Columns      []interface{}            // The columns that should be returned. (Name or Expression)
-	Wheres       []Where                  // The where constraints for the query.
-	Joins        []Join                   // The table joins for the query.
-	Unions       []Union                  // The query union statements.
-	UnionLimit   int                      // The maximum number of union records to return.
-	UnionOffset  int                      // The number of union records to skip.
-	UnionOrders  []string                 // The orderings for the union query.
-	Bindings     map[string][]interface{} // The current query value bindings.
-	BindingKeys  []string                 // The  query bindings keys
-	Distinct     bool                     // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false
-	IsJoinClause bool                     // Determine if the query is a join clause.
+	Operators       []string                 // All of the available clause operators.
+	From            Name                     // The table which the query is targeting.
+	Columns         []interface{}            // The columns that should be returned. (Name or Expression)
+	Aggregate       Aggregate                // An aggregate function and column to be run.
+	Wheres          []Where                  // The where constraints for the query.
+	Joins           []Join                   // The table joins for the query.
+	Unions          []Union                  // The query union statements.
+	UnionLimit      int                      // The maximum number of union records to return.
+	UnionOffset     int                      // The number of union records to skip.
+	UnionOrders     []string                 // The orderings for the union query.
+	Bindings        map[string][]interface{} // The current query value bindings.
+	BindingKeys     []string                 // The  query bindings keys
+	Distinct        bool                     // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false
+	DistinctColumns []interface{}            // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct.
+	IsJoinClause    bool                     // Determine if the query is a join clause.
 }

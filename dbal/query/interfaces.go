@@ -14,6 +14,10 @@ type Query interface {
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
 
+	// defined in the aggregate.go file
+	Count(columns ...interface{}) (int64, error)
+	MustCount(columns ...interface{}) int64
+
 	ToSQL() string
 	GetBindings() []interface{}
 

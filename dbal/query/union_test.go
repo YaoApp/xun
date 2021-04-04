@@ -62,7 +62,8 @@ func TestUnionUnionAll(t *testing.T) {
 // clean the test data
 func TestUnionClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
-	builder.DropTableIfExists("table_test_union")
+	builder.DropTableIfExists("table_test_union_t1")
+	builder.DropTableIfExists("table_test_union_t2")
 }
 
 func NewTableFoUnionTest() {

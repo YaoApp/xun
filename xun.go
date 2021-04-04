@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/yaoapp/xun/utils"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
@@ -102,4 +105,73 @@ func MapToR(row map[string]interface{}) R {
 		}
 	}
 	return res
+}
+
+// ToFixed the return value is the type of float64 and keeps the given decimal places
+func (n N) ToFixed(places int) (float64, error) {
+	if n.Value == nil {
+		return 0, fmt.Errorf("the value is nil")
+	}
+	format := "%" + fmt.Sprintf(".%df", places)
+	return strconv.ParseFloat(fmt.Sprintf(format, n.Value), 64)
+}
+
+// MustToFixed the return value is the type of float64 and keeps the given decimal places
+func (n N) MustToFixed(places int) float64 {
+	value, err := n.ToFixed(places)
+	utils.PanicIF(err)
+	return value
+}
+
+// Int64 the return value is the type of int64 and remove the decimal
+func (n N) Int64() (int64, error) {
+	if n.Value == nil {
+		return 0, fmt.Errorf("the value is nil")
+	}
+	return strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 64)
+}
+
+// MustInt64  the return value is the type of int64 and remove the decimal
+func (n N) MustInt64() int64 {
+	value, err := n.Int64()
+	utils.PanicIF(err)
+	return value
+}
+
+// Int32 the return value is the type of int64 and remove the decimal
+func (n N) Int32() (int32, error) {
+	if n.Value == nil {
+		return 0, fmt.Errorf("the value is nil")
+	}
+	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(value), nil
+}
+
+// MustInt32  the return value is the type of int64 and remove the decimal
+func (n N) MustInt32() int32 {
+	value, err := n.Int32()
+	utils.PanicIF(err)
+	return value
+}
+
+// Int the return value is the type of int and remove the decimal
+func (n N) Int() (int, error) {
+	if n.Value == nil {
+		return 0, fmt.Errorf("the value is nil")
+	}
+	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int(value), nil
+}
+
+// MustInt  the return value is the type of int and remove the decimal
+func (n N) MustInt() int {
+	value, err := n.Int()
+	utils.PanicIF(err)
+	return value
 }

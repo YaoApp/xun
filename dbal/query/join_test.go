@@ -51,7 +51,8 @@ func TestJoinColumnIsString(t *testing.T) {
 // clean the test data
 func TestJoinClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
-	builder.DropTableIfExists("table_test_join")
+	builder.DropTableIfExists("table_test_join_t1")
+	builder.DropTableIfExists("table_test_join_t2")
 }
 
 func NewTableFoJoinTest() {

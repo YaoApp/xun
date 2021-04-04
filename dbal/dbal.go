@@ -63,8 +63,10 @@ func NewName(fullname string, prefix ...string) Name {
 // NewQuery make a new Query instance
 func NewQuery() *Query {
 	query := Query{
-		IsJoinClause: false,
-		Distinct:     false,
+		IsJoinClause:    false,
+		Distinct:        false,
+		DistinctColumns: []interface{}{},
+		Aggregate:       Aggregate{},
 		Operators: []string{
 			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
 			"like", "like binary", "not like", "ilike",

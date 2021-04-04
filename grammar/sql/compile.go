@@ -30,7 +30,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// see if that component exists. If it does we'll just call the compiler
 	// function for the component which is responsible for making the SQL.
 
-	// sqls["aggregate"] = grammarSQL.compileAggregate()
+	sqls["aggregate"] = grammarSQL.compileAggregate(query, query.Aggregate)
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
 	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
@@ -58,6 +58,22 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// reset columns
 	query.Columns = columns
 	return strings.Trim(sql, " ")
+}
+
+// compileAggregate Compile an aggregated select clause.
+func (grammarSQL SQL) compileAggregate(query *dbal.Query, aggregate dbal.Aggregate) string {
+
+	column := grammarSQL.Columnize(aggregate.Columns)
+
+	// If the query has a "distinct" constraint and we're not asking for all columns
+	// we need to prepend "distinct" onto the column name so that the query takes
+	// it into account when it performs the aggregating operations on the data.
+	if len(query.DistinctColumns) > 0 {
+		column = fmt.Sprintf("distinct %s", grammarSQL.Columnize(query.DistinctColumns))
+	} else if query.Distinct && column != "*" {
+		column = fmt.Sprintf("distinct %s", column)
+	}
+	return fmt.Sprintf("select %s(%s) as aggregate", aggregate.Func, column)
 }
 
 // compileUnions  Compile the "union" queries attached to the main query.
@@ -113,9 +129,9 @@ func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}) s
 	// If the query is actually performing an aggregating select, we will let that
 	// compiler handle the building of the select clauses, as it will need some
 	// more syntax that is best handled by that function to keep things neat.
-	// if (len(query.Aggregate) > 0 ) {
-	//     return;
-	// }
+	if query.Aggregate.Func != "" {
+		return ""
+	}
 
 	sql := "select"
 	if query.Distinct {
