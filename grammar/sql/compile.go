@@ -63,6 +63,10 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 // compileAggregate Compile an aggregated select clause.
 func (grammarSQL SQL) compileAggregate(query *dbal.Query, aggregate dbal.Aggregate) string {
 
+	if aggregate.Func == "" {
+		return ""
+	}
+
 	column := grammarSQL.Columnize(aggregate.Columns)
 
 	// If the query has a "distinct" constraint and we're not asking for all columns
