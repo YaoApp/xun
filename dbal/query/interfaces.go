@@ -14,6 +14,9 @@ type Query interface {
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
 
+	ToSQL() string
+	GetBindings() []interface{}
+
 	// defined in the aggregate.go file
 	Count(columns ...interface{}) (int64, error)
 	MustCount(columns ...interface{}) int64
@@ -25,9 +28,6 @@ type Query interface {
 	MustSum(columns ...interface{}) xun.N
 	Avg(columns ...interface{}) (xun.N, error)
 	MustAvg(columns ...interface{}) xun.N
-
-	ToSQL() string
-	GetBindings() []interface{}
 
 	// defined in the select.go file
 	Select(columns ...interface{}) Query
