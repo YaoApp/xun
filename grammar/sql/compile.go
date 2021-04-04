@@ -16,6 +16,10 @@ func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 // CompileSelectOffset Compile a select query into SQL.
 func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string {
 
+	if len(query.Unions) > 0 && query.Aggregate.Func != "" {
+		return grammarSQL.compileUnionAggregate(query)
+	}
+
 	sqls := map[string]string{}
 
 	// If the query does not have any columns set, we'll set the columns to the
@@ -58,6 +62,14 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// reset columns
 	query.Columns = columns
 	return strings.Trim(sql, " ")
+}
+
+// compileUnionAggregate Compile a union aggregate query into SQL.
+func (grammarSQL SQL) compileUnionAggregate(query *dbal.Query) string {
+	qb := &(*query)
+	sql := grammarSQL.compileAggregate(query, query.Aggregate)
+	qb.Aggregate = dbal.Aggregate{}
+	return fmt.Sprintf("%s from (%s) as %s", sql, grammarSQL.CompileSelect(qb), grammarSQL.WrapTable("temp_table"))
 }
 
 // compileAggregate Compile an aggregated select clause.

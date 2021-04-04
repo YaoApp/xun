@@ -60,6 +60,21 @@ func TestAggregateMustAvg(t *testing.T) {
 	assert.Equal(t, float64(77.07), value.MustToFixed(2), "the return value should be 77.07")
 }
 
+func TestAggregateUnionMustCount(t *testing.T) {
+	NewTableFoAggregateTest()
+	qb := getTestBuilder()
+	value := qb.Table("table_test_aggregate_t1").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "name").
+		Union(func(qb Query) {
+			qb.Table("table_test_aggregate_t2").
+				Where("email", "like", "%yaojs.org").
+				Select("id", "email", "name")
+		}).
+		MustCount("id")
+	assert.Equal(t, int64(7), value, "the return value should be 7")
+}
+
 // clean the test data
 func TestAggregateClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
