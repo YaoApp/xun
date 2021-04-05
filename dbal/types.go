@@ -225,6 +225,8 @@ type Query struct {
 	UnionOffset     int                      // The number of union records to skip.
 	UnionOrders     []Order                  // The orderings for the union query.
 	Orders          []Order                  // The orderings for the query.
+	Limit           int                      // The maximum number of records to return.
+	Offset          int                      // The number of records to skip.
 	Groups          []interface{}            // The groupings for the query.
 	Havings         []Having                 // The having constraints for the query.
 	Bindings        map[string][]interface{} // The current query value bindings.

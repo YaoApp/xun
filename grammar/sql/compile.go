@@ -33,7 +33,6 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// To compile the query, we'll spin through each component of the query and
 	// see if that component exists. If it does we'll just call the compiler
 	// function for the component which is responsible for making the SQL.
-
 	sqls["aggregate"] = grammarSQL.compileAggregate(query, query.Aggregate)
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From)
@@ -42,8 +41,8 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
 	sqls["havings"] = grammarSQL.compileHavings(query, query.Havings, offset)
 	sqls["orders"] = grammarSQL.compileOrders(query, query.Orders, offset)
-	// sqls["limit"] = grammarSQL.compileLimit()
-	// sqls["offset"] = grammarSQL.compileOffset()
+	sqls["limit"] = grammarSQL.compileLimit(query, query.Limit)
+	sqls["offset"] = grammarSQL.compileOffset(query, query.Offset)
 	// sqls["lock"] = grammarSQL.compileLock()
 
 	sql := ""
@@ -105,8 +104,14 @@ func (grammarSQL SQL) compileUnions(query *dbal.Query, unions []dbal.Union, offs
 	}
 
 	// unionLimit
+	if query.UnionLimit >= 0 {
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileLimit(query, query.UnionLimit))
+	}
 
 	// unionOffset
+	if query.UnionOffset >= 0 {
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileOffset(query, query.UnionOffset))
+	}
 
 	return strings.TrimPrefix(sql, " ")
 }
@@ -248,6 +253,20 @@ func (grammarSQL SQL) compileOrders(query *dbal.Query, orders []dbal.Order, bind
 		}
 	}
 	return fmt.Sprintf("order by %s", strings.Join(clauses, ", "))
+}
+
+func (grammarSQL SQL) compileLimit(query *dbal.Query, limit int) string {
+	if limit < 0 {
+		return ""
+	}
+	return fmt.Sprintf("limit %d", limit)
+}
+
+func (grammarSQL SQL) compileOffset(query *dbal.Query, offset int) string {
+	if offset < 0 {
+		return ""
+	}
+	return fmt.Sprintf("offset %d", offset)
 }
 
 func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {

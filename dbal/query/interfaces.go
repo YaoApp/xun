@@ -64,6 +64,12 @@ type Query interface {
 	OrderByDesc(column interface{}) Query
 	OrderByRaw(sql string, bindings ...interface{}) Query
 
+	// defined in the limit.go file
+	Skip(value int) Query
+	Offset(value int) Query
+	Take(value int) Query
+	Limit(value int) Query
+
 	// defined in the insert.go file
 	Insert(v interface{}) error
 	MustInsert(v interface{})

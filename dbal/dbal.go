@@ -70,6 +70,10 @@ func NewQuery() *Query {
 		Aggregate:       Aggregate{},
 		Groups:          []interface{}{},
 		Havings:         []Having{},
+		Limit:           -1,
+		Offset:          -1,
+		UnionLimit:      -1,
+		UnionOffset:     -1,
 		Operators: []string{
 			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
 			"like", "like binary", "not like", "ilike",
