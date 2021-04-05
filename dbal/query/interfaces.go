@@ -59,6 +59,11 @@ type Query interface {
 	HavingRaw(sql string, bindings ...interface{}) Query
 	OrHavingRaw(sql string, bindings ...interface{}) Query
 
+	// defined in the order.go file
+	OrderBy(column interface{}, args ...string) Query
+	OrderByDesc(column interface{}) Query
+	OrderByRaw(sql string, bindings ...interface{}) Query
+
 	// defined in the insert.go file
 	Insert(v interface{}) error
 	MustInsert(v interface{})

@@ -203,6 +203,15 @@ type Having struct {
 	SQL      string
 }
 
+// Order the order query
+type Order struct {
+	Type      string
+	Column    interface{}
+	Direction string
+	Offset    int
+	SQL       string
+}
+
 // Query the query builder
 type Query struct {
 	Operators       []string                 // All of the available clause operators.
@@ -214,7 +223,8 @@ type Query struct {
 	Unions          []Union                  // The query union statements.
 	UnionLimit      int                      // The maximum number of union records to return.
 	UnionOffset     int                      // The number of union records to skip.
-	UnionOrders     []string                 // The orderings for the union query.
+	UnionOrders     []Order                  // The orderings for the union query.
+	Orders          []Order                  // The orderings for the query.
 	Groups          []interface{}            // The groupings for the query.
 	Havings         []Having                 // The having constraints for the query.
 	Bindings        map[string][]interface{} // The current query value bindings.

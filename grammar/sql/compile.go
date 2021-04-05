@@ -41,7 +41,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
 	sqls["havings"] = grammarSQL.compileHavings(query, query.Havings, offset)
-	// sqls["orders"] = grammarSQL.compileOrders()
+	sqls["orders"] = grammarSQL.compileOrders(query, query.Orders, offset)
 	// sqls["limit"] = grammarSQL.compileLimit()
 	// sqls["offset"] = grammarSQL.compileOffset()
 	// sqls["lock"] = grammarSQL.compileLock()
@@ -100,6 +100,9 @@ func (grammarSQL SQL) compileUnions(query *dbal.Query, unions []dbal.Union, offs
 	}
 
 	// unionOrders
+	if len(query.UnionOrders) > 0 {
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileOrders(query, query.UnionOrders, offset))
+	}
 
 	// unionLimit
 
@@ -230,12 +233,29 @@ func (grammarSQL SQL) havingBetween(query *dbal.Query, having dbal.Having, bindi
 	return fmt.Sprintf("%s %s %s %s and %s", having.Boolean, column, between, min, max)
 }
 
+// compileOrders Compile the "order by" portions of the query.
+func (grammarSQL SQL) compileOrders(query *dbal.Query, orders []dbal.Order, bindingOffset *int) string {
+	if len(orders) == 0 {
+		return ""
+	}
+
+	clauses := []string{}
+	for _, order := range orders {
+		if order.SQL != "" {
+			clauses = append(clauses, order.SQL)
+		} else {
+			clauses = append(clauses, fmt.Sprintf("%s %s", grammarSQL.Wrap(order.Column), order.Direction))
+		}
+	}
+	return fmt.Sprintf("order by %s", strings.Join(clauses, ", "))
+}
+
 func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
 	// for actually creating the where clauses SQL. This helps keep the code nice
 	// and maintainable since each clause has a very small method that it uses.
-	if wheres == nil {
+	if len(wheres) == 0 {
 		return ""
 	}
 
