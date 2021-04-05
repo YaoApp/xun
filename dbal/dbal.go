@@ -111,6 +111,16 @@ func Raw(value interface{}) Expression {
 	return NewExpression(value)
 }
 
+// IsExpression Determine if the given value is a raw expression.
+func IsExpression(value interface{}) bool {
+	switch value.(type) {
+	case Expression:
+		return true
+	default:
+		return false
+	}
+}
+
 // NewPrimary create a new primary intstance
 func (table *Table) NewPrimary(name string, columns ...*Column) *Primary {
 	return &Primary{

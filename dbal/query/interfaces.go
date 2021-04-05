@@ -52,6 +52,12 @@ type Query interface {
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query
 	GroupByRaw(expression string, bindings ...interface{}) Query
+	Having(column interface{}, args ...interface{}) Query
+	OrHaving(column interface{}, args ...interface{}) Query
+	HavingBetween(column interface{}, values []interface{}, args ...interface{}) Query
+	OrHavingBetween(column interface{}, values []interface{}, args ...interface{}) Query
+	HavingRaw(sql string, bindings ...interface{}) Query
+	OrHavingRaw(sql string, bindings ...interface{}) Query
 
 	// defined in the insert.go file
 	Insert(v interface{}) error

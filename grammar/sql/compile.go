@@ -40,7 +40,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
-	// sqls["havings"] = grammarSQL.compileHavings()
+	sqls["havings"] = grammarSQL.compileHavings(query, query.Havings, offset)
 	// sqls["orders"] = grammarSQL.compileOrders()
 	// sqls["limit"] = grammarSQL.compileLimit()
 	// sqls["offset"] = grammarSQL.compileOffset()
@@ -171,6 +171,65 @@ func (grammarSQL SQL) compileGroups(query *dbal.Query, groups []interface{}) str
 	return fmt.Sprintf("group by %s", grammarSQL.Columnize(groups))
 }
 
+func (grammarSQL SQL) compileHavings(query *dbal.Query, havings []dbal.Having, bindingOffset *int) string {
+	clauses := []string{}
+	for _, having := range havings {
+		clauses = append(clauses, grammarSQL.compileHaving(query, having, bindingOffset))
+	}
+	if len(clauses) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("having %s", grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
+}
+
+func (grammarSQL SQL) compileHaving(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+	// If the having clause is "raw", we can just return the clause straight away
+	// without doing any more processing on it. Otherwise, we will compile the
+	// clause into SQL based on the components that make it up from builder.
+	if having.Type == "raw" {
+		return fmt.Sprintf("%s %s", having.Boolean, having.SQL)
+	} else if having.Type == "between" {
+		return grammarSQL.havingBetween(query, having, bindingOffset)
+	}
+	return grammarSQL.havingBasic(query, having, bindingOffset)
+}
+
+// havingBasic  Compile a basic having clause.
+func (grammarSQL SQL) havingBasic(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+	if !dbal.IsExpression(having.Value) {
+		*bindingOffset = *bindingOffset + having.Offset
+	}
+	column := grammarSQL.Wrap(having.Column)
+	parameter := grammarSQL.Parameter(having.Value, *bindingOffset)
+
+	return fmt.Sprintf("%s %s %s %s", having.Boolean, column, having.Operator, parameter)
+}
+
+// havingBasic Compile a "between" having clause.
+func (grammarSQL SQL) havingBetween(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+	if len(having.Values) != 2 {
+		panic(fmt.Errorf("The given values must have two items"))
+	}
+	between := "between"
+	if having.Not {
+		between = "not between"
+	}
+	column := grammarSQL.Wrap(having.Column)
+	if !dbal.IsExpression(having.Values[0]) {
+		*bindingOffset = *bindingOffset + having.Offset
+	}
+	min := grammarSQL.Parameter(having.Values[0], *bindingOffset)
+
+	if !dbal.IsExpression(having.Values[1]) {
+		*bindingOffset = *bindingOffset + having.Offset
+	}
+	max := grammarSQL.Parameter(having.Values[1], *bindingOffset)
+
+	// and `field` between 3 and 5
+	// or `field` not between 3 and 5
+	return fmt.Sprintf("%s %s %s %s and %s", having.Boolean, column, between, min, max)
+}
+
 func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
@@ -216,9 +275,12 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 
 // whereBasic Compile a date based where clause.
 func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	*bindingOffset = *bindingOffset + where.Offset
+	if !dbal.IsExpression(where.Value) {
+		*bindingOffset = *bindingOffset + where.Offset
+	}
 	value := grammarSQL.Parameter(where.Value, *bindingOffset)
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
+
 	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
 }
 

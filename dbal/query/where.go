@@ -3,7 +3,6 @@ package query
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
@@ -17,7 +16,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, boolean, offset := builder.wherePrepare(args...)
+	operator, value, boolean, offset := builder.prepareArgs(args...)
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
@@ -111,7 +110,7 @@ func (builder *Builder) WhereColumn(first interface{}, args ...interface{}) Quer
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, second, boolean, offset := builder.wherePrepare(args...)
+	operator, second, boolean, offset := builder.prepareArgs(args...)
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
@@ -152,7 +151,7 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 			for _, args := range columns {
 				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 					column := args[0].(string)
-					operator, value, boolean, offset := builder.wherePrepare(args[1:]...)
+					operator, value, boolean, offset := builder.prepareArgs(args[1:]...)
 					qb.Where(column, operator, value, boolean, offset)
 				}
 			}
@@ -250,102 +249,6 @@ func (builder *Builder) forNestedWhere() *Builder {
 	return new
 }
 
-// wherePrepare Prepare the value, operator, boolean and offset for a where clause.
-func (builder *Builder) wherePrepare(args ...interface{}) (string, interface{}, string, int) {
-
-	var operator string = "="
-	var value interface{} = nil
-	var boolean string = "and"
-	var offset = 1
-
-	// Where("score", 5)
-	if len(args) == 1 {
-		value = args[0]
-		return operator, value, boolean, offset
-	}
-
-	// Where("vote", ">", 5)
-	if len(args) >= 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
-		operator = args[0].(string)
-	}
-	if len(args) >= 2 {
-		value = args[1]
-	}
-
-	// Where("vote", ">", 5, "and")
-	if len(args) >= 3 && reflect.TypeOf(args[2]).Kind() == reflect.String {
-		boolean = args[2].(string)
-	}
-
-	// Where("vote", ">", 5, "and", 5)
-	if len(args) == 4 && reflect.TypeOf(args[3]).Kind() == reflect.Int {
-		offset = args[3].(int)
-	}
-
-	return operator, value, boolean, offset
-}
-
-func (builder *Builder) isClosure(v interface{}) bool {
-	if v == nil {
-		return false
-	}
-	typ := reflect.TypeOf(v)
-	return typ.Kind() == reflect.Func &&
-		typ.NumOut() == 0 &&
-		typ.NumIn() == 1 &&
-		typ.In(0).Kind() == reflect.Interface
-}
-
-func (builder *Builder) isOperator(v interface{}) bool {
-	switch v.(type) {
-	case string:
-		return utils.StringHave([]string{"and", "or"}, strings.ToLower(v.(string)))
-	default:
-		return false
-	}
-}
-
-// isExpression Determine if the given value is a raw expression.
-func (builder *Builder) isExpression(value interface{}) bool {
-	switch value.(type) {
-	case dbal.Expression:
-		return true
-	default:
-		return false
-	}
-}
-
-// Determine if the value is a query builder instance or a Closure.
-func (builder *Builder) isQueryable(value interface{}) bool {
-	typ := reflect.TypeOf(value)
-	kind := typ.Kind()
-	if kind == reflect.Ptr {
-		reflectValue := reflect.Indirect(reflect.ValueOf(value))
-		typ = reflectValue.Type()
-		kind = typ.Kind()
-	}
-
-	return builder.isClosure(value) ||
-		(kind == reflect.Interface && typ.Name() == "Query") ||
-		(kind == reflect.Struct && typ.Name() == "Builder")
-}
-
-func (builder *Builder) invalidOperator(operator string) bool {
-	return !utils.StringHave(builder.Query.Operators, operator) &&
-		!utils.StringHave(builder.Grammar.GetOperators(), operator)
-}
-
-func (builder *Builder) invalidOperatorAndValue(operator string, value interface{}) bool {
-	return value == nil &&
-		utils.StringHave(builder.Query.Operators, operator) &&
-		utils.StringHave([]string{"=", "<>", "!="}, operator)
-}
-
-func (builder *Builder) flattenValue(value interface{}) interface{} {
-	values := utils.Flatten(value)
-	return values[0]
-}
-
 // OrWhere Add an "or where" clause to the query.
 func (builder *Builder) OrWhere() {
 }
@@ -408,7 +311,7 @@ func (builder *Builder) OrWhereNotIn() {
 
 // WhereNull Add a "where null" clause to the query.
 func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query {
-	_, not, boolean, _ := builder.wherePrepare(args...)
+	_, not, boolean, _ := builder.prepareArgs(args...)
 	typ := "null"
 	if !utils.IsNil(not) && reflect.TypeOf(not).Kind() == reflect.Bool {
 		if reflect.ValueOf(not).Bool() {
@@ -448,7 +351,7 @@ func (builder *Builder) OrWhereNull(column interface{}) Query {
 
 // WhereNotNull Add a "where not null" clause to the query.
 func (builder *Builder) WhereNotNull(column interface{}, args ...interface{}) Query {
-	boolean, _, _, _ := builder.wherePrepare(args...)
+	boolean, _, _, _ := builder.prepareArgs(args...)
 	return builder.WhereNull(column, boolean, true)
 }
 

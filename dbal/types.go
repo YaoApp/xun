@@ -192,9 +192,15 @@ type Aggregate struct {
 
 // Having The having constraints for the query.
 type Having struct {
+	Type     string
 	Column   interface{}
 	Operator string
+	Value    interface{}
 	Boolean  string
+	Offset   int
+	Values   []interface{}
+	Not      bool
+	SQL      string
 }
 
 // Query the query builder
