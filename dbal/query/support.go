@@ -55,7 +55,7 @@ func (builder *Builder) isClosure(v interface{}) bool {
 		typ.In(0).Kind() == reflect.Interface
 }
 
-func (builder *Builder) isOperator(v interface{}) bool {
+func (builder *Builder) isBoolean(v interface{}) bool {
 	switch v.(type) {
 	case string:
 		return utils.StringHave([]string{"and", "or"}, strings.ToLower(v.(string)))

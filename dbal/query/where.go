@@ -33,7 +33,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// If the columns is actually a Closure instance, we will assume the developer
 	// wants to begin a nested where statement which is wrapped in parenthesis.
 	// We'll add that Closure to the query then return back out immediately.
-	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isOperator(args[0]))) {
+	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isBoolean(args[0]))) {
 		callback := column.(func(Query))
 		boolean := "and"
 		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
@@ -318,12 +318,18 @@ func (builder *Builder) OrWhereNotIn() {
 
 // WhereNull Add a "where null" clause to the query.
 func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query {
-	_, not, boolean, _ := builder.prepareArgs(args...)
+
+	not := false
+	boolean := "and"
 	typ := "null"
-	if !utils.IsNil(not) && reflect.TypeOf(not).Kind() == reflect.Bool {
-		if reflect.ValueOf(not).Bool() {
-			typ = "notnull"
-		}
+	if len(args) > 0 && builder.isBoolean(args[0]) {
+		boolean = args[0].(string)
+	}
+	if len(args) > 1 && reflect.TypeOf(args[1]).Kind() == reflect.Bool {
+		not = args[1].(bool)
+	}
+	if not {
+		typ = "notnull"
 	}
 
 	reflectColumn := reflect.ValueOf(column)
@@ -353,7 +359,7 @@ func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query
 
 // OrWhereNull Add an "or where null" clause to the query.
 func (builder *Builder) OrWhereNull(column interface{}) Query {
-	return builder.WhereNull(column, "or")
+	return builder.WhereNull(column, "or", false)
 }
 
 // WhereNotNull Add a "where not null" clause to the query.

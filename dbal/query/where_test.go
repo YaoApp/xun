@@ -11,7 +11,7 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
-func TestWhereColumnIsArray(t *testing.T) {
+func TestWhereWhereArray(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -57,7 +57,7 @@ func TestWhereColumnIsArray(t *testing.T) {
 	}
 }
 
-func TestWhereColumnIsClosure(t *testing.T) {
+func TestWhereWhereClosure(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -103,7 +103,7 @@ func TestWhereColumnIsClosure(t *testing.T) {
 	}
 }
 
-func TestWhereColumnIsQueryable(t *testing.T) {
+func TestWhereWhereQueryable(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -142,7 +142,7 @@ func TestWhereColumnIsQueryable(t *testing.T) {
 
 }
 
-func TestWhereValueIsClosure(t *testing.T) {
+func TestWhereWhereValueIsClosure(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -180,7 +180,7 @@ func TestWhereValueIsClosure(t *testing.T) {
 
 }
 
-func TestWhereValueIsExpression(t *testing.T) {
+func TestWhereWhereValueIsExpression(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -235,6 +235,28 @@ func TestWhereWhereNull(t *testing.T) {
 	rows := qb.MustGet()
 	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
 }
+func TestWhereOrWhereNull(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		WhereRaw("true").
+		OrWhereNull("deleted_at")
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where true or "deleted_at" is null`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where true or `deleted_at` is null", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 0, len(bindings), "the bindings should have none item")
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
 
 func TestWhereWhereNotNull(t *testing.T) {
 	NewTableFoWhereTest()
@@ -248,6 +270,29 @@ func TestWhereWhereNotNull(t *testing.T) {
 		assert.Equal(t, `select * from "table_test_where" where "email" is not null`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select * from `table_test_where` where `email` is not null", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 0, len(bindings), "the bindings should have none item")
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
+
+func TestWhereOrWhereNotNull(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		WhereRaw("true").
+		OrWhereNotNull("email")
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where true or "email" is not null`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where true or `email` is not null", sql, "the query sql not equal")
 	}
 
 	bindings := qb.GetBindings()
@@ -359,7 +404,7 @@ func TestWhereOrWhereBasicStyle2(t *testing.T) {
 	}
 }
 
-func TestWhereOrWhereColumnIsArray(t *testing.T) {
+func TestWhereOrWhereArray(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").

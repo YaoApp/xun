@@ -52,7 +52,9 @@ type Query interface {
 	OrWhere(column interface{}, args ...interface{}) Query
 	WhereColumn(first interface{}, args ...interface{}) Query
 	WhereNull(column interface{}, args ...interface{}) Query
+	OrWhereNull(column interface{}) Query
 	WhereNotNull(column interface{}, args ...interface{}) Query
+	OrWhereNotNull(column interface{}) Query
 	WhereRaw(sql string, bindings ...interface{}) Query
 	OrWhereRaw(sql string, bindings ...interface{}) Query
 
