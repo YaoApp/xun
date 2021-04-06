@@ -178,7 +178,7 @@ func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}, i
 	switch subquery.(type) {
 	case *Builder:
 		qb := builder.prependDatabaseNameIfCrossDatabaseQuery(subquery.(*Builder))
-		offset := len(utils.Flatten(builder.Query.Bindings))
+		offset := len(builder.GetBindings())
 		bindings := qb.GetBindings()
 		whereOffset := offset + len(utils.Flatten(bindings))
 		return builder.Grammar.CompileSelectOffset(qb.Query, &offset), bindings, whereOffset

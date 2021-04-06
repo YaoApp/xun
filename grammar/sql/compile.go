@@ -35,7 +35,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// function for the component which is responsible for making the SQL.
 	sqls["aggregate"] = grammarSQL.compileAggregate(query, query.Aggregate)
 	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
-	sqls["from"] = grammarSQL.compileFrom(query, query.From)
+	sqls["from"] = grammarSQL.compileFrom(query, query.From, offset)
 	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
 	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
@@ -165,11 +165,21 @@ func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}) s
 }
 
 //  Compile the "from" portion of the query.
-func (grammarSQL SQL) compileFrom(query *dbal.Query, table dbal.Name) string {
-	if table.As() != "" {
-		return fmt.Sprintf("from %s as %s", grammarSQL.ID(table.Fullname()), grammarSQL.ID(table.As()))
+func (grammarSQL SQL) compileFrom(query *dbal.Query, from dbal.From, bindingOffset *int) string {
+	sql := ""
+	if from.Type == "raw" {
+		sql = fmt.Sprintf("from %s", from.SQL)
+	} else if from.Type == "sub" {
+		if from.Alias != "" {
+			sql = fmt.Sprintf("from %s as %s", from.SQL, grammarSQL.ID(from.Alias))
+		} else {
+			sql = fmt.Sprintf("from %s", from.SQL)
+		}
+	} else {
+		sql = fmt.Sprintf("from %s", grammarSQL.WrapTable(from))
 	}
-	return fmt.Sprintf("from %s", grammarSQL.ID(table.Fullname()))
+	*bindingOffset = *bindingOffset + from.Offset
+	return sql
 }
 
 func (grammarSQL SQL) compileGroups(query *dbal.Query, groups []interface{}) string {

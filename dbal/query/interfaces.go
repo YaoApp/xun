@@ -35,6 +35,8 @@ type Query interface {
 
 	// defined in the from.go file
 	From(name string) Query
+	FromRaw(sql string, bindings ...interface{}) Query
+	FromSub(qb interface{}, as string) Query
 
 	// defined in the union.go file
 	Union(query interface{}, all ...bool) Query

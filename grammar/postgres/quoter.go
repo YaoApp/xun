@@ -87,9 +87,11 @@ func (quoter *Quoter) WrapTable(value interface{}) string {
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {
-			return fmt.Sprintf("%s as %s", col.Fullname(), col.As())
+			return fmt.Sprintf("%s as %s", quoter.ID(col.Fullname()), quoter.ID(col.As()))
 		}
 		return quoter.ID(value.(dbal.Name).Fullname())
+	case dbal.From:
+		return quoter.WrapTable(value.(dbal.From).Name)
 	case string:
 		return quoter.ID(dbal.NewName(value.(string)).Fullname())
 	default:

@@ -8,7 +8,7 @@ import (
 // Insert Insert new records into the database.
 func (builder *Builder) Insert(v interface{}) error {
 	values := xun.AnyToRows(v)
-	_, err := builder.Grammar.Insert(builder.Query.From.Fullname(), values)
+	_, err := builder.Grammar.Insert(builder.Query, values)
 	return err
 }
 
@@ -21,7 +21,7 @@ func (builder *Builder) MustInsert(v interface{}) {
 // InsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
 	values := xun.AnyToRows(v)
-	res, err := builder.Grammar.InsertIgnore(builder.Query.From.Fullname(), values)
+	res, err := builder.Grammar.InsertIgnore(builder.Query, values)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +42,7 @@ func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, e
 	if len(sequence) == 1 {
 		seq = sequence[0]
 	}
-	return builder.Grammar.InsertGetID(builder.Query.From.Fullname(), values, seq)
+	return builder.Grammar.InsertGetID(builder.Query, values, seq)
 }
 
 // MustInsertGetID Insert a new record and get the value of the primary key.

@@ -33,9 +33,9 @@ type Grammar interface {
 	GetColumnListing(dbName string, tableName string) ([]*Column, error)
 
 	// Grammar for querying
-	Insert(tableName string, values []xun.R) (sql.Result, error)
-	InsertIgnore(tableName string, values []xun.R) (sql.Result, error)
-	InsertGetID(tableName string, values []xun.R, sequence string) (int64, error)
+	Insert(query *Query, values []xun.R) (sql.Result, error)
+	InsertIgnore(query *Query, values []xun.R) (sql.Result, error)
+	InsertGetID(query *Query, values []xun.R, sequence string) (int64, error)
 
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string

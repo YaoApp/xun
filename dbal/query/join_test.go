@@ -17,15 +17,15 @@ func TestJoinColumnIsString(t *testing.T) {
 		Where("t2.status", "=", "PUBLISHED").
 		Select("t1.*", "t2.t1_id", "t2.title as title", "t2.content as content")
 
-	// select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join table_test_join_t2 as t2 on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?
-	// select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join table_test_join_t2 as t2 on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1
+	// select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join `table_test_join_t2` as `t2` on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?
+	// select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join "table_test_join_t2" as "t2" on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1
 
 	// checking sql
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
-		assert.Equal(t, `select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join table_test_join_t2 as t2 on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
+		assert.Equal(t, `select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" inner join "table_test_join_t2" as "t2" on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
 	} else {
-		assert.Equal(t, "select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join table_test_join_t2 as t2 on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
+		assert.Equal(t, "select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` inner join `table_test_join_t2` as `t2` on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
 	}
 
 	bindings := qb.GetBindings()

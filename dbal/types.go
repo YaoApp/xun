@@ -212,12 +212,21 @@ type Order struct {
 	SQL       string
 }
 
+// From the from query
+type From struct {
+	Type   string
+	Name   interface{}
+	Alias  string
+	Offset int
+	SQL    string
+}
+
 // Query the query builder
 type Query struct {
 	UseWriteConnection bool                     // Whether to use write connection for the select. default is false
 	Lock               interface{}              //  Indicates whether row locking is being used.
 	Operators          []string                 // All of the available clause operators.
-	From               Name                     // The table which the query is targeting.
+	From               From                     // The table which the query is targeting.
 	Columns            []interface{}            // The columns that should be returned. (Name or Expression)
 	Aggregate          Aggregate                // An aggregate function and column to be run.
 	Wheres             []Where                  // The where constraints for the query.

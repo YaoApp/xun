@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 )
 
 // InsertIgnore Insert ignore new records into the database.
-func (grammarSQL SQLite3) InsertIgnore(tableName string, values []xun.R) (sql.Result, error) {
+func (grammarSQL SQLite3) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Result, error) {
 
 	safeFields := []string{}
 	bindVars := []string{}
@@ -20,7 +21,7 @@ func (grammarSQL SQLite3) InsertIgnore(tableName string, values []xun.R) (sql.Re
 		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
 
-	sql := fmt.Sprintf(`INSERT OR IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT OR IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 

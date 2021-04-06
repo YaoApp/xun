@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 )
 
 // Insert Insert new records into the database.
-func (grammarSQL SQL) Insert(tableName string, values []xun.R) (sql.Result, error) {
+func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, error) {
 
 	safeFields := []string{}
 	bindVars := []string{}
@@ -20,13 +21,13 @@ func (grammarSQL SQL) Insert(tableName string, values []xun.R) (sql.Result, erro
 		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 }
 
 // InsertIgnore Insert ignore new records into the database.
-func (grammarSQL SQL) InsertIgnore(tableName string, values []xun.R) (sql.Result, error) {
+func (grammarSQL SQL) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Result, error) {
 
 	safeFields := []string{}
 	bindVars := []string{}
@@ -35,15 +36,15 @@ func (grammarSQL SQL) InsertIgnore(tableName string, values []xun.R) (sql.Result
 		safeFields = append(safeFields, grammarSQL.ID(field))
 	}
 
-	sql := fmt.Sprintf(`INSERT IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.ID(tableName), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql := fmt.Sprintf(`INSERT IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
 	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 
 }
 
 // InsertGetID Insert new records into the database and return the last insert ID
-func (grammarSQL SQL) InsertGetID(tableName string, values []xun.R, sequence string) (int64, error) {
-	res, err := grammarSQL.Insert(tableName, values)
+func (grammarSQL SQL) InsertGetID(query *dbal.Query, values []xun.R, sequence string) (int64, error) {
+	res, err := grammarSQL.Insert(query, values)
 	if err != nil {
 		return 0, err
 	}
