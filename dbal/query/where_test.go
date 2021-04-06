@@ -307,6 +307,89 @@ func TestWhereOrWhereRaw(t *testing.T) {
 	}
 }
 
+func TestWhereOrWhereBasic(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Select("id", "vote").
+		OrderByDesc("id").
+		Where("vote", ">", 10).
+		OrWhere("vote", "<", 6)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "id", "vote" from "table_test_where" where "vote" > $1 or "vote" < $2 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `id`, `vote` from `table_test_where` where `vote` > ? or `vote` < ? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+	}
+}
+
+func TestWhereOrWhereBasicStyle2(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Select("id", "vote").
+		OrderByDesc("id").
+		Where("vote", 10).
+		OrWhere("vote", 6)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "id", "vote" from "table_test_where" where "vote" = $1 or "vote" = $2 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `id`, `vote` from `table_test_where` where `vote` = ? or `vote` = ? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(1), rows[1]["id"].(int64), "the id of the 2nd row should be 1")
+	}
+}
+
+func TestWhereOrWhereColumnIsArray(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Where("email", "lee@yao.run").
+		OrWhere([][]interface{}{
+			{"score", ">", 64.56},
+			{"vote", 10},
+		})
+
+	//select * from `table_test_where` where `email` like ? and (`score` > ? and `vote` = ?)
+	//select * from "table_test_where" where "email" like $1 and ("score" > $2 and "vote" = $3)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" = $1 or ("score" > $2 and "vote" = $3) order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` = ? or (`score` > ? and `vote` = ?) order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should has 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(2), rows[0]["id"].(int64), "the id of the 1st row should be 2")
+		assert.Equal(t, int64(1), rows[1]["id"].(int64), "the id of the 2nd row should be 1")
+	}
+}
+
 // clean the test data
 func TestWhereClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
