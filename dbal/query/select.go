@@ -1,6 +1,9 @@
 package query
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/yaoapp/xun/dbal"
 )
 
@@ -15,7 +18,7 @@ func (builder *Builder) Select(columns ...interface{}) Query {
 		builder.Query.AddColumn(dbal.Raw("*"))
 	}
 	for _, column := range columns {
-		builder.Query.Columns = append(builder.Query.Columns, column)
+		builder.addSelect(column)
 	}
 	return builder
 }
@@ -23,21 +26,42 @@ func (builder *Builder) Select(columns ...interface{}) Query {
 // SelectRaw Add a new "raw" select expression to the query.
 func (builder *Builder) SelectRaw(expression string, bindings ...interface{}) Query {
 	builder.addSelect(dbal.Raw(expression))
-	if len(bindings) > 0 {
-		builder.Query.AddBinding("select", bindings)
-	}
+	builder.Query.AddBinding("select", bindings)
 	return builder
 }
 
-// addSelect Add a new select column to the query.
-func (builder *Builder) addSelect(column interface{}) {
-	builder.Query.Columns = append(builder.Query.Columns, column)
-}
-
 // SelectSub Add a subselect expression to the query.
-func (builder *Builder) SelectSub() {
+func (builder *Builder) SelectSub(qb interface{}, as string) Query {
+	sub, bindings, selectOffset := builder.createSub(qb)
+	column := dbal.Select{
+		Type:   "sub",
+		Alias:  as,
+		SQL:    fmt.Sprintf("(%s)", sub),
+		Offset: selectOffset - 1,
+	}
+	builder.addSelect(column)
+	builder.Query.AddBinding("select", bindings)
+	return builder
 }
 
 // Distinct Force the query to only return distinct results.
 func (builder *Builder) Distinct() {
+}
+
+// addSelect Add a new select column to the query.
+func (builder *Builder) addSelect(column interface{}) {
+	switch column.(type) {
+	case string:
+		if strings.Contains(column.(string), ",") {
+			columns := strings.Split(column.(string), ",")
+			for _, col := range columns {
+				col = strings.Trim(col, " ")
+				builder.addSelect(col)
+			}
+		} else {
+			builder.Query.Columns = append(builder.Query.Columns, column)
+		}
+	default:
+		builder.Query.Columns = append(builder.Query.Columns, column)
+	}
 }

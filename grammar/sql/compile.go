@@ -34,7 +34,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// see if that component exists. If it does we'll just call the compiler
 	// function for the component which is responsible for making the SQL.
 	sqls["aggregate"] = grammarSQL.compileAggregate(query, query.Aggregate)
-	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns)
+	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns, offset)
 	sqls["from"] = grammarSQL.compileFrom(query, query.From, offset)
 	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
 	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
@@ -148,7 +148,7 @@ func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join, offset 
 }
 
 // compileColumns Compile the "select *" portion of the query.
-func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}) string {
+func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}, bindingOffset *int) string {
 
 	// If the query is actually performing an aggregating select, we will let that
 	// compiler handle the building of the select clauses, as it will need some
@@ -161,11 +161,24 @@ func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}) s
 	if query.Distinct {
 		sql = "select distinct"
 	}
-	return fmt.Sprintf("%s %s", sql, grammarSQL.Columnize(columns))
+
+	sql = fmt.Sprintf("%s %s", sql, grammarSQL.Columnize(columns))
+	for _, col := range columns {
+		switch col.(type) {
+		case dbal.Select:
+			*bindingOffset = *bindingOffset + col.(dbal.Select).Offset
+		}
+	}
+
+	return sql
 }
 
 //  Compile the "from" portion of the query.
 func (grammarSQL SQL) compileFrom(query *dbal.Query, from dbal.From, bindingOffset *int) string {
+	if from.Type == "" {
+		return ""
+	}
+
 	sql := ""
 	if from.Type == "raw" {
 		sql = fmt.Sprintf("from %s", from.SQL)

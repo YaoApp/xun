@@ -79,9 +79,15 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {
-			return fmt.Sprintf("%s as %s", quoter.ID(col.Name), col.As())
+			return fmt.Sprintf("%s as %s", quoter.ID(col.Name), quoter.ID(col.As()))
 		}
 		return quoter.ID(value.(dbal.Name).Name)
+	case dbal.Select:
+		col := value.(dbal.Select)
+		if col.Alias != "" {
+			return fmt.Sprintf("%s as %s", col.SQL, quoter.ID(col.Alias))
+		}
+		return fmt.Sprintf("%s ", col.SQL)
 	case string:
 		str := value.(string)
 		if str == "*" {

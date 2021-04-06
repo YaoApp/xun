@@ -221,6 +221,15 @@ type From struct {
 	SQL    string
 }
 
+// Select the from query
+type Select struct {
+	Type   string
+	Name   interface{}
+	Alias  string
+	Offset int
+	SQL    string
+}
+
 // Query the query builder
 type Query struct {
 	UseWriteConnection bool                     // Whether to use write connection for the select. default is false

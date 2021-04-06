@@ -32,6 +32,7 @@ type Query interface {
 	// defined in the select.go file
 	Select(columns ...interface{}) Query
 	SelectRaw(expression string, bindings ...interface{}) Query
+	SelectSub(qb interface{}, as string) Query
 
 	// defined in the from.go file
 	From(name string) Query
