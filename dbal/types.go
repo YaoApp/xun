@@ -162,6 +162,7 @@ type Where struct {
 	Column   interface{}
 	First    interface{} // for comparing the two columns
 	Second   interface{} // for comparing the two columns
+	SQL      string
 	Operator string
 	Boolean  string
 	Wheres   []Where

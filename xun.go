@@ -1,6 +1,7 @@
 package xun
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -105,6 +106,61 @@ func MapToR(row map[string]interface{}) R {
 		}
 	}
 	return res
+}
+
+// MapScan scan the result from sql.Rows
+func MapScan(rows *sql.Rows) ([]R, error) {
+	defer rows.Close()
+	res := []R{}
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	numColumns := len(columns)
+
+	values := make([]interface{}, numColumns)
+	for i := range values {
+		values[i] = new(interface{})
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(values...); err != nil {
+			return nil, err
+		}
+
+		dest := R{}
+		for i, column := range columns {
+			reflectValue := reflect.ValueOf(values[i])
+			value := reflect.Indirect(reflectValue).Interface()
+			switch value.(type) {
+			case []uint8:
+				bytes := ""
+				for _, v := range value.([]uint8) {
+					bytes = fmt.Sprintf("%s%s", bytes, string(v))
+				}
+
+				dest[column] = bytes
+				if len(bytes) < 20 {
+					num, err := strconv.ParseInt(bytes, 10, 64)
+					if err == nil {
+						dest[column] = num
+					}
+				}
+
+			default:
+				dest[column] = value
+			}
+
+		}
+		res = append(res, dest)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // ToFixed the return value is the type of float64 and keeps the given decimal places

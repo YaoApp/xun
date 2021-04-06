@@ -318,6 +318,8 @@ func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		case "basic":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBasic(query, where, bindingOffset)))
 			break
+		case "raw":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereRaw(query, where)))
 		case "null":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNull(query, where)))
 		case "notnull":
@@ -382,6 +384,11 @@ func (grammarSQL SQL) WhereSub(query *dbal.Query, where dbal.Where, bindingOffse
 // WhereNull Compile a "where null" clause.
 func (grammarSQL SQL) WhereNull(query *dbal.Query, where dbal.Where) string {
 	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
+}
+
+// WhereRaw Compile a raw where clause.
+func (grammarSQL SQL) WhereRaw(query *dbal.Query, where dbal.Where) string {
+	return where.SQL
 }
 
 // WhereNotNull Compile a "where not null" clause.

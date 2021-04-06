@@ -52,6 +52,8 @@ type Query interface {
 	WhereColumn(first interface{}, args ...interface{}) Query
 	WhereNull(column interface{}, args ...interface{}) Query
 	WhereNotNull(column interface{}, args ...interface{}) Query
+	WhereRaw(sql string, bindings ...interface{}) Query
+	OrWhereRaw(sql string, bindings ...interface{}) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query

@@ -214,7 +214,7 @@ func TestWhereValueIsExpression(t *testing.T) {
 
 }
 
-func TestWhereNull(t *testing.T) {
+func TestWhereWhereNull(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -236,7 +236,7 @@ func TestWhereNull(t *testing.T) {
 	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
 }
 
-func TestWhereNotNull(t *testing.T) {
+func TestWhereWhereNotNull(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
@@ -256,6 +256,55 @@ func TestWhereNotNull(t *testing.T) {
 	// checking result
 	rows := qb.MustGet()
 	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
+
+func TestWhereWhereRaw(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Select("id", "vote").
+		WhereRaw("vote > 10")
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "id", "vote" from "table_test_where" where vote > 10`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `id`, `vote` from `table_test_where` where vote > 10", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+	}
+}
+
+func TestWhereOrWhereRaw(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Select("id", "vote").
+		OrderByDesc("id").
+		WhereRaw("vote > 10").
+		OrWhereRaw("vote < 6")
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "id", "vote" from "table_test_where" where vote > 10 or vote < 6 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `id`, `vote` from `table_test_where` where vote > 10 or vote < 6 order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+	}
 }
 
 // clean the test data

@@ -417,9 +417,21 @@ func (builder *Builder) OrWhereNotExists() {
 }
 
 // WhereRaw Add a basic where clause to the query.
-func (builder *Builder) WhereRaw() {
+func (builder *Builder) WhereRaw(sql string, bindings ...interface{}) Query {
+	return builder.whereRaw(sql, bindings, "and")
 }
 
 // OrWhereRaw Add an "or where" clause to the query.
-func (builder *Builder) OrWhereRaw() {
+func (builder *Builder) OrWhereRaw(sql string, bindings ...interface{}) Query {
+	return builder.whereRaw(sql, bindings, "or")
+}
+
+func (builder *Builder) whereRaw(sql string, bindings []interface{}, boolean string) Query {
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:    "raw",
+		SQL:     sql,
+		Boolean: boolean,
+	})
+	builder.Query.AddBinding("where", bindings)
+	return builder
 }

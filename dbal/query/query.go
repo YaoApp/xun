@@ -16,19 +16,27 @@ func (builder *Builder) Table(name string) Query {
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() ([]xun.R, error) {
 
-	res := []xun.R{}
-	rows, err := builder.Conn.Read.Queryx(builder.ToSQL(), builder.GetBindings()...)
+	db := builder.Conn.Read
+	if builder.Query.UseWriteConnection {
+		db = builder.Conn.Write
+	}
+
+	rows, err := db.Query(builder.ToSQL(), builder.GetBindings()...)
 	if err != nil {
 		return nil, err
 	}
 
-	for rows.Next() {
-		row := map[string]interface{}{}
-		rows.MapScan(row)
-		res = append(res, xun.MapToR(row))
-	}
+	return xun.MapScan(rows)
 
-	return res, nil
+	// res := []xun.R{}
+	// for rows.Next() {
+	// 	row := map[string]interface{}{}
+	// 	rows.MapScan(row)
+	// 	utils.Println(row)
+	// 	res = append(res, xun.MapToR(row))
+	// }
+
+	// return res, nil
 }
 
 // ToSQL Get the SQL representation of the query.
