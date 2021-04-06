@@ -33,6 +33,7 @@ type Query interface {
 	Select(columns ...interface{}) Query
 	SelectRaw(expression string, bindings ...interface{}) Query
 	SelectSub(qb interface{}, as string) Query
+	Distinct(args ...interface{}) Query
 
 	// defined in the from.go file
 	From(name string) Query

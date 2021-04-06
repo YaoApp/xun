@@ -17,7 +17,7 @@ func (grammarSQL SQL) CompileSelect(query *dbal.Query) string {
 func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string {
 
 	if len(query.Unions) > 0 && query.Aggregate.Func != "" {
-		return grammarSQL.compileUnionAggregate(query)
+		return grammarSQL.CompileUnionAggregate(query)
 	}
 
 	sqls := map[string]string{}
@@ -33,17 +33,17 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	// To compile the query, we'll spin through each component of the query and
 	// see if that component exists. If it does we'll just call the compiler
 	// function for the component which is responsible for making the SQL.
-	sqls["aggregate"] = grammarSQL.compileAggregate(query, query.Aggregate)
-	sqls["columns"] = grammarSQL.compileColumns(query, query.Columns, offset)
-	sqls["from"] = grammarSQL.compileFrom(query, query.From, offset)
-	sqls["joins"] = grammarSQL.compileJoins(query, query.Joins, offset)
-	sqls["wheres"] = grammarSQL.compileWheres(query, query.Wheres, offset)
-	sqls["groups"] = grammarSQL.compileGroups(query, query.Groups)
-	sqls["havings"] = grammarSQL.compileHavings(query, query.Havings, offset)
-	sqls["orders"] = grammarSQL.compileOrders(query, query.Orders, offset)
-	sqls["limit"] = grammarSQL.compileLimit(query, query.Limit)
-	sqls["offset"] = grammarSQL.compileOffset(query, query.Offset)
-	// sqls["lock"] = grammarSQL.compileLock()
+	sqls["aggregate"] = grammarSQL.CompileAggregate(query, query.Aggregate)
+	sqls["columns"] = grammarSQL.CompileColumns(query, query.Columns, offset)
+	sqls["from"] = grammarSQL.CompileFrom(query, query.From, offset)
+	sqls["joins"] = grammarSQL.CompileJoins(query, query.Joins, offset)
+	sqls["wheres"] = grammarSQL.CompileWheres(query, query.Wheres, offset)
+	sqls["groups"] = grammarSQL.CompileGroups(query, query.Groups)
+	sqls["havings"] = grammarSQL.CompileHavings(query, query.Havings, offset)
+	sqls["orders"] = grammarSQL.CompileOrders(query, query.Orders, offset)
+	sqls["limit"] = grammarSQL.CompileLimit(query, query.Limit)
+	sqls["offset"] = grammarSQL.CompileOffset(query, query.Offset)
+	// sqls["lock"] = grammarSQL.CompileLock()
 
 	sql := ""
 	for _, name := range []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"} {
@@ -55,7 +55,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 
 	// Compile unions
 	if len(query.Unions) > 0 {
-		sql = fmt.Sprintf("%s %s", grammarSQL.WrapUnion(sql), grammarSQL.compileUnions(query, query.Unions, offset))
+		sql = fmt.Sprintf("%s %s", grammarSQL.WrapUnion(sql), grammarSQL.CompileUnions(query, query.Unions, offset))
 	}
 
 	// reset columns
@@ -63,16 +63,16 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	return strings.Trim(sql, " ")
 }
 
-// compileUnionAggregate Compile a union aggregate query into SQL.
-func (grammarSQL SQL) compileUnionAggregate(query *dbal.Query) string {
+// CompileUnionAggregate Compile a union aggregate query into SQL.
+func (grammarSQL SQL) CompileUnionAggregate(query *dbal.Query) string {
 	qb := &(*query)
-	sql := grammarSQL.compileAggregate(query, query.Aggregate)
+	sql := grammarSQL.CompileAggregate(query, query.Aggregate)
 	qb.Aggregate = dbal.Aggregate{}
 	return fmt.Sprintf("%s from (%s) as %s", sql, grammarSQL.CompileSelect(qb), grammarSQL.WrapTable("temp_table"))
 }
 
-// compileAggregate Compile an aggregated select clause.
-func (grammarSQL SQL) compileAggregate(query *dbal.Query, aggregate dbal.Aggregate) string {
+// CompileAggregate Compile an aggregated select clause.
+func (grammarSQL SQL) CompileAggregate(query *dbal.Query, aggregate dbal.Aggregate) string {
 
 	if aggregate.Func == "" {
 		return ""
@@ -91,33 +91,33 @@ func (grammarSQL SQL) compileAggregate(query *dbal.Query, aggregate dbal.Aggrega
 	return fmt.Sprintf("select %s(%s) as aggregate", aggregate.Func, column)
 }
 
-// compileUnions  Compile the "union" queries attached to the main query.
-func (grammarSQL SQL) compileUnions(query *dbal.Query, unions []dbal.Union, offset *int) string {
+// CompileUnions Compile the "union" queries attached to the main query.
+func (grammarSQL SQL) CompileUnions(query *dbal.Query, unions []dbal.Union, offset *int) string {
 	sql := ""
 	for _, union := range unions {
-		sql = sql + grammarSQL.compileUnion(query, union, offset)
+		sql = sql + grammarSQL.CompileUnion(query, union, offset)
 	}
 
 	// unionOrders
 	if len(query.UnionOrders) > 0 {
-		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileOrders(query, query.UnionOrders, offset))
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.CompileOrders(query, query.UnionOrders, offset))
 	}
 
 	// unionLimit
 	if query.UnionLimit >= 0 {
-		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileLimit(query, query.UnionLimit))
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.CompileLimit(query, query.UnionLimit))
 	}
 
 	// unionOffset
 	if query.UnionOffset >= 0 {
-		sql = fmt.Sprintf("%s %s", sql, grammarSQL.compileOffset(query, query.UnionOffset))
+		sql = fmt.Sprintf("%s %s", sql, grammarSQL.CompileOffset(query, query.UnionOffset))
 	}
 
 	return strings.TrimPrefix(sql, " ")
 }
 
-// compileUnion Compile a single union statement.
-func (grammarSQL SQL) compileUnion(query *dbal.Query, union dbal.Union, offset *int) string {
+// CompileUnion Compile a single union statement.
+func (grammarSQL SQL) CompileUnion(query *dbal.Query, union dbal.Union, offset *int) string {
 	conjunction := "union "
 	if union.All {
 		conjunction = "union all "
@@ -125,14 +125,14 @@ func (grammarSQL SQL) compileUnion(query *dbal.Query, union dbal.Union, offset *
 	return fmt.Sprintf("%s%s", conjunction, grammarSQL.WrapUnion(grammarSQL.CompileSelectOffset(union.Query, offset)))
 }
 
-// compileJoins Compile the "join" portions of the query.
-func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join, offset *int) string {
+// CompileJoins Compile the "join" portions of the query.
+func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset *int) string {
 	sql := ""
 	for _, join := range joins {
 		table := grammarSQL.WrapTable(join.Table)
 		nestedJoins := " "
 		if len(join.Query.Joins) > 0 {
-			nestedJoins = grammarSQL.compileJoins(query, join.Query.Joins, offset)
+			nestedJoins = grammarSQL.CompileJoins(query, join.Query.Joins, offset)
 		}
 		tableAndNestedJoins := table
 		if len(join.Query.Joins) > 0 {
@@ -140,15 +140,15 @@ func (grammarSQL SQL) compileJoins(query *dbal.Query, joins []dbal.Join, offset 
 		}
 
 		return strings.Trim(
-			fmt.Sprintf("%s join %s %s", join.Type, tableAndNestedJoins, grammarSQL.compileWheres(join.Query, join.Query.Wheres, offset)),
+			fmt.Sprintf("%s join %s %s", join.Type, tableAndNestedJoins, grammarSQL.CompileWheres(join.Query, join.Query.Wheres, offset)),
 			" ",
 		)
 	}
 	return sql
 }
 
-// compileColumns Compile the "select *" portion of the query.
-func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}, bindingOffset *int) string {
+// CompileColumns Compile the "select *" portion of the query.
+func (grammarSQL SQL) CompileColumns(query *dbal.Query, columns []interface{}, bindingOffset *int) string {
 
 	// If the query is actually performing an aggregating select, we will let that
 	// compiler handle the building of the select clauses, as it will need some
@@ -173,8 +173,8 @@ func (grammarSQL SQL) compileColumns(query *dbal.Query, columns []interface{}, b
 	return sql
 }
 
-//  Compile the "from" portion of the query.
-func (grammarSQL SQL) compileFrom(query *dbal.Query, from dbal.From, bindingOffset *int) string {
+//CompileFrom  Compile the "from" portion of the query.
+func (grammarSQL SQL) CompileFrom(query *dbal.Query, from dbal.From, bindingOffset *int) string {
 	if from.Type == "" {
 		return ""
 	}
@@ -195,17 +195,19 @@ func (grammarSQL SQL) compileFrom(query *dbal.Query, from dbal.From, bindingOffs
 	return sql
 }
 
-func (grammarSQL SQL) compileGroups(query *dbal.Query, groups []interface{}) string {
+// CompileGroups Compile the "group by" portions of the query.
+func (grammarSQL SQL) CompileGroups(query *dbal.Query, groups []interface{}) string {
 	if len(groups) == 0 {
 		return ""
 	}
 	return fmt.Sprintf("group by %s", grammarSQL.Columnize(groups))
 }
 
-func (grammarSQL SQL) compileHavings(query *dbal.Query, havings []dbal.Having, bindingOffset *int) string {
+// CompileHavings Compile the "having" portions of the query.
+func (grammarSQL SQL) CompileHavings(query *dbal.Query, havings []dbal.Having, bindingOffset *int) string {
 	clauses := []string{}
 	for _, having := range havings {
-		clauses = append(clauses, grammarSQL.compileHaving(query, having, bindingOffset))
+		clauses = append(clauses, grammarSQL.CompileHaving(query, having, bindingOffset))
 	}
 	if len(clauses) == 0 {
 		return ""
@@ -213,20 +215,21 @@ func (grammarSQL SQL) compileHavings(query *dbal.Query, havings []dbal.Having, b
 	return fmt.Sprintf("having %s", grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
-func (grammarSQL SQL) compileHaving(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+// CompileHaving Compile a single having clause.
+func (grammarSQL SQL) CompileHaving(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
 	// If the having clause is "raw", we can just return the clause straight away
 	// without doing any more processing on it. Otherwise, we will compile the
 	// clause into SQL based on the components that make it up from builder.
 	if having.Type == "raw" {
 		return fmt.Sprintf("%s %s", having.Boolean, having.SQL)
 	} else if having.Type == "between" {
-		return grammarSQL.havingBetween(query, having, bindingOffset)
+		return grammarSQL.HavingBetween(query, having, bindingOffset)
 	}
-	return grammarSQL.havingBasic(query, having, bindingOffset)
+	return grammarSQL.HavingBasic(query, having, bindingOffset)
 }
 
-// havingBasic  Compile a basic having clause.
-func (grammarSQL SQL) havingBasic(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+// HavingBasic  Compile a basic having clause.
+func (grammarSQL SQL) HavingBasic(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
 	if !dbal.IsExpression(having.Value) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
@@ -236,8 +239,8 @@ func (grammarSQL SQL) havingBasic(query *dbal.Query, having dbal.Having, binding
 	return fmt.Sprintf("%s %s %s %s", having.Boolean, column, having.Operator, parameter)
 }
 
-// havingBasic Compile a "between" having clause.
-func (grammarSQL SQL) havingBetween(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
+// HavingBetween Compile a "between" having clause.
+func (grammarSQL SQL) HavingBetween(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
 	if len(having.Values) != 2 {
 		panic(fmt.Errorf("The given values must have two items"))
 	}
@@ -261,8 +264,8 @@ func (grammarSQL SQL) havingBetween(query *dbal.Query, having dbal.Having, bindi
 	return fmt.Sprintf("%s %s %s %s and %s", having.Boolean, column, between, min, max)
 }
 
-// compileOrders Compile the "order by" portions of the query.
-func (grammarSQL SQL) compileOrders(query *dbal.Query, orders []dbal.Order, bindingOffset *int) string {
+// CompileOrders Compile the "order by" portions of the query.
+func (grammarSQL SQL) CompileOrders(query *dbal.Query, orders []dbal.Order, bindingOffset *int) string {
 	if len(orders) == 0 {
 		return ""
 	}
@@ -278,21 +281,24 @@ func (grammarSQL SQL) compileOrders(query *dbal.Query, orders []dbal.Order, bind
 	return fmt.Sprintf("order by %s", strings.Join(clauses, ", "))
 }
 
-func (grammarSQL SQL) compileLimit(query *dbal.Query, limit int) string {
+// CompileLimit Compile the "limit" portions of the query.
+func (grammarSQL SQL) CompileLimit(query *dbal.Query, limit int) string {
 	if limit < 0 {
 		return ""
 	}
 	return fmt.Sprintf("limit %d", limit)
 }
 
-func (grammarSQL SQL) compileOffset(query *dbal.Query, offset int) string {
+// CompileOffset Compile the "offset" portions of the query.
+func (grammarSQL SQL) CompileOffset(query *dbal.Query, offset int) string {
 	if offset < 0 {
 		return ""
 	}
 	return fmt.Sprintf("offset %d", offset)
 }
 
-func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
+// CompileWheres Compile an update statement into SQL.
+func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
 	// for actually creating the where clauses SQL. This helps keep the code nice
@@ -310,19 +316,19 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		boolen := strings.ToLower(where.Boolean)
 		switch where.Type {
 		case "basic":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereBasic(query, where, bindingOffset)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBasic(query, where, bindingOffset)))
 			break
 		case "null":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNull(query, where)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNull(query, where)))
 		case "notnull":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNotNull(query, where)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNotNull(query, where)))
 		case "column":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereColumn(query, where)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereColumn(query, where)))
 		case "sub":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereSub(query, where, bindingOffset)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereSub(query, where, bindingOffset)))
 			break
 		case "nested":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereNested(query, where, bindingOffset)))
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNested(query, where, bindingOffset)))
 			break
 		}
 	}
@@ -335,8 +341,8 @@ func (grammarSQL SQL) compileWheres(query *dbal.Query, wheres []dbal.Where, bind
 	return fmt.Sprintf("%s %s", conjunction, grammarSQL.RemoveLeadingBoolean(strings.Join(clauses, " ")))
 }
 
-// whereBasic Compile a date based where clause.
-func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereBasic Compile a date based where clause.
+func (grammarSQL SQL) WhereBasic(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	if !dbal.IsExpression(where.Value) {
 		*bindingOffset = *bindingOffset + where.Offset
 	}
@@ -346,20 +352,20 @@ func (grammarSQL SQL) whereBasic(query *dbal.Query, where dbal.Where, bindingOff
 	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
 }
 
-// whereColumn Compile a where clause comparing two columns.
-func (grammarSQL SQL) whereColumn(query *dbal.Query, where dbal.Where) string {
+// WhereColumn Compile a where clause comparing two columns.
+func (grammarSQL SQL) WhereColumn(query *dbal.Query, where dbal.Where) string {
 	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.First), where.Operator, grammarSQL.Wrap(where.Second))
 }
 
-// whereNested Compile a nested where clause.
-func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereNested Compile a nested where clause.
+func (grammarSQL SQL) WhereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 
 	offset := 6 // - where
 	if query.IsJoinClause {
 		offset = 3 // - on
 	}
 
-	sql := grammarSQL.compileWheres(where.Query, where.Query.Wheres, bindingOffset)
+	sql := grammarSQL.CompileWheres(where.Query, where.Query.Wheres, bindingOffset)
 	end := len(sql)
 	if end > offset {
 		sql = sql[offset:end]
@@ -367,19 +373,19 @@ func (grammarSQL SQL) whereNested(query *dbal.Query, where dbal.Where, bindingOf
 	return fmt.Sprintf("(%s)", sql)
 }
 
-// whereSub Compile a where condition with a sub-select.
-func (grammarSQL SQL) whereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereSub Compile a where condition with a sub-select.
+func (grammarSQL SQL) WhereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
 	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
 }
 
-// whereNull Compile a "where null" clause.
-func (grammarSQL SQL) whereNull(query *dbal.Query, where dbal.Where) string {
+// WhereNull Compile a "where null" clause.
+func (grammarSQL SQL) WhereNull(query *dbal.Query, where dbal.Where) string {
 	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
 }
 
-// whereNotNull Compile a "where not null" clause.
-func (grammarSQL SQL) whereNotNull(query *dbal.Query, where dbal.Where) string {
+// WhereNotNull Compile a "where not null" clause.
+func (grammarSQL SQL) WhereNotNull(query *dbal.Query, where dbal.Where) string {
 	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
 }
 

@@ -101,11 +101,73 @@ func TestSelectSelectSub(t *testing.T) {
 
 	// select "id", (select 'cate') as "category" from "table_test_select" as "t" where "email" like $1 order by "id" asc
 	// select `id`, (select ?) as `category` from `table_test_select` as `t` where `email` like ? order by `id` asc
-	// fmt.Println(qb.ToSQL())
-	// utils.Println(qb.GetBindings())
-	// utils.Println(qb.MustGet())
 
 	checktestSelectSelectSub(t, qb)
+}
+
+func TestSelectDistinct(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("t.cate as category").Distinct()
+
+	// select distinct "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1
+	// select distinct `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?
+
+	checktestSelectDistinct(t, qb)
+}
+
+func TestSelectDistinctTrue(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("t.cate as category").Distinct(true)
+
+	// select distinct "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1
+	// select distinct `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?
+
+	checktestSelectDistinct(t, qb)
+}
+
+func TestSelectDistinctFalse(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "t.email as wid, t.cate as category").Distinct(false).
+		OrderBy("id")
+
+	checktestSelectSelect(t, qb)
+}
+
+func TestSelectDistinctColumns(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "t.email as wid, t.cate as category").
+		Distinct("category") // Postgres only
+
+	// select distinct on ("category") "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1
+	// select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?
+
+	// checking
+	sql := qb.ToSQL()
+	rows := qb.MustGet()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select distinct on ("category") "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1`, sql, "the query sql not equal")
+		assert.Equal(t, 2, len(rows), "the return value should be have 2 rows")
+		if len(rows) == 2 {
+			assert.Equal(t, "cat", rows[0]["category"].(string), "the category of first row should be cat")
+			assert.Equal(t, "dog", rows[1]["category"].(string), "the category of first row should be dog")
+		}
+	} else {
+		assert.Equal(t, "select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?", sql, "the query sql not equal")
+		assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	}
+
 }
 
 // clean the test data
@@ -177,5 +239,23 @@ func checktestSelectSelectSub(t *testing.T, qb Query) {
 	if len(rows) == 4 {
 		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
 		assert.Equal(t, "cate", rows[0]["category"].(string), "the category of first row should be 1")
+	}
+}
+
+func checktestSelectDistinct(t *testing.T, qb Query) {
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select distinct "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select distinct `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 2 rows")
+	if len(rows) == 2 {
+		assert.Equal(t, "cat", rows[0]["category"].(string), "the category of first row should be cat")
+		assert.Equal(t, "dog", rows[1]["category"].(string), "the category of first row should be dog")
 	}
 }

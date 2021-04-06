@@ -45,7 +45,21 @@ func (builder *Builder) SelectSub(qb interface{}, as string) Query {
 }
 
 // Distinct Force the query to only return distinct results.
-func (builder *Builder) Distinct() {
+func (builder *Builder) Distinct(args ...interface{}) Query {
+	if len(args) > 0 {
+		if _, ok := args[0].(bool); ok {
+			builder.Query.Distinct = args[0].(bool)
+		} else if _, ok := args[0].([]interface{}); ok {
+			builder.Query.Distinct = true
+			builder.Query.DistinctColumns = args[0].([]interface{})
+		} else {
+			builder.Query.Distinct = true
+			builder.Query.DistinctColumns = args
+		}
+	} else {
+		builder.Query.Distinct = true
+	}
+	return builder
 }
 
 // addSelect Add a new select column to the query.
