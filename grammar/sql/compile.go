@@ -320,12 +320,19 @@ func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bind
 			break
 		case "raw":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereRaw(query, where)))
+			break
 		case "null":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNull(query, where)))
+			break
 		case "notnull":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNotNull(query, where)))
+			break
+		case "between":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBetween(query, where, bindingOffset)))
+			break
 		case "column":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereColumn(query, where)))
+			break
 		case "sub":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereSub(query, where, bindingOffset)))
 			break
@@ -394,6 +401,25 @@ func (grammarSQL SQL) WhereRaw(query *dbal.Query, where dbal.Where) string {
 // WhereNotNull Compile a "where not null" clause.
 func (grammarSQL SQL) WhereNotNull(query *dbal.Query, where dbal.Where) string {
 	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
+}
+
+// WhereBetween Compile a "between" where clause.
+func (grammarSQL SQL) WhereBetween(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	if len(where.Values) != 2 {
+		panic(fmt.Errorf("The given values must have two items"))
+	}
+	between := "between"
+	if where.Not {
+		between = "not between"
+	}
+	column := grammarSQL.Wrap(where.Column)
+	*bindingOffset = *bindingOffset + where.Offset
+	min := grammarSQL.Parameter(where.Values[0], *bindingOffset)
+	*bindingOffset = *bindingOffset + 1
+	max := grammarSQL.Parameter(where.Values[1], *bindingOffset)
+	// `field` between 3 and 5
+	// `field` not between 3 and 5
+	return fmt.Sprintf("%s %s %s and %s", column, between, min, max)
 }
 
 // Utils for compiling

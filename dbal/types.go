@@ -168,6 +168,8 @@ type Where struct {
 	Wheres   []Where
 	Query    *Query
 	Value    interface{}
+	Values   []interface{}
+	Not      bool
 	Offset   int
 }
 

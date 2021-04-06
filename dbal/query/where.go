@@ -260,62 +260,6 @@ func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
 
 }
 
-// WhereJSONContains Add a "where JSON contains" clause to the query.
-func (builder *Builder) WhereJSONContains() {
-}
-
-// OrWhereJSONContains Add an "or where JSON contains" clause to the query.
-func (builder *Builder) OrWhereJSONContains() {
-}
-
-// WhereJSONDoesntContain Add a "where JSON not contains" clause to the query.
-func (builder *Builder) WhereJSONDoesntContain() {
-}
-
-// OrWhereJSONDoesntContain Add an "or where JSON not contains" clause to the query.
-func (builder *Builder) OrWhereJSONDoesntContain() {
-}
-
-// WhereJSONLength Add a "where JSON length" clause to the query.
-func (builder *Builder) WhereJSONLength() {
-}
-
-// OrWhereJSONLength Add an "or where JSON length" clause to the query.
-func (builder *Builder) OrWhereJSONLength() {
-}
-
-// WhereBetween Add a where between statement to the query.
-func (builder *Builder) WhereBetween() {
-}
-
-// OrWhereBetween Add an or where between statement to the query.
-func (builder *Builder) OrWhereBetween() {
-}
-
-// WhereNotBetween Add a where not between statement to the query.
-func (builder *Builder) WhereNotBetween() {
-}
-
-// OrWhereNotBetween Add an or where not between statement using columns to the query.
-func (builder *Builder) OrWhereNotBetween() {
-}
-
-// WhereIn Add a "where in" clause to the query.
-func (builder *Builder) WhereIn() {
-}
-
-// OrWhereIn Add an "or where in" clause to the query.
-func (builder *Builder) OrWhereIn() {
-}
-
-// WhereNotIn Add a "where not in" clause to the query.
-func (builder *Builder) WhereNotIn() {
-}
-
-// OrWhereNotIn Add an "or where not in" clause to the query.
-func (builder *Builder) OrWhereNotIn() {
-}
-
 // WhereNull Add a "where null" clause to the query.
 func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query {
 
@@ -371,6 +315,83 @@ func (builder *Builder) WhereNotNull(column interface{}, args ...interface{}) Qu
 // OrWhereNotNull Add an "or where not null" clause to the query.
 func (builder *Builder) OrWhereNotNull(column interface{}) Query {
 	return builder.WhereNull(column, "or", true)
+}
+
+// WhereRaw Add a basic where clause to the query.
+func (builder *Builder) WhereRaw(sql string, bindings ...interface{}) Query {
+	return builder.whereRaw(sql, bindings, "and")
+}
+
+// OrWhereRaw Add an "or where" clause to the query.
+func (builder *Builder) OrWhereRaw(sql string, bindings ...interface{}) Query {
+	return builder.whereRaw(sql, bindings, "or")
+}
+
+func (builder *Builder) whereRaw(sql string, bindings []interface{}, boolean string) Query {
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:    "raw",
+		SQL:     sql,
+		Boolean: boolean,
+	})
+	builder.Query.AddBinding("where", bindings)
+	return builder
+}
+
+// WhereBetween Add a where between statement to the query.
+func (builder *Builder) WhereBetween(column interface{}, values []interface{}) Query {
+	return builder.whereBetween(column, values, "and", false)
+}
+
+// OrWhereBetween Add an or where between statement to the query.
+func (builder *Builder) OrWhereBetween(column interface{}, values []interface{}) Query {
+	return builder.whereBetween(column, values, "or", false)
+}
+
+// WhereNotBetween Add a where not between statement to the query.
+func (builder *Builder) WhereNotBetween(column interface{}, values []interface{}) Query {
+	return builder.whereBetween(column, values, "and", true)
+}
+
+// OrWhereNotBetween Add an or where not between statement using columns to the query.
+func (builder *Builder) OrWhereNotBetween(column interface{}, values []interface{}) Query {
+	return builder.whereBetween(column, values, "or", true)
+}
+
+// whereBetween Add a where between statement to the query.
+func (builder *Builder) whereBetween(column interface{}, values []interface{}, boolean string, not bool) Query {
+
+	values = builder.cleanBindings(values)
+	if len(values) > 2 {
+		values = values[0:2]
+	}
+
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:    "between",
+		Column:  column,
+		Values:  values,
+		Boolean: boolean,
+		Not:     not,
+		Offset:  1,
+	})
+
+	builder.Query.AddBinding("where", values)
+	return builder
+}
+
+// WhereIn Add a "where in" clause to the query.
+func (builder *Builder) WhereIn() {
+}
+
+// OrWhereIn Add an "or where in" clause to the query.
+func (builder *Builder) OrWhereIn() {
+}
+
+// WhereNotIn Add a "where not in" clause to the query.
+func (builder *Builder) WhereNotIn() {
+}
+
+// OrWhereNotIn Add an "or where not in" clause to the query.
+func (builder *Builder) OrWhereNotIn() {
 }
 
 // WhereDate Add a "where date" statement to the query.
@@ -429,22 +450,26 @@ func (builder *Builder) WhereNotExists() {
 func (builder *Builder) OrWhereNotExists() {
 }
 
-// WhereRaw Add a basic where clause to the query.
-func (builder *Builder) WhereRaw(sql string, bindings ...interface{}) Query {
-	return builder.whereRaw(sql, bindings, "and")
+// WhereJSONContains Add a "where JSON contains" clause to the query.
+func (builder *Builder) WhereJSONContains() {
 }
 
-// OrWhereRaw Add an "or where" clause to the query.
-func (builder *Builder) OrWhereRaw(sql string, bindings ...interface{}) Query {
-	return builder.whereRaw(sql, bindings, "or")
+// OrWhereJSONContains Add an "or where JSON contains" clause to the query.
+func (builder *Builder) OrWhereJSONContains() {
 }
 
-func (builder *Builder) whereRaw(sql string, bindings []interface{}, boolean string) Query {
-	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
-		Type:    "raw",
-		SQL:     sql,
-		Boolean: boolean,
-	})
-	builder.Query.AddBinding("where", bindings)
-	return builder
+// WhereJSONDoesntContain Add a "where JSON not contains" clause to the query.
+func (builder *Builder) WhereJSONDoesntContain() {
+}
+
+// OrWhereJSONDoesntContain Add an "or where JSON not contains" clause to the query.
+func (builder *Builder) OrWhereJSONDoesntContain() {
+}
+
+// WhereJSONLength Add a "where JSON length" clause to the query.
+func (builder *Builder) WhereJSONLength() {
+}
+
+// OrWhereJSONLength Add an "or where JSON length" clause to the query.
+func (builder *Builder) OrWhereJSONLength() {
 }

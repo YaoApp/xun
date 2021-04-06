@@ -89,9 +89,7 @@ func (builder *Builder) HavingBetween(column interface{}, values []interface{}, 
 		values = values[0:2]
 	}
 
-	if len(values) > 0 {
-		builder.Query.AddBinding("having", values)
-	}
+	builder.Query.AddBinding("having", values)
 	return builder
 }
 
