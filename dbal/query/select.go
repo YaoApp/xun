@@ -52,6 +52,12 @@ func (builder *Builder) Distinct(args ...interface{}) Query {
 		} else if _, ok := args[0].([]interface{}); ok {
 			builder.Query.Distinct = true
 			builder.Query.DistinctColumns = args[0].([]interface{})
+		} else if _, ok := args[0].([]string); ok {
+			builder.Query.Distinct = true
+			builder.Query.DistinctColumns = []interface{}{}
+			for _, arg := range args[0].([]string) {
+				builder.Query.DistinctColumns = append(builder.Query.DistinctColumns, arg)
+			}
 		} else {
 			builder.Query.Distinct = true
 			builder.Query.DistinctColumns = args

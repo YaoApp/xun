@@ -10,6 +10,19 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
+func TestSelectSelectDefault(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		OrderBy("id")
+
+	// select * from `table_test_select` as `t` where `email` like ? order by `id` asc
+	// select * from "table_test_select" as "t" where "email" like $1 order by "id" asc
+
+	checktestSelectDefault(t, qb)
+}
+
 func TestSelectSelectColumns(t *testing.T) {
 	NewTableFoSelectTest()
 	qb := getTestBuilder()
@@ -147,27 +160,33 @@ func TestSelectDistinctColumns(t *testing.T) {
 	qb := getTestBuilder()
 	qb.From("table_test_select as t").
 		Where("email", "like", "%@yao.run").
-		Select("id", "t.email as wid, t.cate as category").
-		Distinct("category") // Postgres only
+		Select("id", "t.email as wid, t.cate as category", "vote").
+		Distinct("category", "vote") // Postgres only
 
-	// select distinct on ("category") "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1
-	// select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?
+	// select distinct on ("category", "vote") "id", "t"."email" as "wid", "t"."cate" as "category", "vote" from "table_test_select" as "t" where "email" like $1
+	// select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category`, `vote` from `table_test_select` as `t` where `email` like ?
 
-	// checking
-	sql := qb.ToSQL()
-	rows := qb.MustGet()
-	if unit.DriverIs("postgres") {
-		assert.Equal(t, `select distinct on ("category") "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_select" as "t" where "email" like $1`, sql, "the query sql not equal")
-		assert.Equal(t, 2, len(rows), "the return value should be have 2 rows")
-		if len(rows) == 2 {
-			assert.Equal(t, "cat", rows[0]["category"].(string), "the category of first row should be cat")
-			assert.Equal(t, "dog", rows[1]["category"].(string), "the category of first row should be dog")
-		}
-	} else {
-		assert.Equal(t, "select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_select` as `t` where `email` like ?", sql, "the query sql not equal")
-		assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
-	}
+	checktestSelectDistinctColumns(t, qb)
+}
 
+func TestSelectDistinctColumnsStyle2(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "t.email as wid, t.cate as category", "vote").
+		Distinct([]string{"category", "vote"}) // Postgres only
+	checktestSelectDistinctColumns(t, qb)
+}
+
+func TestSelectDistinctColumnsStyle3(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "t.email as wid, t.cate as category", "vote").
+		Distinct([]interface{}{"category", "vote"}) // Postgres only
+	checktestSelectDistinctColumns(t, qb)
 }
 
 // clean the test data
@@ -199,6 +218,25 @@ func NewTableFoSelectTest() {
 		{"email": "ken@yao.run", "cate": "dog", "name": "Ken", "vote": 5, "score": 99.27, "status": "DONE", "created_at": "2021-03-25 09:40:23"},
 		{"email": "ben@yao.run", "cate": "cat", "name": "Ben", "vote": 6, "score": 48.12, "status": "DONE", "created_at": "2021-03-25 18:15:29"},
 	})
+}
+
+func checktestSelectDefault(t *testing.T, qb Query) {
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_select" as "t" where "email" like $1 order by "id" asc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_select` as `t` where `email` like ? order by `id` asc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	if len(rows) == 4 {
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
+		assert.Equal(t, "john@yao.run", rows[0]["email"].(string), "the wid of first row should be john@yao.run")
+		assert.Equal(t, "cat", rows[0]["cate"].(string), "the category of first row should be 1")
+	}
 }
 
 func checktestSelectSelect(t *testing.T, qb Query) {
@@ -256,6 +294,28 @@ func checktestSelectDistinct(t *testing.T, qb Query) {
 	assert.Equal(t, 2, len(rows), "the return value should be have 2 rows")
 	if len(rows) == 2 {
 		assert.Equal(t, "cat", rows[0]["category"].(string), "the category of first row should be cat")
-		assert.Equal(t, "dog", rows[1]["category"].(string), "the category of first row should be dog")
+		assert.Equal(t, "dog", rows[1]["category"].(string), "the category of second row should be dog")
+	}
+}
+
+func checktestSelectDistinctColumns(t *testing.T, qb Query) {
+
+	// select distinct on ("category", "vote") "id", "t"."email" as "wid", "t"."cate" as "category", "vote" from "table_test_select" as "t" where "email" like $1
+	// select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category`, `vote` from `table_test_select` as `t` where `email` like ?
+
+	// checking
+	sql := qb.ToSQL()
+	rows := qb.MustGet()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select distinct on ("category", "vote") "id", "t"."email" as "wid", "t"."cate" as "category", "vote" from "table_test_select" as "t" where "email" like $1`, sql, "the query sql not equal")
+		assert.Equal(t, 3, len(rows), "the return value should be have 3 rows")
+		if len(rows) == 3 {
+			assert.Equal(t, "cat", rows[0]["category"].(string), "the category of first row should be cat")
+			assert.Equal(t, "cat", rows[1]["category"].(string), "the category of second row should be cat")
+			assert.Equal(t, "dog", rows[2]["category"].(string), "the category of third row should be dog")
+		}
+	} else {
+		assert.Equal(t, "select distinct `id`, `t`.`email` as `wid`, `t`.`cate` as `category`, `vote` from `table_test_select` as `t` where `email` like ?", sql, "the query sql not equal")
+		assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
 	}
 }
