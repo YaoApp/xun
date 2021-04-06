@@ -23,6 +23,20 @@ func TestSelectSelectDefault(t *testing.T) {
 	checktestSelectDefault(t, qb)
 }
 
+func TestSelectSelectDefaultStyle2(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select().
+		OrderBy("id")
+
+	// select * from `table_test_select` as `t` where `email` like ? order by `id` asc
+	// select * from "table_test_select" as "t" where "email" like $1 order by "id" asc
+
+	checktestSelectDefault(t, qb)
+}
+
 func TestSelectSelectColumns(t *testing.T) {
 	NewTableFoSelectTest()
 	qb := getTestBuilder()
