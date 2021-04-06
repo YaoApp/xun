@@ -12,7 +12,6 @@ import (
 func (builder *Builder) OrderBy(column interface{}, args ...string) Query {
 	offset := 0
 	direction := "asc"
-	bindings := []interface{}{}
 	orderName := "order"
 
 	if len(args) > 0 {
@@ -28,6 +27,7 @@ func (builder *Builder) OrderBy(column interface{}, args ...string) Query {
 
 	if builder.isQueryable(column) {
 		sql := ""
+		bindings := []interface{}{}
 		sql, bindings, offset = builder.createSub(column)
 		column = dbal.Raw(fmt.Sprintf("(%s)", sql))
 		builder.Query.AddBinding(orderName, bindings)
