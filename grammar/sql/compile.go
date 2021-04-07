@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
 )
 
@@ -313,54 +314,18 @@ func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bind
 	// operator, which is added by the query builders for convenience so we can
 	// avoid checking for the first clauses in each of the compilers methods.
 	for _, where := range wheres {
-		// fmt.Printf("CompileSelect: %s %s %s %v\n", where.Boolean, where.Type, where.Operator, where.Value)
 		boolen := strings.ToLower(where.Boolean)
-		switch where.Type {
-		case "basic":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBasic(query, where, bindingOffset)))
-			break
-		case "date":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereDate(query, where, bindingOffset)))
-			break
-		case "time":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereTime(query, where, bindingOffset)))
-			break
-		case "day":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereDay(query, where, bindingOffset)))
-			break
-		case "month":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereMonth(query, where, bindingOffset)))
-			break
-		case "year":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereYear(query, where, bindingOffset)))
-			break
-		case "raw":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereRaw(query, where, bindingOffset)))
-			break
-		case "null":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNull(query, where, bindingOffset)))
-			break
-		case "notnull":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNotNull(query, where, bindingOffset)))
-			break
-		case "between":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBetween(query, where, bindingOffset)))
-			break
-		case "in":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereIn(query, where, bindingOffset)))
-			break
-		case "column":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereColumn(query, where, bindingOffset)))
-			break
-		case "sub":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereSub(query, where, bindingOffset)))
-			break
-		case "exists":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereExists(query, where, bindingOffset)))
-			break
-		case "nested":
-			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNested(query, where, bindingOffset)))
-			break
+		typ := xun.UpperFirst(where.Type)
+		// WhereBasic, WhereDate, WhereTime ...
+		method := reflect.ValueOf(grammarSQL).MethodByName(fmt.Sprintf("Where%s", typ))
+		if method.Kind() == reflect.Func {
+			in := []reflect.Value{
+				reflect.ValueOf(query),
+				reflect.ValueOf(where),
+				reflect.ValueOf(bindingOffset),
+			}
+			out := method.Call(in)
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, out[0].String()))
 		}
 	}
 
@@ -402,18 +367,18 @@ func (grammarSQL SQL) WhereTime(query *dbal.Query, where dbal.Where, bindingOffs
 	return grammarSQL.WhereDateBased("time", query, where, bindingOffset)
 }
 
-// WhereTime Compile a "where day" clause.
-func (grammarSQL SQL) whereDay(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereDay Compile a "where day" clause.
+func (grammarSQL SQL) WhereDay(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("day", query, where, bindingOffset)
 }
 
-// whereMonth Compile a "where month" clause.
-func (grammarSQL SQL) whereMonth(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereMonth Compile a "where month" clause.
+func (grammarSQL SQL) WhereMonth(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("month", query, where, bindingOffset)
 }
 
-// whereYear Compile a "where year" clause.
-func (grammarSQL SQL) whereYear(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereYear Compile a "where year" clause.
+func (grammarSQL SQL) WhereYear(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("year", query, where, bindingOffset)
 }
 
@@ -452,8 +417,8 @@ func (grammarSQL SQL) WhereSub(query *dbal.Query, where dbal.Where, bindingOffse
 	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
 }
 
-// Compile a where (not) exists clause.
-func (grammarSQL SQL) whereExists(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereExists Compile a where (not) exists clause.
+func (grammarSQL SQL) WhereExists(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	exists := "exists"
 	if where.Not {
 		exists = "not exists"
@@ -472,8 +437,8 @@ func (grammarSQL SQL) WhereRaw(query *dbal.Query, where dbal.Where, bindingOffse
 	return where.SQL
 }
 
-// WhereNotNull Compile a "where not null" clause.
-func (grammarSQL SQL) WhereNotNull(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+// WhereNotnull Compile a "where not null" clause.
+func (grammarSQL SQL) WhereNotnull(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
 }
 

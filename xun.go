@@ -22,6 +22,16 @@ func ToSnakeCase(str string) string {
 	return strings.ToLower(snake)
 }
 
+// UpperFirst upcase the first letter
+func UpperFirst(str string) string {
+	if len(str) < 1 {
+		return strings.ToUpper(str)
+	}
+	first := strings.ToUpper(string(str[0]))
+	other := str[1:]
+	return first + other
+}
+
 // Time Create a new time struct
 func Time(value interface{}) T {
 	return T{
