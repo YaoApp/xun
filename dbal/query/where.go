@@ -538,11 +538,19 @@ func (builder *Builder) OrWhereTime(column interface{}, args ...interface{}) Que
 }
 
 // WhereYear Add a "where year" statement to the query.
-func (builder *Builder) WhereYear() {
+func (builder *Builder) WhereYear(column interface{}, args ...interface{}) Query {
+	operator, value, boolean, _ := builder.prepareArgs(args...)
+	// date Format
+	if !builder.isExpression(value) {
+		value = xun.Time(value).MustToTime().Year()
+	}
+	return builder.whereDateTime("year", column, operator, value, boolean)
 }
 
 // OrWhereYear Add an "or where year" statement to the query.
-func (builder *Builder) OrWhereYear() {
+func (builder *Builder) OrWhereYear(column interface{}, args ...interface{}) Query {
+	operator, value, _, _ := builder.prepareArgs(args...)
+	return builder.WhereYear(column, operator, value, "or")
 }
 
 // WhereMonth Add a "where month" statement to the query.

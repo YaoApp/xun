@@ -224,6 +224,5 @@ func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where d
 	} else {
 		value = where.Value.(dbal.Expression).GetValue()
 	}
-
-	return fmt.Sprintf("%s(%s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("extract(%s from %s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
 }

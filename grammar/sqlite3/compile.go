@@ -159,17 +159,17 @@ func (grammarSQL SQLite3) WhereTime(query *dbal.Query, where dbal.Where, binding
 
 // WhereTime Compile a "where day" clause.
 func (grammarSQL SQLite3) whereDay(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return grammarSQL.WhereDateBased("day", query, where, bindingOffset)
+	return grammarSQL.WhereDateBased("%d", query, where, bindingOffset)
 }
 
 // whereMonth Compile a "where month" clause.
 func (grammarSQL SQLite3) whereMonth(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return grammarSQL.WhereDateBased("month", query, where, bindingOffset)
+	return grammarSQL.WhereDateBased("%m", query, where, bindingOffset)
 }
 
 // whereYear Compile a "where year" clause.
 func (grammarSQL SQLite3) whereYear(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return grammarSQL.WhereDateBased("year", query, where, bindingOffset)
+	return grammarSQL.WhereDateBased("%Y", query, where, bindingOffset)
 }
 
 // WhereDateBased  Compile a date based where clause.

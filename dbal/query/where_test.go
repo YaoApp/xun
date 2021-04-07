@@ -1207,6 +1207,60 @@ func TestWhereOrWhereTime(t *testing.T) {
 	}
 }
 
+func TestWhereWhereYear(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("id", ">", 2).
+		WhereYear("created_at", ">", "2021-03-24 10:30:15")
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "id" > $1 and extract(year from "created_at")>$2 order by "id" desc`, sql, "the query sql not equal")
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `id` > ? and strftime('%Y',`created_at`) > cast(? as text) order by `id` desc", sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `id` > ? and year(`created_at`)>? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 0, len(rows), "the return value should be have 1 rows")
+}
+
+func TestWhereOrWhereYear(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("id", ">", 2).
+		OrWhereYear("created_at", ">", "2021-03-24 10:30:15")
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "id" > $1 or extract(year from "created_at")>$2 order by "id" desc`, sql, "the query sql not equal")
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `id` > ? or strftime('%Y',`created_at`) > cast(? as text) order by `id` desc", sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `id` > ? or year(`created_at`)>? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 1 rows")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(3), rows[1]["id"].(int64), "the id of the 2nd row should be 3")
+	}
+}
+
 // clean the test data
 func TestWhereClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
