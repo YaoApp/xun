@@ -160,6 +160,18 @@ func TestSelectSelectSubString(t *testing.T) {
 	checktestSelectSelectSubRaw(t, qb)
 }
 
+func TestSelectSelectSubErrorType(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	assert.PanicsWithError(t, "a subquery must be a query builder instance, a Closure, or a string", func() {
+		qb.From("table_test_select as t").
+			Where("email", "like", "%@yao.run").
+			Select("id").
+			SelectSub(400, "category").
+			OrderBy("id")
+	})
+}
+
 func TestSelectDistinct(t *testing.T) {
 	NewTableFoSelectTest()
 	qb := getTestBuilder()
