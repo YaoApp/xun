@@ -45,7 +45,7 @@ func TestDebugDDFail(t *testing.T) {
 	out := string(bytes)
 	assert.Nil(t, err, "the command should be executed success")
 	assert.True(t, strings.Contains(out, "select"), "the command return value should be have select...")
-	assert.True(t, strings.Contains(out, `Error 1064`), "the command return value should be have Error 1064...")
+	assert.True(t, strings.Contains(out, `[]`), "the command return value should be have []...")
 	assert.True(t, strings.Contains(out, `runtime/debug.Stack`), "the command return value should be have runtime/debug.Stack...")
 }
 
