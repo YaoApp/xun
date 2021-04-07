@@ -124,7 +124,38 @@ func TestGroupHavingBetween(t *testing.T) {
 		Where("email", "like", "%@yao.run").
 		Select("vote", dbal.Raw("Count(id) as cnt")).
 		GroupBy("vote").
-		HavingBetween("vote", []interface{}{5, 7})
+		HavingBetween("vote", []int{5, 7})
+
+	// select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` between ? and ?
+	// select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" between $2 and $3
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" between $2 and $3`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` between ? and ?", sql, "the query sql not equal")
+	}
+
+	// check values
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should have 2 items")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(2), rows[0]["cnt"].(int64), "the cnt of first row should be 1")
+		assert.Equal(t, int64(5), rows[0]["vote"].(int64), "the vote of first row should be 5")
+		assert.Equal(t, int64(1), rows[1]["cnt"].(int64), "the cnt of last row should be 2")
+		assert.Equal(t, int64(6), rows[1]["vote"].(int64), "the vote of last row should be DONE")
+	}
+}
+
+func TestGroupHavingBetweenInt(t *testing.T) {
+	NewTableFoGroupTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_group").
+		Where("email", "like", "%@yao.run").
+		Select("vote", dbal.Raw("Count(id) as cnt")).
+		GroupBy("vote").
+		HavingBetween("vote", []int{5, 7, 9})
 
 	// select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` between ? and ?
 	// select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" between $2 and $3
@@ -156,7 +187,7 @@ func TestGroupOrHavingBetween(t *testing.T) {
 		Select("vote", dbal.Raw("Count(id) as cnt")).
 		GroupBy("vote").
 		Having("vote", "=", 8).
-		OrHavingBetween("vote", []interface{}{5, 7})
+		OrHavingBetween("vote", []int{5, 7})
 
 	// select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` = ? or `vote` between ? and ?
 	// select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" = $2 or "vote" between $3 and $4

@@ -353,45 +353,46 @@ func (builder *Builder) whereRaw(sql string, bindings []interface{}, boolean str
 }
 
 // WhereBetween Add a where between statement to the query.
-func (builder *Builder) WhereBetween(column interface{}, values []interface{}) Query {
+func (builder *Builder) WhereBetween(column interface{}, values interface{}) Query {
 	return builder.whereBetween(column, values, "and", false)
 }
 
 // OrWhereBetween Add an or where between statement to the query.
-func (builder *Builder) OrWhereBetween(column interface{}, values []interface{}) Query {
+func (builder *Builder) OrWhereBetween(column interface{}, values interface{}) Query {
 	return builder.whereBetween(column, values, "or", false)
 }
 
 // WhereNotBetween Add a where not between statement to the query.
-func (builder *Builder) WhereNotBetween(column interface{}, values []interface{}) Query {
+func (builder *Builder) WhereNotBetween(column interface{}, values interface{}) Query {
 	return builder.whereBetween(column, values, "and", true)
 }
 
 // OrWhereNotBetween Add an or where not between statement using columns to the query.
-func (builder *Builder) OrWhereNotBetween(column interface{}, values []interface{}) Query {
+func (builder *Builder) OrWhereNotBetween(column interface{}, values interface{}) Query {
 	return builder.whereBetween(column, values, "or", true)
 }
 
 // whereBetween Add a where between statement to the query.
-func (builder *Builder) whereBetween(column interface{}, values []interface{}, boolean string, not bool) Query {
+func (builder *Builder) whereBetween(column interface{}, values interface{}, boolean string, not bool) Query {
 
 	betweenOffset := 1
 
-	values = builder.cleanBindings(values)
-	if len(values) > 2 {
-		values = values[0:2]
+	betweenValues := builder.cleanBindings(values)
+
+	if len(betweenValues) > 2 {
+		betweenValues = betweenValues[0:2]
 	}
 
 	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
 		Type:    "between",
 		Column:  column,
-		Values:  values,
+		Values:  betweenValues,
 		Boolean: boolean,
 		Not:     not,
 		Offset:  betweenOffset,
 	})
 
-	builder.Query.AddBinding("where", values)
+	builder.Query.AddBinding("where", betweenValues)
 	return builder
 }
 

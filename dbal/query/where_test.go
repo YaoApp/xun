@@ -441,7 +441,39 @@ func TestWhereWhereBetween(t *testing.T) {
 	qb.Table("table_test_where").
 		OrderByDesc("id").
 		Where("email", "like", "%yao.run").
-		WhereBetween("vote", []interface{}{5, 10})
+		WhereBetween("vote", []int{5, 10})
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	//select * from `table_test_where` where `email` like ? and `vote` between ? and ? order by `id` desc
+	//select * from "table_test_where" where "email" like $1 and "vote" between $2 and $3 order by "id" desc
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and "vote" between $2 and $3 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? and `vote` between ? and ? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 3, len(rows), "the return value should be have 3 rows")
+	if len(rows) == 3 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(1), rows[2]["id"].(int64), "the id of the 2nd row should be 1")
+	}
+}
+
+func TestWhereWhereBetweenInt(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Where("email", "like", "%yao.run").
+		WhereBetween("vote", []int{5, 10, 100})
 
 	// fmt.Println(qb.ToSQL())
 	// utils.Println(qb.MustGet())
@@ -473,7 +505,7 @@ func TestWhereOrWhereBetween(t *testing.T) {
 	qb.Table("table_test_where").
 		OrderByDesc("id").
 		Where("email", "like", "%yao.run").
-		OrWhereBetween("vote", []interface{}{5, 10})
+		OrWhereBetween("vote", []int{5, 10})
 
 	// fmt.Println(qb.ToSQL())
 	// utils.Println(qb.MustGet())
@@ -500,7 +532,7 @@ func TestWhereWhereNotBetween(t *testing.T) {
 	qb.Table("table_test_where").
 		OrderByDesc("id").
 		Where("email", "like", "%yao.run").
-		WhereNotBetween("vote", []interface{}{5, 10})
+		WhereNotBetween("vote", []int{5, 10})
 
 	// fmt.Println(qb.ToSQL())
 	// utils.Println(qb.MustGet())
@@ -530,7 +562,7 @@ func TestWhereOrWhereNotBetween(t *testing.T) {
 	qb.Table("table_test_where").
 		OrderByDesc("id").
 		Where("email", "like", "%yao.run").
-		OrWhereNotBetween("vote", []interface{}{5, 10})
+		OrWhereNotBetween("vote", []int{5, 10})
 
 	// fmt.Println(qb.ToSQL())
 	// utils.Println(qb.MustGet())

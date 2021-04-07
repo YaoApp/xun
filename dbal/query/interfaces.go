@@ -57,10 +57,10 @@ type Query interface {
 	OrWhereNotNull(column interface{}) Query
 	WhereRaw(sql string, bindings ...interface{}) Query
 	OrWhereRaw(sql string, bindings ...interface{}) Query
-	WhereBetween(column interface{}, values []interface{}) Query
-	OrWhereBetween(column interface{}, values []interface{}) Query
-	WhereNotBetween(column interface{}, values []interface{}) Query
-	OrWhereNotBetween(column interface{}, values []interface{}) Query
+	WhereBetween(column interface{}, values interface{}) Query
+	OrWhereBetween(column interface{}, values interface{}) Query
+	WhereNotBetween(column interface{}, values interface{}) Query
+	OrWhereNotBetween(column interface{}, values interface{}) Query
 	WhereIn(column interface{}, values interface{}) Query
 	OrWhereIn(column interface{}, values interface{}) Query
 	WhereNotIn(column interface{}, values interface{}) Query
@@ -71,8 +71,8 @@ type Query interface {
 	GroupByRaw(expression string, bindings ...interface{}) Query
 	Having(column interface{}, args ...interface{}) Query
 	OrHaving(column interface{}, args ...interface{}) Query
-	HavingBetween(column interface{}, values []interface{}, args ...interface{}) Query
-	OrHavingBetween(column interface{}, values []interface{}, args ...interface{}) Query
+	HavingBetween(column interface{}, values interface{}, args ...interface{}) Query
+	OrHavingBetween(column interface{}, values interface{}, args ...interface{}) Query
 	HavingRaw(sql string, bindings ...interface{}) Query
 	OrHavingRaw(sql string, bindings ...interface{}) Query
 

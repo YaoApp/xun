@@ -52,7 +52,7 @@ func (builder *Builder) OrHaving(column interface{}, args ...interface{}) Query 
 }
 
 // HavingBetween Add a "having between " clause to the query.
-func (builder *Builder) HavingBetween(column interface{}, values []interface{}, args ...interface{}) Query {
+func (builder *Builder) HavingBetween(column interface{}, values interface{}, args ...interface{}) Query {
 
 	boolean := "and"
 	not := false
@@ -74,27 +74,26 @@ func (builder *Builder) HavingBetween(column interface{}, values []interface{}, 
 			offset = args[2].(int)
 		}
 	}
+	havingValues := builder.cleanBindings(values)
+	if len(havingValues) > 2 {
+		havingValues = havingValues[0:2]
+	}
 
 	builder.Query.Havings = append(builder.Query.Havings, dbal.Having{
 		Type:    "between",
 		Column:  column,
 		Not:     not,
 		Boolean: boolean,
-		Values:  values,
+		Values:  havingValues,
 		Offset:  offset,
 	})
 
-	values = builder.cleanBindings(values)
-	if len(values) > 2 {
-		values = values[0:2]
-	}
-
-	builder.Query.AddBinding("having", values)
+	builder.Query.AddBinding("having", havingValues)
 	return builder
 }
 
 // OrHavingBetween Add a "having between " clause to the query.
-func (builder *Builder) OrHavingBetween(column interface{}, values []interface{}, args ...interface{}) Query {
+func (builder *Builder) OrHavingBetween(column interface{}, values interface{}, args ...interface{}) Query {
 	not := false
 	offset := 1
 	if len(args) > 0 {
