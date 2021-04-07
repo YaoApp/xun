@@ -78,6 +78,8 @@ type Query interface {
 	OrWhereYear(column interface{}, args ...interface{}) Query
 	WhereMonth(column interface{}, args ...interface{}) Query
 	OrWhereMonth(column interface{}, args ...interface{}) Query
+	WhereDay(column interface{}, args ...interface{}) Query
+	OrWhereDay(column interface{}, args ...interface{}) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query

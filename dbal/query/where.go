@@ -570,14 +570,22 @@ func (builder *Builder) OrWhereMonth(column interface{}, args ...interface{}) Qu
 }
 
 // WhereDay Add a "where day" statement to the query.
-func (builder *Builder) WhereDay() {
+func (builder *Builder) WhereDay(column interface{}, args ...interface{}) Query {
+	operator, value, boolean, _ := builder.prepareArgs(args...)
+	// date Format
+	if !builder.isExpression(value) {
+		value = xun.Time(value).MustToTime().Day()
+	}
+	return builder.whereDateTime("day", column, operator, value, boolean)
 }
 
 // OrWhereDay Add an "or where day" statement to the query.
-func (builder *Builder) OrWhereDay() {
+func (builder *Builder) OrWhereDay(column interface{}, args ...interface{}) Query {
+	operator, value, _, _ := builder.prepareArgs(args...)
+	return builder.WhereDay(column, operator, value, "or")
 }
 
-// whereDateTime Add a date based (date, year, month, day, time) statement to the query.
+// whereDateTime Add a date based (date, time, year, month, day ) statement to the query.
 func (builder *Builder) whereDateTime(dateType string, column interface{}, operator string, value interface{}, boolean string) Query {
 
 	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
