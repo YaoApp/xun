@@ -57,6 +57,35 @@ func TestWhereWhereArray(t *testing.T) {
 	}
 }
 
+func TestWhereWhereArrayErrorType(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("id", 1).
+		Where([][]string{
+			{"score", ">"},
+			{"score", "<"},
+		})
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "id" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `id` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the 2nd binding should be 10")
+	}
+}
+
 func TestWhereWhereClosure(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
@@ -101,6 +130,68 @@ func TestWhereWhereClosure(t *testing.T) {
 	if len(rows) == 1 {
 		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
 	}
+}
+
+func TestWhereWhereClosureOr(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("email", "like", "%@yao.run").
+		Where(func(qb Query) {
+			qb.Where("vote", ">", 10)
+			qb.Where("name", "Ken")
+			qb.Where(func(qb Query) {
+				qb.Where("created_at", ">", "2021-03-25 08:00:00")
+				qb.Where("created_at", "<", "2021-03-25 19:00:00")
+			})
+		}, "or").
+		Where("score", ">", 5)
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 or ("vote" > $2 and "name" = $3 and ("created_at" > $4 and "created_at" < $5)) and "score" > $6`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? or (`vote` > ? and `name` = ? and (`created_at` > ? and `created_at` < ?)) and `score` > ?", sql, "the query sql not equal")
+	}
+
+	// // checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+}
+
+func TestWhereWhereClosureOrStyle2(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("email", "like", "%@yao.run").
+		OrWhere(func(qb Query) {
+			qb.Where("vote", ">", 10)
+			qb.Where("name", "Ken")
+			qb.Where(func(qb Query) {
+				qb.Where("created_at", ">", "2021-03-25 08:00:00")
+				qb.Where("created_at", "<", "2021-03-25 19:00:00")
+			})
+		}).
+		Where("score", ">", 5)
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like $1 or ("vote" > $2 and "name" = $3 and ("created_at" > $4 and "created_at" < $5)) and "score" > $6`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `email` like ? or (`vote` > ? and `name` = ? and (`created_at` > ? and `created_at` < ?)) and `score` > ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
 }
 
 func TestWhereWhereQueryable(t *testing.T) {
@@ -177,7 +268,6 @@ func TestWhereWhereValueIsClosure(t *testing.T) {
 	if len(rows) == 1 {
 		assert.Equal(t, "ken@yao.run", rows[0]["email"].(string), "the email of first row should be ken@yao.run")
 	}
-
 }
 
 func TestWhereWhereValueIsExpression(t *testing.T) {
@@ -338,6 +428,28 @@ func TestWhereWhereNull(t *testing.T) {
 		assert.Equal(t, `select * from "table_test_where" where "deleted_at" is null`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select * from `table_test_where` where `deleted_at` is null", sql, "the query sql not equal")
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 0, len(bindings), "the bindings should have none item")
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
+}
+
+func TestWhereWhereNullArray(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		WhereNull([]string{"deleted_at", "updated_at"})
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "deleted_at" is null and "updated_at" is null`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `deleted_at` is null and `updated_at` is null", sql, "the query sql not equal")
 	}
 
 	bindings := qb.GetBindings()

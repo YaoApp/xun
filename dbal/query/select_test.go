@@ -132,6 +132,34 @@ func TestSelectSelectSub(t *testing.T) {
 	checktestSelectSelectSub(t, qb)
 }
 
+func TestSelectSelectSubRaw(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id").
+		SelectSub(dbal.Raw("select 'cate'"), "category").
+		OrderBy("id")
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+	checktestSelectSelectSubRaw(t, qb)
+}
+
+func TestSelectSelectSubString(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	qb.From("table_test_select as t").
+		Where("email", "like", "%@yao.run").
+		Select("id").
+		SelectSub("select 'cate'", "category").
+		OrderBy("id")
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+	checktestSelectSelectSubRaw(t, qb)
+}
+
 func TestSelectDistinct(t *testing.T) {
 	NewTableFoSelectTest()
 	qb := getTestBuilder()
@@ -283,6 +311,25 @@ func checktestSelectSelectSub(t *testing.T, qb Query) {
 		assert.Equal(t, `select "id", (select 'cate') as "category" from "table_test_select" as "t" where "email" like $1 order by "id" asc`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select `id`, (select ?) as `category` from `table_test_select` as `t` where `email` like ? order by `id` asc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	if len(rows) == 4 {
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
+		assert.Equal(t, "cate", rows[0]["category"].(string), "the category of first row should be 1")
+	}
+}
+
+func checktestSelectSelectSubRaw(t *testing.T, qb Query) {
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "id", (select 'cate') as "category" from "table_test_select" as "t" where "email" like $1 order by "id" asc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `id`, (select 'cate') as `category` from `table_test_select` as `t` where `email` like ? order by `id` asc", sql, "the query sql not equal")
 	}
 
 	// checking result

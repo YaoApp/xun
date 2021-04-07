@@ -26,12 +26,11 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 			boolean = args[0].(string)
 		}
 		whereType = "nested"
-	}
 
-	// If the column is a Closure instance and there is an operator value, we will
-	// assume the developer wants to run a subquery and then compare the result
-	// of that subquery with the given value that was provided to the method.
-	if builder.isQueryable(column) && len(args) >= 1 {
+		// If the column is a Closure instance and there is an operator value, we will
+		// assume the developer wants to run a subquery and then compare the result
+		// of that subquery with the given value that was provided to the method.
+	} else if builder.isQueryable(column) && len(args) >= 1 {
 		whereType = "sub"
 	}
 
@@ -40,6 +39,10 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
 // OrWhere Add an "or where" clause to the query.
 func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
+
+	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isBoolean(args[0]))) {
+		return builder.Where(column, "or")
+	}
 
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
@@ -226,9 +229,9 @@ func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}, i
 		whereOffset := offset + len(utils.Flatten(bindings))
 		return builder.Grammar.CompileSelectOffset(qb.Query, &offset), bindings, whereOffset
 	case dbal.Expression:
-		return subquery.(dbal.Expression).GetValue(), []interface{}{}, 0
+		return subquery.(dbal.Expression).GetValue(), []interface{}{}, 1
 	case string:
-		return subquery.(string), []interface{}{}, 0
+		return subquery.(string), []interface{}{}, 1
 	}
 
 	panic(fmt.Errorf("a subquery must be a query builder instance, a Closure, or a string"))
@@ -467,6 +470,22 @@ func (builder *Builder) whereIn(column interface{}, values interface{}, boolean 
 	return builder
 }
 
+// WhereExists Add an exists clause to the query.
+func (builder *Builder) WhereExists() {
+}
+
+// OrWhereExists Add an or exists clause to the query.
+func (builder *Builder) OrWhereExists() {
+}
+
+// WhereNotExists  Add a where not exists clause to the query.
+func (builder *Builder) WhereNotExists() {
+}
+
+// OrWhereNotExists Add a where not exists clause to the query.
+func (builder *Builder) OrWhereNotExists() {
+}
+
 // WhereDate Add a "where date" statement to the query.
 func (builder *Builder) WhereDate() {
 }
@@ -505,22 +524,6 @@ func (builder *Builder) WhereTime() {
 
 // OrWhereTime Add an "or where time" statement to the query.
 func (builder *Builder) OrWhereTime() {
-}
-
-// WhereExists Add an exists clause to the query.
-func (builder *Builder) WhereExists() {
-}
-
-// OrWhereExists Add an or exists clause to the query.
-func (builder *Builder) OrWhereExists() {
-}
-
-// WhereNotExists  Add a where not exists clause to the query.
-func (builder *Builder) WhereNotExists() {
-}
-
-// OrWhereNotExists Add a where not exists clause to the query.
-func (builder *Builder) OrWhereNotExists() {
 }
 
 // WhereJSONContains Add a "where JSON contains" clause to the query.
