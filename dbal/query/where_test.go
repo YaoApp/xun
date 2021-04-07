@@ -12,7 +12,7 @@ import (
 )
 
 func TestWhereWhereArray(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -58,7 +58,7 @@ func TestWhereWhereArray(t *testing.T) {
 }
 
 func TestWhereWhereArrayErrorType(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("id", 1).
@@ -87,7 +87,7 @@ func TestWhereWhereArrayErrorType(t *testing.T) {
 }
 
 func TestWhereWhereClosure(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -133,7 +133,7 @@ func TestWhereWhereClosure(t *testing.T) {
 }
 
 func TestWhereWhereClosureOr(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -164,7 +164,7 @@ func TestWhereWhereClosureOr(t *testing.T) {
 }
 
 func TestWhereWhereClosureOrStyle2(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -195,7 +195,7 @@ func TestWhereWhereClosureOrStyle2(t *testing.T) {
 }
 
 func TestWhereWhereQueryable(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -234,7 +234,7 @@ func TestWhereWhereQueryable(t *testing.T) {
 }
 
 func TestWhereWhereValueIsClosure(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -271,7 +271,7 @@ func TestWhereWhereValueIsClosure(t *testing.T) {
 }
 
 func TestWhereWhereValueIsExpression(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("email", "like", "%@yao.run").
@@ -305,7 +305,7 @@ func TestWhereWhereValueIsExpression(t *testing.T) {
 }
 
 func TestWhereWhereColumn(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("vote", ">", 10).
@@ -331,7 +331,7 @@ func TestWhereWhereColumn(t *testing.T) {
 }
 
 func TestWhereWhereColumnBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -360,7 +360,7 @@ func TestWhereWhereColumnBasic(t *testing.T) {
 }
 
 func TestWhereWhereColumnArray(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("vote", ">", 0).
@@ -389,7 +389,7 @@ func TestWhereWhereColumnArray(t *testing.T) {
 }
 
 func TestWhereOrWhereColumn(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -417,7 +417,7 @@ func TestWhereOrWhereColumn(t *testing.T) {
 }
 
 func TestWhereWhereNull(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Where("deleted_at", nil)
@@ -439,7 +439,7 @@ func TestWhereWhereNull(t *testing.T) {
 }
 
 func TestWhereWhereNullArray(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		WhereNull([]string{"deleted_at", "updated_at"})
@@ -460,7 +460,7 @@ func TestWhereWhereNullArray(t *testing.T) {
 	assert.Equal(t, 4, len(rows), "the return value should has 4 row")
 }
 func TestWhereOrWhereNull(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		WhereRaw("true").
@@ -483,7 +483,7 @@ func TestWhereOrWhereNull(t *testing.T) {
 }
 
 func TestWhereWhereNotNull(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		WhereNotNull("email")
@@ -505,7 +505,7 @@ func TestWhereWhereNotNull(t *testing.T) {
 }
 
 func TestWhereOrWhereNotNull(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		WhereRaw("true").
@@ -528,7 +528,7 @@ func TestWhereOrWhereNotNull(t *testing.T) {
 }
 
 func TestWhereWhereRaw(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Select("id", "vote").
@@ -551,7 +551,7 @@ func TestWhereWhereRaw(t *testing.T) {
 }
 
 func TestWhereOrWhereRaw(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Select("id", "vote").
@@ -577,7 +577,7 @@ func TestWhereOrWhereRaw(t *testing.T) {
 }
 
 func TestWhereOrWhereBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Select("id", "vote").
@@ -603,7 +603,7 @@ func TestWhereOrWhereBasic(t *testing.T) {
 }
 
 func TestWhereOrWhereBasicStyle2(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		Select("id", "vote").
@@ -629,7 +629,7 @@ func TestWhereOrWhereBasicStyle2(t *testing.T) {
 }
 
 func TestWhereOrWhereArray(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -660,7 +660,7 @@ func TestWhereOrWhereArray(t *testing.T) {
 }
 
 func TestWhereWhereBetween(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -692,7 +692,7 @@ func TestWhereWhereBetween(t *testing.T) {
 }
 
 func TestWhereWhereBetweenInt(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -724,7 +724,7 @@ func TestWhereWhereBetweenInt(t *testing.T) {
 }
 
 func TestWhereOrWhereBetween(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -751,7 +751,7 @@ func TestWhereOrWhereBetween(t *testing.T) {
 }
 
 func TestWhereWhereNotBetween(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -781,7 +781,7 @@ func TestWhereWhereNotBetween(t *testing.T) {
 }
 
 func TestWhereOrWhereNotBetween(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -809,7 +809,7 @@ func TestWhereOrWhereNotBetween(t *testing.T) {
 }
 
 func TestWhereWhereInBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -838,7 +838,7 @@ func TestWhereWhereInBasic(t *testing.T) {
 }
 
 func TestWhereWhereInBasicString(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -862,7 +862,7 @@ func TestWhereWhereInBasicString(t *testing.T) {
 }
 
 func TestWhereWhereInBasicSub(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -894,7 +894,7 @@ func TestWhereWhereInBasicSub(t *testing.T) {
 }
 
 func TestWhereOrWhereInBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -920,7 +920,7 @@ func TestWhereOrWhereInBasic(t *testing.T) {
 }
 
 func TestWhereWhereNotInBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -944,7 +944,7 @@ func TestWhereWhereNotInBasic(t *testing.T) {
 }
 
 func TestWhereOrWhereNotInBasic(t *testing.T) {
-	NewTableFoWhereTest()
+	NewTableForWhereTest()
 	qb := getTestBuilder()
 	qb.Table("table_test_where").
 		OrderByDesc("id").
@@ -969,13 +969,136 @@ func TestWhereOrWhereNotInBasic(t *testing.T) {
 	}
 }
 
+func TestWhereWhereExist(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("score", ">", 90).
+		WhereExists(func(qb Query) {
+			qb.SelectRaw("true").
+				From("table_test_where as t2").
+				WhereColumn("t1.score", "t2.score_grade")
+		})
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "score" > $1 and exists (select true from "table_test_where" as "t2" where "t1"."score" = "t2"."score_grade") order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `score` > ? and exists (select true from `table_test_where` as `t2` where `t1`.`score` = `t2`.`score_grade`) order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+	}
+}
+
+func TestWhereOrWhereExist(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("score", ">", 90).
+		OrWhereExists(func(qb Query) {
+			qb.SelectRaw("true").
+				From("table_test_where as t2").
+				WhereColumn("t1.score", "t2.score_grade")
+		})
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "score" > $1 or exists (select true from "table_test_where" as "t2" where "t1"."score" = "t2"."score_grade") order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `score` > ? or exists (select true from `table_test_where` as `t2` where `t1`.`score` = `t2`.`score_grade`) order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 2 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+		assert.Equal(t, int64(1), rows[1]["id"].(int64), "the id of the 2nd row should be 1")
+	}
+}
+
+func TestWhereWhereNotExist(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("score", ">", 90).
+		WhereNotExists(func(qb Query) {
+			qb.SelectRaw("true").
+				From("table_test_where as t2").
+				WhereColumn("t1.score", "t2.score_grade")
+		})
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "score" > $1 and not exists (select true from "table_test_where" as "t2" where "t1"."score" = "t2"."score_grade") order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `score` > ? and not exists (select true from `table_test_where` as `t2` where `t1`.`score` = `t2`.`score_grade`) order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of the 1st row should be 1")
+	}
+}
+
+func TestWhereOrWhereNotExist(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where as t1").
+		OrderByDesc("id").
+		Where("score", "<", 90).
+		OrWhereNotExists(func(qb Query) {
+			qb.SelectRaw("true").
+				From("table_test_where as t2").
+				WhereColumn("t1.score", "t2.score_grade")
+		})
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" as "t1" where "score" < $1 or not exists (select true from "table_test_where" as "t2" where "t1"."score" = "t2"."score_grade") order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` as `t1` where `score` < ? or not exists (select true from `table_test_where` as `t2` where `t1`.`score` = `t2`.`score_grade`) order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 3, len(rows), "the return value should be have 3 rows")
+	if len(rows) == 3 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(1), rows[2]["id"].(int64), "the id of the 3rd row should be 1")
+	}
+}
+
 // clean the test data
 func TestWhereClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
 	builder.DropTableIfExists("table_test_where")
 }
 
-func NewTableFoWhereTest() {
+func NewTableForWhereTest() {
 	defer unit.Catch()
 	builder := getTestSchemaBuilder()
 	builder.DropTableIfExists("table_test_where")

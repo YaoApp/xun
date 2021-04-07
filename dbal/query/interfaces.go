@@ -66,6 +66,10 @@ type Query interface {
 	OrWhereIn(column interface{}, values interface{}) Query
 	WhereNotIn(column interface{}, values interface{}) Query
 	OrWhereNotIn(column interface{}, values interface{}) Query
+	WhereExists(closure func(qb Query)) Query
+	OrWhereExists(closure func(qb Query)) Query
+	WhereNotExists(closure func(qb Query)) Query
+	OrWhereNotExists(closure func(qb Query)) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query
@@ -97,6 +101,10 @@ type Query interface {
 
 	InsertGetID(v interface{}, sequence ...string) (int64, error)
 	MustInsertGetID(v interface{}, sequence ...string) int64
+
+	// defined in the debug.go file
+	DD()
+	Dump()
 
 	// @todo
 	// Chunking Results:

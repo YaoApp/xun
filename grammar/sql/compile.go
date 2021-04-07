@@ -340,6 +340,9 @@ func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		case "sub":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereSub(query, where, bindingOffset)))
 			break
+		case "exists":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.whereExists(query, where, bindingOffset)))
+			break
 		case "nested":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereNested(query, where, bindingOffset)))
 			break
@@ -390,6 +393,16 @@ func (grammarSQL SQL) WhereNested(query *dbal.Query, where dbal.Where, bindingOf
 func (grammarSQL SQL) WhereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
 	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
+}
+
+// Compile a where (not) exists clause.
+func (grammarSQL SQL) whereExists(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	exists := "exists"
+	if where.Not {
+		exists = "not exists"
+	}
+	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
+	return fmt.Sprintf("%s (%s)", exists, selectSQL)
 }
 
 // WhereNull Compile a "where null" clause.

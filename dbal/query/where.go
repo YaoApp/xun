@@ -471,19 +471,37 @@ func (builder *Builder) whereIn(column interface{}, values interface{}, boolean 
 }
 
 // WhereExists Add an exists clause to the query.
-func (builder *Builder) WhereExists() {
+func (builder *Builder) WhereExists(closure func(qb Query)) Query {
+	return builder.whereExists(closure, "and", false)
 }
 
 // OrWhereExists Add an or exists clause to the query.
-func (builder *Builder) OrWhereExists() {
+func (builder *Builder) OrWhereExists(closure func(qb Query)) Query {
+	return builder.whereExists(closure, "or", false)
 }
 
 // WhereNotExists  Add a where not exists clause to the query.
-func (builder *Builder) WhereNotExists() {
+func (builder *Builder) WhereNotExists(closure func(qb Query)) Query {
+	return builder.whereExists(closure, "and", true)
 }
 
 // OrWhereNotExists Add a where not exists clause to the query.
-func (builder *Builder) OrWhereNotExists() {
+func (builder *Builder) OrWhereNotExists(closure func(qb Query)) Query {
+	return builder.whereExists(closure, "or", true)
+}
+
+// WhereExists Add an exists clause to the query.
+func (builder *Builder) whereExists(closure func(qb Query), boolean string, not bool) Query {
+	new := builder.forSubQuery()
+	closure(new)
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:    "exists",
+		Not:     not,
+		Boolean: boolean,
+		Query:   new.Query,
+	})
+	builder.Query.AddBinding("where", new.GetBindings())
+	return builder
 }
 
 // WhereDate Add a "where date" statement to the query.
