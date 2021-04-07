@@ -169,6 +169,7 @@ type Where struct {
 	Query    *Query
 	Value    interface{}
 	Values   []interface{}
+	ValuesIn interface{}
 	Not      bool
 	Offset   int
 }

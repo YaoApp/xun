@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/yaoapp/xun/dbal"
@@ -330,6 +331,9 @@ func (grammarSQL SQL) CompileWheres(query *dbal.Query, wheres []dbal.Where, bind
 		case "between":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereBetween(query, where, bindingOffset)))
 			break
+		case "in":
+			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereIn(query, where, bindingOffset)))
+			break
 		case "column":
 			clauses = append(clauses, fmt.Sprintf("%s %s", boolen, grammarSQL.WhereColumn(query, where)))
 			break
@@ -420,6 +424,37 @@ func (grammarSQL SQL) WhereBetween(query *dbal.Query, where dbal.Where, bindingO
 	// `field` between 3 and 5
 	// `field` not between 3 and 5
 	return fmt.Sprintf("%s %s %s and %s", column, between, min, max)
+}
+
+// WhereIn Compile a "where in" clause.
+func (grammarSQL SQL) WhereIn(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+
+	in := "in"
+	sql := "false = true"
+	if where.Not {
+		in = "not in"
+		sql = "true = true"
+	}
+
+	if where.ValuesIn != nil {
+		reflectValues := reflect.ValueOf(where.ValuesIn)
+		reflectValues = reflect.Indirect(reflectValues)
+		if reflectValues.Kind() == reflect.Slice || reflectValues.Kind() == reflect.Array {
+			*bindingOffset = *bindingOffset + where.Offset
+			values := []interface{}{}
+			for i := 0; i < reflectValues.Len(); i++ {
+				values = append(values, reflectValues.Index(i).Interface())
+			}
+
+			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, grammarSQL.Parameterize(values, *bindingOffset))
+			*bindingOffset = *bindingOffset + len(values)
+		} else if _, ok := where.ValuesIn.(dbal.Expression); ok {
+			*bindingOffset = *bindingOffset + where.Offset
+			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, where.ValuesIn.(dbal.Expression).GetValue())
+		}
+	}
+
+	return sql
 }
 
 // Utils for compiling

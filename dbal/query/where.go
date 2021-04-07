@@ -11,12 +11,48 @@ import (
 // Where Add a basic where clause to the query.
 func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 
-	columnKind := reflect.TypeOf(column).Kind()
-
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
 	operator, value, boolean, offset := builder.prepareArgs(args...)
+	whereType := "basic"
+
+	// If the columns is actually a Closure instance, we will assume the developer
+	// wants to begin a nested where statement which is wrapped in parenthesis.
+	// We'll add that Closure to the query then return back out immediately.
+	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isBoolean(args[0]))) {
+		boolean = "and"
+		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
+			boolean = args[0].(string)
+		}
+		whereType = "nested"
+	}
+
+	// If the column is a Closure instance and there is an operator value, we will
+	// assume the developer wants to run a subquery and then compare the result
+	// of that subquery with the given value that was provided to the method.
+	if builder.isQueryable(column) && len(args) >= 1 {
+		whereType = "sub"
+	}
+
+	return builder.where(column, operator, value, boolean, offset, whereType)
+}
+
+// OrWhere Add an "or where" clause to the query.
+func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
+
+	// Here we will make some assumptions about the operator. If only 2 values are
+	// passed to the method, we will assume that the operator is an equals sign
+	// and keep going. Otherwise, we'll require the operator to be passed in.
+	operator, value, _, offset := builder.prepareArgs(args...)
+	return builder.Where(column, operator, value, "or", offset)
+
+}
+
+// Where Add a basic where clause to the query.
+func (builder *Builder) where(column interface{}, operator string, value interface{}, boolean string, offset int, whereType string) Query {
+
+	columnKind := reflect.TypeOf(column).Kind()
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
@@ -30,15 +66,8 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Where( func(qb Query){  qb.Where("name", "Ken")... })
 	// Where( func(qb Query){  qb.Where("name", "Ken")... }, "and")
 	// Where( func(qb Query){  qb.Where("name", "Ken")... }, "or")
-	// If the columns is actually a Closure instance, we will assume the developer
-	// wants to begin a nested where statement which is wrapped in parenthesis.
-	// We'll add that Closure to the query then return back out immediately.
-	if builder.isClosure(column) && (len(args) == 0 || (len(args) >= 1 && builder.isBoolean(args[0]))) {
+	if whereType == "nested" {
 		callback := column.(func(Query))
-		boolean := "and"
-		if len(args) == 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
-			boolean = args[0].(string)
-		}
 		builder.whereNested(callback, boolean)
 		return builder
 	}
@@ -47,10 +76,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Where( func(qb Query){ qb.Where("name", "Ken")... }, 5, "or")
 	// Where( func(qb Query){ qb.Where("name", "Ken")... }, ">", 5)
 	// Where( func(qb Query){ qb.Where("name", "Ken")... }, ">", 5, "or")
-	// If the column is a Closure instance and there is an operator value, we will
-	// assume the developer wants to run a subquery and then compare the result
-	// of that subquery with the given value that was provided to the method.
-	if builder.isQueryable(column) && len(args) >= 1 {
+	if whereType == "sub" {
 		sub, bindings, whereOffset := builder.createSub(column)
 		builder.Query.AddBinding("where", bindings)
 		builder.Where(dbal.Raw(fmt.Sprintf("(%s)", sub)), operator, value, boolean, whereOffset)
@@ -249,17 +275,6 @@ func (builder *Builder) forNestedWhere() *Builder {
 	return new
 }
 
-// OrWhere Add an "or where" clause to the query.
-func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
-
-	// Here we will make some assumptions about the operator. If only 2 values are
-	// passed to the method, we will assume that the operator is an equals sign
-	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, _, offset := builder.prepareArgs(args...)
-	return builder.Where(column, operator, value, "or", offset)
-
-}
-
 // WhereNull Add a "where null" clause to the query.
 func (builder *Builder) WhereNull(column interface{}, args ...interface{}) Query {
 
@@ -360,6 +375,8 @@ func (builder *Builder) OrWhereNotBetween(column interface{}, values []interface
 // whereBetween Add a where between statement to the query.
 func (builder *Builder) whereBetween(column interface{}, values []interface{}, boolean string, not bool) Query {
 
+	betweenOffset := 1
+
 	values = builder.cleanBindings(values)
 	if len(values) > 2 {
 		values = values[0:2]
@@ -371,7 +388,7 @@ func (builder *Builder) whereBetween(column interface{}, values []interface{}, b
 		Values:  values,
 		Boolean: boolean,
 		Not:     not,
-		Offset:  1,
+		Offset:  betweenOffset,
 	})
 
 	builder.Query.AddBinding("where", values)
@@ -379,19 +396,57 @@ func (builder *Builder) whereBetween(column interface{}, values []interface{}, b
 }
 
 // WhereIn Add a "where in" clause to the query.
-func (builder *Builder) WhereIn() {
+func (builder *Builder) WhereIn(column interface{}, values interface{}) Query {
+	return builder.whereIn(column, values, "and", false)
 }
 
 // OrWhereIn Add an "or where in" clause to the query.
-func (builder *Builder) OrWhereIn() {
+func (builder *Builder) OrWhereIn(column interface{}, values interface{}) Query {
+	return builder.whereIn(column, values, "or", false)
 }
 
 // WhereNotIn Add a "where not in" clause to the query.
-func (builder *Builder) WhereNotIn() {
+func (builder *Builder) WhereNotIn(column interface{}, values interface{}) Query {
+	return builder.whereIn(column, values, "and", true)
 }
 
 // OrWhereNotIn Add an "or where not in" clause to the query.
-func (builder *Builder) OrWhereNotIn() {
+func (builder *Builder) OrWhereNotIn(column interface{}, values interface{}) Query {
+	return builder.whereIn(column, values, "or", true)
+}
+
+// whereIn Add a "where in" clause to the query.
+func (builder *Builder) whereIn(column interface{}, values interface{}, boolean string, not bool) Query {
+
+	inOffset := 0
+
+	// If the value is a query builder instance we will assume the developer wants to
+	// look for any values that exists within this given query. So we will add the
+	// query accordingly so that this query is properly executed when it is run.
+	if builder.isQueryable(values) {
+		sub, bindings, offset := builder.createSub(values)
+		values = dbal.Raw(sub)
+		builder.Query.AddBinding("where", bindings)
+		inOffset = offset
+	}
+
+	where := dbal.Where{
+		Type:     "in",
+		ValuesIn: values,
+		Column:   column,
+		Offset:   inOffset,
+		Not:      not,
+		Boolean:  boolean,
+	}
+
+	builder.Query.Wheres = append(builder.Query.Wheres, where)
+
+	// Finally we'll add a binding for each values unless that value is an expression
+	// in which case we will just skip over it since it will be the query as a raw
+	// string and not as a parameterized place-holder to be replaced by the PDO.
+	builder.Query.AddBinding("where", builder.cleanBindings(values))
+
+	return builder
 }
 
 // WhereDate Add a "where date" statement to the query.

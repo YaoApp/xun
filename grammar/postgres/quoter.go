@@ -117,7 +117,7 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
 	for idx, value := range values {
-		quoter.Parameter(value, idx+1+offset)
+		params = append(params, quoter.Parameter(value, idx+1+offset))
 	}
 	return strings.Join(params, ",")
 }

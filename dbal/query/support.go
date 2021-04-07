@@ -1,7 +1,6 @@
 package query
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -104,18 +103,17 @@ func (builder *Builder) invalidOperatorAndValue(operator string, value interface
 
 // Remove all of the expressions from a list of bindings.
 func (builder *Builder) cleanBindings(bindings interface{}) []interface{} {
-
-	values, ok := bindings.([]interface{})
-	if !ok {
-		panic(fmt.Errorf("The input bindings must be the interface slice"))
-	}
-
-	for index, value := range values {
-		if builder.isExpression(value) {
-			values = append(values[:index], values[index+1:]...)
+	values := []interface{}{}
+	reflectValues := reflect.ValueOf(bindings)
+	reflectValues = reflect.Indirect(reflectValues)
+	if reflectValues.Kind() == reflect.Slice || reflectValues.Kind() == reflect.Array {
+		for i := 0; i < reflectValues.Len(); i++ {
+			value := reflectValues.Index(i).Interface()
+			if !builder.isExpression(value) {
+				values = append(values, value)
+			}
 		}
 	}
-
 	return values
 }
 

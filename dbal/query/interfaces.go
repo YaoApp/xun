@@ -61,6 +61,10 @@ type Query interface {
 	OrWhereBetween(column interface{}, values []interface{}) Query
 	WhereNotBetween(column interface{}, values []interface{}) Query
 	OrWhereNotBetween(column interface{}, values []interface{}) Query
+	WhereIn(column interface{}, values interface{}) Query
+	OrWhereIn(column interface{}, values interface{}) Query
+	WhereNotIn(column interface{}, values interface{}) Query
+	OrWhereNotIn(column interface{}, values interface{}) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query
