@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
@@ -505,11 +506,19 @@ func (builder *Builder) whereExists(closure func(qb Query), boolean string, not 
 }
 
 // WhereDate Add a "where date" statement to the query.
-func (builder *Builder) WhereDate() {
+func (builder *Builder) WhereDate(column interface{}, args ...interface{}) Query {
+	operator, value, boolean, _ := builder.prepareArgs(args...)
+	// date Format
+	if !builder.isExpression(value) {
+		value = xun.Time(value).MustToTime().Format("2006-01-02")
+	}
+	return builder.whereDateTime("date", column, operator, value, boolean)
 }
 
 // OrWhereDate Add an "or where date" statement to the query.
-func (builder *Builder) OrWhereDate() {
+func (builder *Builder) OrWhereDate(column interface{}, args ...interface{}) Query {
+	operator, value, _, _ := builder.prepareArgs(args...)
+	return builder.WhereDate(column, operator, value, "or")
 }
 
 // WhereYear Add a "where year" statement to the query.
@@ -542,6 +551,25 @@ func (builder *Builder) WhereTime() {
 
 // OrWhereTime Add an "or where time" statement to the query.
 func (builder *Builder) OrWhereTime() {
+}
+
+// whereDateTime Add a date based (date, year, month, day, time) statement to the query.
+func (builder *Builder) whereDateTime(dateType string, column interface{}, operator string, value interface{}, boolean string) Query {
+
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:     dateType,
+		Column:   column,
+		Operator: operator,
+		Value:    value,
+		Boolean:  boolean,
+		Offset:   1,
+	})
+
+	if !builder.isExpression(value) {
+		builder.Query.AddBinding("where", value)
+	}
+
+	return builder
 }
 
 // WhereJSONContains Add a "where JSON contains" clause to the query.

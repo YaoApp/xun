@@ -1,4 +1,4 @@
-package postgres
+package sqlite3
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 )
 
 // CompileSelect Compile a select query into SQL.
-func (grammarSQL Postgres) CompileSelect(query *dbal.Query) string {
+func (grammarSQL SQLite3) CompileSelect(query *dbal.Query) string {
 	bindingOffset := 0
 	return grammarSQL.CompileSelectOffset(query, &bindingOffset)
 }
 
 // CompileSelectOffset Compile a select query into SQL.
-func (grammarSQL Postgres) CompileSelectOffset(query *dbal.Query, offset *int) string {
+func (grammarSQL SQLite3) CompileSelectOffset(query *dbal.Query, offset *int) string {
 
 	if len(query.Unions) > 0 && query.Aggregate.Func != "" {
 		return grammarSQL.CompileUnionAggregate(query)
@@ -63,37 +63,8 @@ func (grammarSQL Postgres) CompileSelectOffset(query *dbal.Query, offset *int) s
 	return strings.Trim(sql, " ")
 }
 
-// CompileColumns Compile the "select *" portion of the query.
-func (grammarSQL Postgres) CompileColumns(query *dbal.Query, columns []interface{}, bindingOffset *int) string {
-
-	// If the query is actually performing an aggregating select, we will let that
-	// compiler handle the building of the select clauses, as it will need some
-	// more syntax that is best handled by that function to keep things neat.
-	if query.Aggregate.Func != "" {
-		return ""
-	}
-
-	sql := "select"
-	if len(query.DistinctColumns) > 0 {
-		sql = fmt.Sprintf("select distinct on (%s)", grammarSQL.Columnize(query.DistinctColumns))
-	} else if query.Distinct {
-		sql = "select distinct"
-	}
-
-	sql = fmt.Sprintf("%s %s", sql, grammarSQL.Columnize(columns))
-
-	for _, col := range columns {
-		switch col.(type) {
-		case dbal.Select:
-			*bindingOffset = *bindingOffset + col.(dbal.Select).Offset
-		}
-	}
-
-	return sql
-}
-
 // CompileWheres Compile an update statement into SQL.
-func (grammarSQL Postgres) CompileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) CompileWheres(query *dbal.Query, wheres []dbal.Where, bindingOffset *int) string {
 
 	// Each type of where clauses has its own compiler function which is responsible
 	// for actually creating the where clauses SQL. This helps keep the code nice
@@ -167,7 +138,7 @@ func (grammarSQL Postgres) CompileWheres(query *dbal.Query, wheres []dbal.Where,
 }
 
 // Compile a where (not) exists clause.
-func (grammarSQL Postgres) whereExists(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) whereExists(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	exists := "exists"
 	if where.Not {
 		exists = "not exists"
@@ -177,39 +148,32 @@ func (grammarSQL Postgres) whereExists(query *dbal.Query, where dbal.Where, bind
 }
 
 // WhereDate Compile a "where date" clause.
-func (grammarSQL Postgres) WhereDate(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	value := ""
-	if !dbal.IsExpression(where.Value) {
-		*bindingOffset = *bindingOffset + where.Offset
-		value = grammarSQL.Parameter(where.Value, *bindingOffset)
-	} else {
-		value = where.Value.(dbal.Expression).GetValue()
-	}
-	return fmt.Sprintf("%s::date %s%s", grammarSQL.Wrap(where.Column), where.Operator, value)
+func (grammarSQL SQLite3) WhereDate(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	return grammarSQL.WhereDateBased("%Y-%m-%d", query, where, bindingOffset)
 }
 
 // WhereTime Compile a "where time" clause.
-func (grammarSQL Postgres) WhereTime(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) WhereTime(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("time", query, where, bindingOffset)
 }
 
 // WhereTime Compile a "where day" clause.
-func (grammarSQL Postgres) whereDay(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) whereDay(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("day", query, where, bindingOffset)
 }
 
 // whereMonth Compile a "where month" clause.
-func (grammarSQL Postgres) whereMonth(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) whereMonth(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("month", query, where, bindingOffset)
 }
 
 // whereYear Compile a "where year" clause.
-func (grammarSQL Postgres) whereYear(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) whereYear(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	return grammarSQL.WhereDateBased("year", query, where, bindingOffset)
 }
 
 // WhereDateBased  Compile a date based where clause.
-func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+func (grammarSQL SQLite3) WhereDateBased(typ string, query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	value := ""
 	if !dbal.IsExpression(where.Value) {
 		*bindingOffset = *bindingOffset + where.Offset
@@ -218,5 +182,5 @@ func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where d
 		value = where.Value.(dbal.Expression).GetValue()
 	}
 
-	return fmt.Sprintf("%s(%s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("strftime('%s',%s) %s cast(%s as text)", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
 }

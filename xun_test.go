@@ -61,3 +61,10 @@ func TestMustToRows(t *testing.T) {
 	}
 
 }
+
+func TestMustToTime(t *testing.T) {
+	assert.Equal(t, "2020-12-31T23:22:14", Time("2020-12-31 23:22:14").MustToTime().Format("2006-01-02T15:04:05"), "the value should be 2020-12-31T23:22:14")
+	assert.Equal(t, "2021-01-01T07:22:14", Time(1609456934000).MustToTime().Format("2006-01-02T15:04:05"), "the value should be 2021-01-01T07:22:14")
+	assert.Equal(t, "2020-12-31", Time("2020-12-31").MustToTime().Format("2006-01-02"), "the value should be 2006-01-02")
+	assert.Equal(t, "23:22:14", Time("23:22:14").MustToTime().Format("15:04:05"), "the value should be 23:22:14")
+}

@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/yaoapp/xun/utils"
 )
@@ -19,6 +20,13 @@ func ToSnakeCase(str string) string {
 	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
 	return strings.ToLower(snake)
+}
+
+// Time Create a new time struct
+func Time(value interface{}) T {
+	return T{
+		Value: value,
+	}
 }
 
 // AnyToR convert any struct to R type
@@ -229,5 +237,71 @@ func (n N) Int() (int, error) {
 func (n N) MustInt() int {
 	value, err := n.Int()
 	utils.PanicIF(err)
+	return value
+}
+
+// ToTime cast the T to time.Time
+func (t T) ToTime(formats ...string) (time.Time, error) {
+	if len(formats) == 0 {
+		formats = []string{
+			"2006-01-02T15:04:05-0700",
+			"2006-01-02T15:04:05",
+			"2006-01-02 15:04:05",
+			"2006-01-02",
+			"15:04:05",
+		}
+	}
+
+	switch t.Value.(type) {
+	case int, int64, int32, int16, int8, uint8:
+		var err error
+		var i int64
+		var s int64
+		strValue := fmt.Sprintf("%v", t.Value)
+		if len(strValue) == 10 {
+			i, err = strconv.ParseInt(strValue, 10, 64)
+			s = 0
+			if err != nil {
+				return time.Now(), err
+			}
+		} else if len(strValue) == 13 {
+			i, err = strconv.ParseInt(strValue[0:10], 10, 64)
+			if err != nil {
+				return time.Now(), err
+			}
+			s, err = strconv.ParseInt(strValue[10:13], 10, 64)
+			if err != nil {
+				return time.Now(), err
+			}
+		}
+		return time.Unix(i, s), nil
+
+	case string, []byte:
+		var err error
+		strValue := fmt.Sprintf("%s", t.Value)
+		dateValue := time.Now()
+		for _, format := range formats {
+			dateValue, err = time.Parse(format, strValue)
+			if err == nil {
+				return dateValue, nil
+			}
+		}
+		if err != nil {
+			return dateValue, fmt.Errorf("%s(%s)", err, formats)
+		}
+		return dateValue, fmt.Errorf("cannot parse %s (%s)", t.Value, formats)
+	case time.Time:
+		return t.Value.(time.Time), nil
+	default:
+		return time.Now(), nil
+	}
+}
+
+// MustToTime cast the T to time.Time
+func (t T) MustToTime(formats ...string) time.Time {
+	value, err := t.ToTime(formats...)
+	if err != nil {
+		panic(err)
+	}
 	return value
 }

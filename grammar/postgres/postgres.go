@@ -130,5 +130,6 @@ func New() dbal.Grammar {
 		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
 		pg.FlipTypes["SMALLINT"] = "smallInteger"
 	}
+
 	return pg
 }
