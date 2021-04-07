@@ -190,7 +190,14 @@ func (grammarSQL Postgres) WhereDate(query *dbal.Query, where dbal.Where, bindin
 
 // WhereTime Compile a "where time" clause.
 func (grammarSQL Postgres) WhereTime(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return grammarSQL.WhereDateBased("time", query, where, bindingOffset)
+	value := ""
+	if !dbal.IsExpression(where.Value) {
+		*bindingOffset = *bindingOffset + where.Offset
+		value = grammarSQL.Parameter(where.Value, *bindingOffset)
+	} else {
+		value = where.Value.(dbal.Expression).GetValue()
+	}
+	return fmt.Sprintf("%s::time %s%s", grammarSQL.Wrap(where.Column), where.Operator, value)
 }
 
 // WhereTime Compile a "where day" clause.

@@ -72,6 +72,8 @@ type Query interface {
 	OrWhereNotExists(closure func(qb Query)) Query
 	WhereDate(column interface{}, args ...interface{}) Query
 	OrWhereDate(column interface{}, args ...interface{}) Query
+	WhereTime(column interface{}, args ...interface{}) Query
+	OrWhereTime(column interface{}, args ...interface{}) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query

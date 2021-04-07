@@ -154,7 +154,7 @@ func (grammarSQL SQLite3) WhereDate(query *dbal.Query, where dbal.Where, binding
 
 // WhereTime Compile a "where time" clause.
 func (grammarSQL SQLite3) WhereTime(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return grammarSQL.WhereDateBased("time", query, where, bindingOffset)
+	return grammarSQL.WhereDateBased("%H:%M:%S", query, where, bindingOffset)
 }
 
 // WhereTime Compile a "where day" clause.

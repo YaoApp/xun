@@ -521,6 +521,22 @@ func (builder *Builder) OrWhereDate(column interface{}, args ...interface{}) Que
 	return builder.WhereDate(column, operator, value, "or")
 }
 
+// WhereTime Add a "where time" statement to the query.
+func (builder *Builder) WhereTime(column interface{}, args ...interface{}) Query {
+	operator, value, boolean, _ := builder.prepareArgs(args...)
+	// date Format
+	if !builder.isExpression(value) {
+		value = xun.Time(value).MustToTime().Format("15:04:05")
+	}
+	return builder.whereDateTime("time", column, operator, value, boolean)
+}
+
+// OrWhereTime Add an "or where time" statement to the query.
+func (builder *Builder) OrWhereTime(column interface{}, args ...interface{}) Query {
+	operator, value, _, _ := builder.prepareArgs(args...)
+	return builder.WhereTime(column, operator, value, "or")
+}
+
 // WhereYear Add a "where year" statement to the query.
 func (builder *Builder) WhereYear() {
 }
@@ -543,14 +559,6 @@ func (builder *Builder) WhereDay() {
 
 // OrWhereDay Add an "or where day" statement to the query.
 func (builder *Builder) OrWhereDay() {
-}
-
-// WhereTime Add a "where time" statement to the query.
-func (builder *Builder) WhereTime() {
-}
-
-// OrWhereTime Add an "or where time" statement to the query.
-func (builder *Builder) OrWhereTime() {
 }
 
 // whereDateTime Add a date based (date, year, month, day, time) statement to the query.
