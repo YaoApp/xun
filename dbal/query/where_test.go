@@ -214,6 +214,118 @@ func TestWhereWhereValueIsExpression(t *testing.T) {
 
 }
 
+func TestWhereWhereColumn(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("vote", ">", 10).
+		WhereColumn("score", "score_grade")
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "vote" > $1 and "score" = "score_grade"`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `vote` > ? and `score` = `score_grade`", sql, "the query sql not equal")
+	}
+
+	// // checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+	}
+}
+
+func TestWhereWhereColumnBasic(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Where("vote", ">", 0).
+		WhereColumn("score", "<", "score_grade")
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "vote" > $1 and "score" < "score_grade" order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `vote` > ? and `score` < `score_grade` order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 3, len(rows), "the return value should be have 3 row")
+	if len(rows) == 3 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(1), rows[2]["id"].(int64), "the id of the 3th row should be 1")
+	}
+}
+
+func TestWhereWhereColumnArray(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("vote", ">", 0).
+		WhereColumn([][]interface{}{
+			{"score", "score_grade"},
+			{"score", ">=", "score_grade"},
+		})
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "vote" > $1 and ("score" = "score_grade" and "score" >= "score_grade")`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `vote` > ? and (`score` = `score_grade` and `score` >= `score_grade`)", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+	}
+}
+
+func TestWhereOrWhereColumn(t *testing.T) {
+	NewTableFoWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Where("vote", 5).
+		OrWhereColumn("score", "score_grade")
+
+	// fmt.Println(qb.ToSQL())
+	// utils.Println(qb.MustGet())
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "vote" = $1 or "score" = "score_grade" order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `vote` = ? or `score` = `score_grade` order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should be have 2 rows")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(3), rows[0]["id"].(int64), "the id of the 1st row should be 3")
+		assert.Equal(t, int64(2), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+	}
+}
+
 func TestWhereWhereNull(t *testing.T) {
 	NewTableFoWhereTest()
 	qb := getTestBuilder()
@@ -761,6 +873,7 @@ func NewTableFoWhereTest() {
 		table.String("name").Index()
 		table.Integer("vote")
 		table.Float("score", 5, 2).Index()
+		table.Float("score_grade", 5, 2).Index()
 		table.Enum("status", []string{"WAITING", "PENDING", "DONE"}).SetDefault("WAITING")
 		table.Timestamps()
 		table.SoftDeletes()
@@ -768,9 +881,9 @@ func NewTableFoWhereTest() {
 
 	qb := getTestBuilder()
 	qb.Table("table_test_where").Insert([]xun.R{
-		{"email": "john@yao.run", "name": "John", "vote": 10, "score": 96.32, "status": "WAITING", "created_at": "2021-03-25 00:21:16"},
-		{"email": "lee@yao.run", "name": "Lee", "vote": 5, "score": 64.56, "status": "PENDING", "created_at": "2021-03-25 08:30:15"},
-		{"email": "ken@yao.run", "name": "Ken", "vote": 125, "score": 99.27, "status": "DONE", "created_at": "2021-03-25 09:40:23"},
-		{"email": "ben@yao.run", "name": "Ben", "vote": 6, "score": 48.12, "status": "DONE", "created_at": "2021-03-25 18:15:29"},
+		{"email": "john@yao.run", "name": "John", "vote": 10, "score": 96.32, "score_grade": 99.27, "status": "WAITING", "created_at": "2021-03-25 00:21:16"},
+		{"email": "lee@yao.run", "name": "Lee", "vote": 5, "score": 64.56, "score_grade": 99.27, "status": "PENDING", "created_at": "2021-03-25 08:30:15"},
+		{"email": "ken@yao.run", "name": "Ken", "vote": 125, "score": 99.27, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-25 09:40:23"},
+		{"email": "ben@yao.run", "name": "Ben", "vote": 6, "score": 48.12, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-25 18:15:29"},
 	})
 }

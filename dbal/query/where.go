@@ -131,19 +131,36 @@ func (builder *Builder) where(column interface{}, operator string, value interfa
 // WhereColumn Add a "where" clause comparing two columns to the query.
 func (builder *Builder) WhereColumn(first interface{}, args ...interface{}) Query {
 
-	columnKind := reflect.TypeOf(first).Kind()
+	// Here we will make some assumptions about the operator. If only 2 values are
+	// passed to the method, we will assume that the operator is an equals sign
+	// and keep going. Otherwise, we'll require the operator to be passed in.
+	operator, second, _, offset := builder.prepareArgs(args...)
+
+	return builder.whereColumn(first, operator, second, "and", offset)
+}
+
+// OrWhereColumn Add an "or where" clause comparing two columns to the query.
+func (builder *Builder) OrWhereColumn(first interface{}, args ...interface{}) Query {
 
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, second, boolean, offset := builder.prepareArgs(args...)
+	operator, second, _, offset := builder.prepareArgs(args...)
+
+	return builder.whereColumn(first, operator, second, "or", offset)
+}
+
+// WhereColumn Add a "where" clause comparing two columns to the query.
+func (builder *Builder) whereColumn(first interface{}, operator string, second interface{}, boolean string, offset int) Query {
+
+	columnKind := reflect.TypeOf(first).Kind()
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})
 	// If the column is an array, we will assume it is an array of key-value pairs
 	// and can add them each as a where clause. We will maintain the boolean we
 	// received when the method was called and pass it into the Wheres attribute.
 	if columnKind == reflect.Array || columnKind == reflect.Slice {
-		builder.addArrayOfWheres(first, boolean)
+		builder.addArrayOfWheres(first, boolean, true)
 		return builder
 	}
 
@@ -162,13 +179,9 @@ func (builder *Builder) WhereColumn(first interface{}, args ...interface{}) Quer
 	return builder
 }
 
-// OrWhereColumn Add an "or where" clause comparing two columns to the query.
-func (builder *Builder) OrWhereColumn() {
-}
-
 // Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10},})
 // addArrayOfWheres Add an array of where clauses to the query.
-func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean string) *Builder {
+func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean string, whereColumn ...bool) *Builder {
 
 	switch inputColumns.(type) {
 	case [][]interface{}:
@@ -178,7 +191,11 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 					column := args[0].(string)
 					operator, value, boolean, offset := builder.prepareArgs(args[1:]...)
-					qb.Where(column, operator, value, boolean, offset)
+					if len(whereColumn) > 0 && whereColumn[0] {
+						qb.WhereColumn(column, operator, value, boolean, offset)
+					} else {
+						qb.Where(column, operator, value, boolean, offset)
+					}
 				}
 			}
 		}, boolean)
