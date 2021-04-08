@@ -1,6 +1,9 @@
 package query
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/utils"
 )
@@ -57,6 +60,29 @@ func (builder *Builder) MustInsertGetID(v interface{}, sequence ...string) int64
 
 // InsertUsing Insert new records into the table using a subquery.
 func (builder *Builder) InsertUsing(qb interface{}, columns ...interface{}) (int64, error) {
+
+	// columns  "field1,field2", []string{"field1", "field2"}
+	if len(columns) == 1 {
+		col, ok := columns[0].(string)
+		if ok && strings.Contains(col, ",") {
+			cols := strings.Split(col, ",")
+			columns = []interface{}{}
+			for _, col := range cols {
+				columns = append(columns, strings.Trim(col, " "))
+			}
+		} else if !ok {
+			reflectValue := reflect.ValueOf(columns[0])
+			kind := reflectValue.Kind()
+			columns = []interface{}{}
+			if kind == reflect.Array || kind == reflect.Slice {
+				for i := 0; i < reflectValue.Len(); i++ {
+					columns = append(columns, reflectValue.Index(i).Interface())
+				}
+			}
+
+		}
+	}
+
 	builder.UseWrite()
 	sql, bindings, _ := builder.createSub(qb)
 	res, err := builder.Grammar.InsertUsing(builder.Query, columns, sql, bindings)

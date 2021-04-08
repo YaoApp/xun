@@ -161,29 +161,61 @@ func TestInsertMustInsertUsing(t *testing.T) {
 	NewTableForInsertTest()
 	qb := getTestBuilder()
 	var affected int64
+	var sql string
 	if unit.DriverIs("postgres") {
-		affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
-			qb.SelectRaw("$1 as email, $2 as vote", "Bee@example.com", 2)
-		}, "email", "vote")
+		sql = "$1 as email, $2 as vote"
 	} else {
-		affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
-			qb.SelectRaw("? as email, ? as vote", "Bee@example.com", 2)
-		}, "email", "vote")
+		sql = "? as email, ? as vote"
 	}
+	affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+		qb.SelectRaw(sql, "Bee@example.com", 2)
+	}, "email,vote")
+
 	assert.Equal(t, int64(1), affected, "The return affected should be 1")
 	assert.Panics(t, func() {
 		newQuery := New(unit.Driver(), unit.DSN())
 		newQuery.DB().Close()
-		if unit.DriverIs("postgres") {
-			newQuery.Table("table_test_insert").MustInsertUsing(func(qb Query) {
-				qb.SelectRaw("$1 as email, $2 as vote", "Bee@example.com", 2)
-			}, "email", "vote")
-		} else {
-			newQuery.Table("table_test_insert").MustInsertUsing(func(qb Query) {
-				qb.SelectRaw("? as email, ? as vote", "Bee@example.com", 2)
-			}, "email", "vote")
-		}
+		newQuery.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+			qb.SelectRaw(sql, "Bee@example.com", 2)
+		}, "email", "vote")
 	})
+}
+
+func TestInsertMustInsertUsingWithComma(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	var affected int64
+	var sql string
+	if unit.DriverIs("postgres") {
+		sql = "$1 as email, $2 as vote"
+	} else {
+		sql = "? as email, ? as vote"
+	}
+
+	affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+		qb.SelectRaw(sql, "Bee@example.com", 2)
+	}, "email,vote")
+
+	assert.Equal(t, int64(1), affected, "The return affected should be 1")
+}
+
+func TestInsertMustInsertUsingWithArray(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	var affected int64
+	var sql string
+	if unit.DriverIs("postgres") {
+		sql = "$1 as email, $2 as vote"
+	} else {
+		sql = "? as email, ? as vote"
+	}
+
+	affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+		qb.SelectRaw(sql, "Bee@example.com", 2)
+	}, []string{"email", "vote"})
+
+	assert.Equal(t, int64(1), affected, "The return affected should be 1")
+
 }
 
 // clean the test data
