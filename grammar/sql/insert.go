@@ -22,7 +22,7 @@ func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, err
 	}
 
 	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 }
 
@@ -37,7 +37,7 @@ func (grammarSQL SQL) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Resul
 	}
 
 	sql := fmt.Sprintf(`INSERT IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.NamedExec(sql, values)
 
 }
@@ -49,6 +49,13 @@ func (grammarSQL SQL) InsertGetID(query *dbal.Query, values []xun.R, sequence st
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+// InsertUsing Compile and run an insert statement using a subquery into SQL.
+func (grammarSQL SQL) InsertUsing(query *dbal.Query, columns []interface{}, sql string, bindings []interface{}) (sql.Result, error) {
+	sql = fmt.Sprintf("INSERT INTO %s (%s) %s", grammarSQL.WrapTable(query.From), grammarSQL.Columnize(columns), sql)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	return grammarSQL.DB.Exec(sql, bindings...)
 }
 
 // GetOperators get the operators

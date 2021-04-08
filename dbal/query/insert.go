@@ -32,7 +32,6 @@ func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
 
 // MustInsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
-	builder.UseWrite()
 	affected, err := builder.InsertOrIgnore(v)
 	utils.PanicIF(err)
 	return affected
@@ -51,16 +50,25 @@ func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, e
 
 // MustInsertGetID Insert a new record and get the value of the primary key.
 func (builder *Builder) MustInsertGetID(v interface{}, sequence ...string) int64 {
-	builder.UseWrite()
 	lastID, err := builder.InsertGetID(v, sequence...)
 	utils.PanicIF(err)
 	return lastID
 }
 
 // InsertUsing Insert new records into the table using a subquery.
-func (builder *Builder) InsertUsing() {
+func (builder *Builder) InsertUsing(qb interface{}, columns ...interface{}) (int64, error) {
+	builder.UseWrite()
+	sql, bindings, _ := builder.createSub(qb)
+	res, err := builder.Grammar.InsertUsing(builder.Query, columns, sql, bindings)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
 }
 
 // MustInsertUsing Insert new records into the table using a subquery.
-func (builder *Builder) MustInsertUsing() {
+func (builder *Builder) MustInsertUsing(qb interface{}, columns ...interface{}) int64 {
+	affected, err := builder.InsertUsing(qb, columns...)
+	utils.PanicIF(err)
+	return affected
 }

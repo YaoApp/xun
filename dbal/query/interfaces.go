@@ -125,12 +125,12 @@ type Query interface {
 	// defined in the insert.go file
 	Insert(v interface{}) error
 	MustInsert(v interface{})
-
 	InsertOrIgnore(v interface{}) (int64, error)
 	MustInsertOrIgnore(v interface{}) int64
-
 	InsertGetID(v interface{}, sequence ...string) (int64, error)
 	MustInsertGetID(v interface{}, sequence ...string) int64
+	InsertUsing(qb interface{}, columns ...interface{}) (int64, error)
+	MustInsertUsing(qb interface{}, columns ...interface{}) int64
 
 	// defined in the debug.go file
 	DD()

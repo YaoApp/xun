@@ -35,6 +35,7 @@ type Grammar interface {
 	// Grammar for querying
 	Insert(query *Query, values []xun.R) (sql.Result, error)
 	InsertIgnore(query *Query, values []xun.R) (sql.Result, error)
+	InsertUsing(query *Query, columns []interface{}, sql string, bindings []interface{}) (sql.Result, error)
 	InsertGetID(query *Query, values []xun.R, sequence string) (int64, error)
 
 	CompileSelect(query *Query) string

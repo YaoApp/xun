@@ -157,6 +157,35 @@ func TestInsertMustInsertGetID(t *testing.T) {
 	assert.Error(t, err, "the return value sholud be error")
 }
 
+func TestInsertMustInsertUsing(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	var affected int64
+	if unit.DriverIs("postgres") {
+		affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+			qb.SelectRaw("$1 as email, $2 as vote", "Bee@example.com", 2)
+		}, "email", "vote")
+	} else {
+		affected = qb.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+			qb.SelectRaw("? as email, ? as vote", "Bee@example.com", 2)
+		}, "email", "vote")
+	}
+	assert.Equal(t, int64(1), affected, "The return affected should be 1")
+	assert.Panics(t, func() {
+		newQuery := New(unit.Driver(), unit.DSN())
+		newQuery.DB().Close()
+		if unit.DriverIs("postgres") {
+			newQuery.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+				qb.SelectRaw("$1 as email, $2 as vote", "Bee@example.com", 2)
+			}, "email", "vote")
+		} else {
+			newQuery.Table("table_test_insert").MustInsertUsing(func(qb Query) {
+				qb.SelectRaw("? as email, ? as vote", "Bee@example.com", 2)
+			}, "email", "vote")
+		}
+	})
+}
+
 // clean the test data
 func TestInsertClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
