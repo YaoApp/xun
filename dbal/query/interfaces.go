@@ -18,7 +18,7 @@ type Query interface {
 	GetBindings() []interface{}
 
 	// defined in the connection.go file
-	DB(readonly ...bool) *sqlx.DB
+	DB(usewrite ...bool) *sqlx.DB
 	IsRead() bool
 	UseRead() Query
 	UseWrite() Query
