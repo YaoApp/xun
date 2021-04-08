@@ -135,14 +135,16 @@ func Flatten(value interface{}) []interface{} {
 	if kind == reflect.Array || kind == reflect.Slice {
 		for i := 0; i < reflectValue.Len(); i++ {
 			value := reflectValue.Index(i)
-			if value.Kind() == reflect.Array || kind == reflect.Slice {
+			valueKind := value.Kind()
+			if valueKind == reflect.Array || valueKind == reflect.Slice {
 				res = append(res, Flatten(value.Interface()))
 			} else {
-				res = append(res, value)
+				res = append(res, value.Interface())
 			}
 		}
 	} else {
 		res = append(res, value)
 	}
+
 	return res
 }

@@ -132,6 +132,10 @@ type Query interface {
 	InsertUsing(qb interface{}, columns ...interface{}) (int64, error)
 	MustInsertUsing(qb interface{}, columns ...interface{}) int64
 
+	// defined in the update.go file
+	Upsert(values interface{}, uniqueBy interface{}, update interface{}) (int64, error)
+	MustUpsert(values interface{}, uniqueBy interface{}, update interface{}) int64
+
 	// defined in the debug.go file
 	DD()
 	Dump()

@@ -26,6 +26,40 @@ func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, err
 	return grammarSQL.DB.NamedExec(sql, values)
 }
 
+// CompileInsert Compile an insert statement into SQL.
+func (grammarSQL SQL) CompileInsert(query *dbal.Query, values []xun.R) (string, []interface{}) {
+
+	table := grammarSQL.WrapTable(query.From)
+	if len(values) == 0 {
+		return fmt.Sprintf("insert into %s default values", table), nil
+	}
+
+	columns := values[0].Keys()
+	insertValues := [][]interface{}{}
+	for _, row := range values {
+		insertValue := []interface{}{}
+		for _, column := range columns {
+			insertValue = append(insertValue, row.MustGet(column))
+		}
+		insertValues = append(insertValues, insertValue)
+	}
+
+	offset := 0
+	parameters := []string{}
+	bindings := []interface{}{}
+	for _, value := range insertValues {
+		parameters = append(parameters, fmt.Sprintf("(%s)", grammarSQL.Parameterize(value, offset)))
+		for _, v := range value {
+			if !dbal.IsExpression(v) {
+				bindings = append(bindings, v)
+				offset++
+			}
+		}
+	}
+
+	return fmt.Sprintf("insert into %s (%s) values %s", table, grammarSQL.Columnize(columns), strings.Join(parameters, ",")), bindings
+}
+
 // InsertIgnore Insert ignore new records into the database.
 func (grammarSQL SQL) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Result, error) {
 

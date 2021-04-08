@@ -315,3 +315,50 @@ func (t T) MustToTime(formats ...string) time.Time {
 	}
 	return value
 }
+
+// Get get the value of the given key
+func (row R) Get(key interface{}) interface{} {
+	keyStr := fmt.Sprintf("%v", key)
+	value, has := row[keyStr]
+	if !has {
+		return nil
+	}
+	return value
+}
+
+// MustGet get the value of the given key
+func (row R) MustGet(key interface{}) interface{} {
+	keyStr := fmt.Sprintf("%v", key)
+	value, has := row[keyStr]
+	if !has {
+		panic(fmt.Errorf("the key %v does not exists", key))
+	}
+	return value
+}
+
+// ToMap cast to map[string]interface{}
+func (row R) ToMap() map[string]interface{} {
+	res := map[string]interface{}{}
+	for k, v := range row {
+		res[k] = v
+	}
+	return res
+}
+
+// Keys get keys of R
+func (row R) Keys() []interface{} {
+	keys := []interface{}{}
+	for k := range row {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// KeysString get keys of R
+func (row R) KeysString() []string {
+	keys := []string{}
+	for k := range row {
+		keys = append(keys, k)
+	}
+	return keys
+}

@@ -38,6 +38,10 @@ type Grammar interface {
 	InsertUsing(query *Query, columns []interface{}, sql string, bindings []interface{}) (sql.Result, error)
 	InsertGetID(query *Query, values []xun.R, sequence string) (int64, error)
 
+	Upsert(query *Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (sql.Result, error)
+
+	CompileInsert(query *Query, values []xun.R) (string, []interface{})
+	CompileUpsert(query *Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
 }
