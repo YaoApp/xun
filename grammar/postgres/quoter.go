@@ -62,27 +62,29 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 		}
 		return fmt.Sprintf("%s ", col.SQL)
 	case string:
-		str := value.(string)
-		if str == "*" {
-			return str
-		}
-		if strings.Contains(str, ".") {
-			arrs := strings.Split(str, ".")
-			tab := arrs[0]
-			col := dbal.NewName(arrs[1])
-			if col.As() != "" {
-				return fmt.Sprintf("%s.%s as %s", quoter.ID(tab), quoter.ID(col.Name), quoter.ID(col.As()))
-			}
-			name := col.Name
-			if name != "*" {
-				name = quoter.ID(col.Name)
-			}
-			return fmt.Sprintf("%s.%s", quoter.ID(tab), name)
-		}
-		return quoter.ID(dbal.NewName(value.(string)).Name)
+		return quoter.WrapAliasedValue(value.(string))
 	default:
 		return fmt.Sprintf("%v", value)
 	}
+}
+
+// WrapAliasedValue Wrap a value that has an alias.
+func (quoter *Quoter) WrapAliasedValue(value string) string {
+	if value == "*" {
+		return "*"
+	}
+	if strings.Contains(value, ".") {
+		arrs := strings.Split(value, ".")
+		table := arrs[0]
+		name := quoter.WrapAliasedValue(arrs[1])
+		return fmt.Sprintf("%s.%s", quoter.ID(table), name)
+	}
+
+	name := dbal.NewName(value)
+	if name.As() != "" {
+		return fmt.Sprintf("%s as %s", quoter.ID(name.Fullname()), quoter.ID(name.As()))
+	}
+	return fmt.Sprintf("%s", quoter.ID(name.Fullname()))
 }
 
 // WrapTable Wrap a table in keyword identifiers.

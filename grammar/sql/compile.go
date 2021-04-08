@@ -131,7 +131,10 @@ func (grammarSQL SQL) CompileUnion(query *dbal.Query, union dbal.Union, offset *
 func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset *int) string {
 	sql := ""
 	for _, join := range joins {
-		table := grammarSQL.WrapTable(join.Table)
+		table := grammarSQL.WrapTable(join.Name)
+		if join.SQL != "" && join.Alias != "" {
+			table = fmt.Sprintf("(%s) as %s", join.SQL, join.Alias)
+		}
 		nestedJoins := " "
 		if len(join.Query.Joins) > 0 {
 			nestedJoins = grammarSQL.CompileJoins(query, join.Query.Joins, offset)
@@ -140,7 +143,6 @@ func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset 
 		if len(join.Query.Joins) > 0 {
 			tableAndNestedJoins = fmt.Sprintf("(%s%s)", table, nestedJoins)
 		}
-
 		return strings.Trim(
 			fmt.Sprintf("%s join %s %s", join.Type, tableAndNestedJoins, grammarSQL.CompileWheres(join.Query, join.Query.Wheres, offset)),
 			" ",

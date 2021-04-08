@@ -32,13 +32,13 @@ type Query interface {
 	// defined in the select.go file
 	Select(columns ...interface{}) Query
 	SelectRaw(expression string, bindings ...interface{}) Query
-	SelectSub(qb interface{}, as string) Query
+	SelectSub(qb interface{}, alias string) Query
 	Distinct(args ...interface{}) Query
 
 	// defined in the from.go file
 	From(name string) Query
 	FromRaw(sql string, bindings ...interface{}) Query
-	FromSub(qb interface{}, as string) Query
+	FromSub(qb interface{}, alias string) Query
 
 	// defined in the union.go file
 	Union(query interface{}, all ...bool) Query
@@ -46,6 +46,7 @@ type Query interface {
 
 	// defined in the join.go file
 	Join(table string, first interface{}, args ...interface{}) Query
+	JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
 
 	// defined in the where.go file
 	Where(column interface{}, args ...interface{}) Query

@@ -176,10 +176,12 @@ type Where struct {
 
 // Join the join clause for the query
 type Join struct {
-	Type       string // inner, left, right, cross
-	Table      Name   // The table the join clause is joining to.
-	Query      *Query
-	TableQuery *Query // Join sub query
+	Type   string      // inner, left, right, cross
+	Name   interface{} // The table the join clause is joining to.
+	Query  *Query
+	Alias  string
+	SQL    string
+	Offset int
 }
 
 // Union the query union statement
