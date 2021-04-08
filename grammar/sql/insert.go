@@ -13,17 +13,9 @@ import (
 
 // Insert Insert new records into the database.
 func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, error) {
-
-	safeFields := []string{}
-	bindVars := []string{}
-	for field := range values[0] {
-		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field))
-	}
-
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
+	sql, bindings := grammarSQL.CompileInsert(query, values)
 	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.NamedExec(sql, values)
+	return grammarSQL.DB.Exec(sql, bindings...)
 }
 
 // CompileInsert Compile an insert statement into SQL.
