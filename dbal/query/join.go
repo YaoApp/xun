@@ -8,34 +8,26 @@ import (
 
 // Join  Add a join clause to the query.
 func (builder *Builder) Join(table string, first interface{}, args ...interface{}) Query {
-	operator, second, _ := builder.joinPrepare(args...)
+	operator, second := builder.joinPrepare(args...)
 	return builder.join(dbal.NewName(table), "", first, operator, second, "inner", "on", 0)
 }
 
 // JoinSub Add a subquery join clause to the query.
 func (builder *Builder) JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query {
-	operator, second, _ := builder.joinPrepare(args...)
+	operator, second := builder.joinPrepare(args...)
 	return builder.joinSub(qb, alias, first, operator, second, "inner", "on", 0)
 }
 
-// On Add an "on" clause to the join.
-func (builder *Builder) On(first interface{}, args ...interface{}) Query {
-	operator, second, boolean := builder.joinPrepare(args...)
-	join := builder.joinOn(first, operator, second, boolean, 0)
-	builder.Query.Joins = append(builder.Query.Joins, join)
-	return builder
-}
-
-// OrOn Add an "or on" clause to the join.
-func (builder *Builder) OrOn(first interface{}, args ...interface{}) Query {
-	operator, second, _ := builder.joinPrepare(args...)
-	join := builder.joinOn(first, operator, second, "or", 0)
-	builder.Query.Joins = append(builder.Query.Joins, join)
-	return builder
-}
-
 // LeftJoin Add a left join to the query.
-func (builder *Builder) LeftJoin() {
+func (builder *Builder) LeftJoin(table string, first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	return builder.join(dbal.NewName(table), "", first, operator, second, "left", "on", 0)
+}
+
+// LeftJoinSub Add a subquery left join to the query.
+func (builder *Builder) LeftJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	return builder.joinSub(qb, alias, first, operator, second, "left", "on", 0)
 }
 
 // RightJoin Add a right join to the query.
@@ -46,6 +38,22 @@ func (builder *Builder) RightJoin() {
 func (builder *Builder) CrossJoin() {
 }
 
+// On Add an "on" clause to the join.
+func (builder *Builder) On(first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	join := builder.joinOn(first, operator, second, "and", 0)
+	builder.Query.Joins = append(builder.Query.Joins, join)
+	return builder
+}
+
+// OrOn Add an "or on" clause to the join.
+func (builder *Builder) OrOn(first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	join := builder.joinOn(first, operator, second, "or", 0)
+	builder.Query.Joins = append(builder.Query.Joins, join)
+	return builder
+}
+
 // forJoinClause Create a new query instance for a join clause.
 func (builder *Builder) forJoinClause() *Builder {
 	new := builder.new()
@@ -53,13 +61,15 @@ func (builder *Builder) forJoinClause() *Builder {
 	return new
 }
 
-func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}, string) {
-	var operator = ""
+func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}) {
+	var operator = "="
 	var second interface{} = nil
-	var boolean = "and"
-	// var method = "on"
 
-	if len(args) > 0 && reflect.TypeOf(args[0]).Kind() == reflect.String {
+	if len(args) == 1 {
+		second = args[0]
+	}
+
+	if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 		operator = args[0].(string)
 	}
 
@@ -67,11 +77,7 @@ func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}, s
 		second = args[1]
 	}
 
-	if len(args) > 2 && reflect.TypeOf(args[2]).Kind() == reflect.String {
-		boolean = args[2].(string)
-	}
-
-	return operator, second, boolean
+	return operator, second
 }
 
 //JoinWhere Add a "join where" clause to the query.

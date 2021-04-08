@@ -55,8 +55,7 @@ func TestJoinJoinOnNested(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_join_t1 as t1").
 		Join("table_test_join_t2 as t2", func(join Query) {
-			join.On("t2.t1_id", "=", "t1.id").
-				OrOn("t2.o_id", "=", "t1.id")
+			join.On("t2.t1_id", "t1.id").OrOn("t2.o_id", "=", "t1.id")
 		}).
 		Where("t2.status", "=", "PUBLISHED").
 		Select("t1.*", "t2.t1_id", "t2.title as title", "t2.o_id as o_id").
@@ -112,6 +111,79 @@ func TestJoinJoinSubOn(t *testing.T) {
 		assert.Equal(t, `select "t1".*, "t2"."join_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" inner join (select "t1_id" as "join_id", "title", "status" from "table_test_join_t2") as t2 on "t2"."join_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` inner join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 on `t2`.`join_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should has 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(1), rows[0]["join_id"].(int64), "the join_id of first row should be 1")
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
+		assert.Equal(t, "A Psychological Trick to Evoke An Interesting Conversation", rows[0]["title"].(string), "the title of first row should be A Psychological Trick to Evoke An Interesting Conversation")
+		assert.Equal(t, int64(4), rows[1]["join_id"].(int64), "the join_id of 2nd row should be 4")
+		assert.Equal(t, int64(4), rows[1]["id"].(int64), "the id of 2nd should be 4")
+		assert.Equal(t, "The Future of Dashboards is Dashboardless", rows[1]["title"].(string), "the title of 2nd row should be The Future of Dashboards is Dashboardless")
+	}
+
+}
+
+func TestJoinLeftJoinOn(t *testing.T) {
+	NewTableFoJoinTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_join_t1 as t1").
+		LeftJoin("table_test_join_t2 as t2", "t2.t1_id", "=", "t1.id").
+		Where("t2.status", "=", "PUBLISHED").
+		Select("t1.*", "t2.t1_id", "t2.title as title", "t2.content as content")
+
+	// select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` left join `table_test_join_t2` as `t2` on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?
+	// select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" left join "table_test_join_t2" as "t2" on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "t1".*, "t2"."t1_id", "t2"."title" as "title", "t2"."content" as "content" from "table_test_join_t1" as "t1" left join "table_test_join_t2" as "t2" on "t2"."t1_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title`, `t2`.`content` as `content` from `table_test_join_t1` as `t1` left join `table_test_join_t2` as `t2` on `t2`.`t1_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "the return value should has 1 row")
+	if len(rows) == 2 {
+		assert.Equal(t, int64(1), rows[0]["t1_id"].(int64), "the t1_id of first row should be 1")
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the id of first row should be 1")
+		assert.Equal(t, "A Psychological Trick to Evoke An Interesting Conversation", rows[0]["title"].(string), "the title of first row should be A Psychological Trick to Evoke An Interesting Conversation")
+		assert.Equal(t, int64(4), rows[1]["t1_id"].(int64), "the t1_id of 2nd row should be 4")
+		assert.Equal(t, int64(4), rows[1]["id"].(int64), "the id of 2nd should be 4")
+		assert.Equal(t, "The Future of Dashboards is Dashboardless", rows[1]["title"].(string), "the title of 2nd row should be The Future of Dashboards is Dashboardless")
+	}
+
+}
+
+func TestJoinLeftJoinSubOn(t *testing.T) {
+	NewTableFoJoinTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_join_t1 as t1").
+		LeftJoinSub(func(qb Query) {
+			qb.Select("t1_id as join_id", "title", "status").
+				From("table_test_join_t2")
+		}, "t2", "t2.join_id", "=", "t1.id").
+		Where("t2.status", "=", "PUBLISHED").
+		Select("t1.*", "t2.join_id", "t2.title as title")
+
+	// qb.DD()
+
+	// select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` left join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 on `t2`.`join_id` = `t1`.`id` where `t2`.`status` = ?
+	// select "t1".*, "t2"."join_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" left join (select "t1_id" as "join_id", "title", "status" from "table_test_join_t2") as t2 on "t2"."join_id" = "t1"."id" where "t2"."status" = $1
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "t1".*, "t2"."join_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" left join (select "t1_id" as "join_id", "title", "status" from "table_test_join_t2") as t2 on "t2"."join_id" = "t1"."id" where "t2"."status" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` left join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 on `t2`.`join_id` = `t1`.`id` where `t2`.`status` = ?", sql, "the query sql not equal")
 	}
 
 	// checking result

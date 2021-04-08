@@ -13,7 +13,6 @@ type Query interface {
 	// defined in the query.go file
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
-
 	ToSQL() string
 	GetBindings() []interface{}
 
@@ -47,6 +46,8 @@ type Query interface {
 	// defined in the join.go file
 	Join(table string, first interface{}, args ...interface{}) Query
 	JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
+	LeftJoin(table string, first interface{}, args ...interface{}) Query
+	LeftJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
 	On(first interface{}, args ...interface{}) Query
 	OrOn(first interface{}, args ...interface{}) Query
 
