@@ -31,7 +31,15 @@ func (builder *Builder) LeftJoinSub(qb interface{}, alias string, first interfac
 }
 
 // RightJoin Add a right join to the query.
-func (builder *Builder) RightJoin() {
+func (builder *Builder) RightJoin(table string, first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	return builder.join(dbal.NewName(table), "", first, operator, second, "right", "on", 0)
+}
+
+// RightJoinSub Add a subquery right join to the query.
+func (builder *Builder) RightJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query {
+	operator, second := builder.joinPrepare(args...)
+	return builder.joinSub(qb, alias, first, operator, second, "right", "on", 0)
 }
 
 // CrossJoin Add a "cross join" clause to the query.

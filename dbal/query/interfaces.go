@@ -48,6 +48,8 @@ type Query interface {
 	JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
 	LeftJoin(table string, first interface{}, args ...interface{}) Query
 	LeftJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
+	RightJoin(table string, first interface{}, args ...interface{}) Query
+	RightJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
 	On(first interface{}, args ...interface{}) Query
 	OrOn(first interface{}, args ...interface{}) Query
 
