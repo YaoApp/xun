@@ -279,6 +279,63 @@ func TestJoinRightJoinSubOn(t *testing.T) {
 	}
 }
 
+func TestJoinCrossJoinOn(t *testing.T) {
+	NewTableFoJoinTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_join_t1 as t1").
+		CrossJoin("table_test_join_t2 as t2").
+		Where("t2.status", "=", "PUBLISHED").
+		Select("t1.*", "t2.t1_id", "t2.title as title")
+
+	// select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` cross join `table_test_join_t2` as `t2` where `t2`.`status` = ?
+	// select "t1".*, "t2"."t1_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" cross join "table_test_join_t2" as "t2" where "t2"."status" = $1
+
+	// qb.DD()
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "t1".*, "t2"."t1_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" cross join "table_test_join_t2" as "t2" where "t2"."status" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `t1`.*, `t2`.`t1_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` cross join `table_test_join_t2` as `t2` where `t2`.`status` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 12, len(rows), "the return value should be have 12 items")
+
+}
+
+func TestJoinCrossJoinSubOn(t *testing.T) {
+	NewTableFoJoinTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_join_t1 as t1").
+		CrossJoinSub(func(qb Query) {
+			qb.Select("t1_id as join_id", "title", "status").
+				From("table_test_join_t2")
+		}, "t2").
+		Where("t2.status", "=", "PUBLISHED").
+		Select("t1.*", "t2.join_id", "t2.title as title")
+
+	// qb.DD()
+
+	// select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` cross join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 where `t2`.`status` = ?
+	// select "t1".*, "t2"."join_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" cross join (select "t1_id" as "join_id", "title", "status" from "table_test_join_t2") as t2 where "t2"."status" = $1
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select "t1".*, "t2"."join_id", "t2"."title" as "title" from "table_test_join_t1" as "t1" cross join (select "t1_id" as "join_id", "title", "status" from "table_test_join_t2") as t2 where "t2"."status" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` cross join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 where `t2`.`status` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 12, len(rows), "the return value should be have 12 items")
+
+}
+
 // clean the test data
 func TestJoinClean(t *testing.T) {
 	builder := getTestSchemaBuilder()

@@ -43,7 +43,13 @@ func (builder *Builder) RightJoinSub(qb interface{}, alias string, first interfa
 }
 
 // CrossJoin Add a "cross join" clause to the query.
-func (builder *Builder) CrossJoin() {
+func (builder *Builder) CrossJoin(table string) Query {
+	return builder.join(dbal.NewName(table), "", nil, "", nil, "cross", "on", 0)
+}
+
+// CrossJoinSub Add a subquery cross join to the query.
+func (builder *Builder) CrossJoinSub(qb interface{}, alias string) Query {
+	return builder.joinSub(qb, alias, nil, "", nil, "cross", "on", 0)
 }
 
 // On Add an "on" clause to the join.
@@ -128,7 +134,7 @@ func (builder *Builder) joinOn(first interface{}, operator string, second interf
 
 	if builder.isClosure(first) {
 		builder.whereNested(first.(func(qb Query)), boolean)
-	} else {
+	} else if first != nil {
 		builder.whereColumn(first, operator, second, boolean, offset)
 	}
 
