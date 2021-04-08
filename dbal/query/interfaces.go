@@ -47,6 +47,8 @@ type Query interface {
 	// defined in the join.go file
 	Join(table string, first interface{}, args ...interface{}) Query
 	JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
+	On(first interface{}, args ...interface{}) Query
+	OrOn(first interface{}, args ...interface{}) Query
 
 	// defined in the where.go file
 	Where(column interface{}, args ...interface{}) Query

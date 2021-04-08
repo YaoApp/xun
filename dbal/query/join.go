@@ -6,16 +6,32 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
-//Join  Add a join clause to the query.
+// Join  Add a join clause to the query.
 func (builder *Builder) Join(table string, first interface{}, args ...interface{}) Query {
-	operator, second, _, _ := builder.joinPrepare(args...)
+	operator, second, _ := builder.joinPrepare(args...)
 	return builder.join(dbal.NewName(table), "", first, operator, second, "inner", "on", 0)
 }
 
-//JoinSub Add a subquery join clause to the query.
+// JoinSub Add a subquery join clause to the query.
 func (builder *Builder) JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query {
-	operator, second, _, _ := builder.joinPrepare(args...)
+	operator, second, _ := builder.joinPrepare(args...)
 	return builder.joinSub(qb, alias, first, operator, second, "inner", "on", 0)
+}
+
+// On Add an "on" clause to the join.
+func (builder *Builder) On(first interface{}, args ...interface{}) Query {
+	operator, second, boolean := builder.joinPrepare(args...)
+	join := builder.joinOn(first, operator, second, boolean, 0)
+	builder.Query.Joins = append(builder.Query.Joins, join)
+	return builder
+}
+
+// OrOn Add an "or on" clause to the join.
+func (builder *Builder) OrOn(first interface{}, args ...interface{}) Query {
+	operator, second, _ := builder.joinPrepare(args...)
+	join := builder.joinOn(first, operator, second, "or", 0)
+	builder.Query.Joins = append(builder.Query.Joins, join)
+	return builder
 }
 
 // LeftJoin Add a left join to the query.
@@ -37,11 +53,11 @@ func (builder *Builder) forJoinClause() *Builder {
 	return new
 }
 
-func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}, string, string) {
+func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}, string) {
 	var operator = ""
 	var second interface{} = nil
-	var typ = "inner"
-	var method = "on"
+	var boolean = "and"
+	// var method = "on"
 
 	if len(args) > 0 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 		operator = args[0].(string)
@@ -52,14 +68,10 @@ func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}, s
 	}
 
 	if len(args) > 2 && reflect.TypeOf(args[2]).Kind() == reflect.String {
-		typ = args[2].(string)
+		boolean = args[2].(string)
 	}
 
-	if len(args) > 3 && reflect.TypeOf(args[3]).Kind() == reflect.String {
-		method = args[3].(string)
-	}
-
-	return operator, second, typ, method
+	return operator, second, boolean
 }
 
 //JoinWhere Add a "join where" clause to the query.
@@ -78,7 +90,8 @@ func (builder *Builder) RightJoinWhere() {
 func (builder *Builder) join(table interface{}, alias string, first interface{}, operator string, second interface{}, typ string, method string, offset int) Query {
 	if method == "on" {
 		qb := builder.forJoinClause()
-		join := qb.joinOn(typ, first, operator, second, "and", offset)
+		join := qb.joinOn(first, operator, second, "and", offset)
+		join.Type = typ
 		join.Name = table
 		if alias != "" {
 			join.Alias = alias
@@ -97,16 +110,15 @@ func (builder *Builder) joinSub(qb interface{}, alias string, first interface{},
 	return builder.join(sub, alias, first, operator, second, typ, method, joinOffset+offset)
 }
 
-func (builder *Builder) joinOn(typ string, first interface{}, operator string, second interface{}, boolean string, offset int) dbal.Join {
+func (builder *Builder) joinOn(first interface{}, operator string, second interface{}, boolean string, offset int) dbal.Join {
 
 	if builder.isClosure(first) {
 		builder.whereNested(first.(func(qb Query)), boolean)
 	} else {
-		builder.WhereColumn(first, operator, second, boolean)
+		builder.whereColumn(first, operator, second, boolean, offset)
 	}
 
 	return dbal.Join{
-		Type:   typ, // inner left join
 		Query:  builder.Query,
 		Offset: offset,
 	}

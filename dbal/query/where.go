@@ -293,6 +293,7 @@ func (builder *Builder) addNestedWhereQuery(query *dbal.Query, boolean string) *
 func (builder *Builder) forNestedWhere() *Builder {
 	new := builder.new()
 	new.Query.From = builder.Query.From
+	new.Query.IsJoinClause = builder.Query.IsJoinClause
 	return new
 }
 

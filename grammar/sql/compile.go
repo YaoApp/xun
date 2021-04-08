@@ -143,6 +143,7 @@ func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset 
 		if len(join.Query.Joins) > 0 {
 			tableAndNestedJoins = fmt.Sprintf("(%s%s)", table, nestedJoins)
 		}
+
 		return strings.Trim(
 			fmt.Sprintf("%s join %s %s", join.Type, tableAndNestedJoins, grammarSQL.CompileWheres(join.Query, join.Query.Wheres, offset)),
 			" ",
