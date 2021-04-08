@@ -23,14 +23,6 @@ func Use(conn *Connection) Query {
 	return builder
 }
 
-// DB Get the sqlx.DB pointer instance
-func (builder *Builder) DB(readonly ...bool) *sqlx.DB {
-	if len(readonly) == 1 && readonly[0] == true {
-		return builder.Conn.Read
-	}
-	return builder.Conn.Write
-}
-
 // clone create a new builder instance with current builder
 func (builder *Builder) clone() *Builder {
 	new := *builder

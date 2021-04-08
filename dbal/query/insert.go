@@ -7,6 +7,7 @@ import (
 
 // Insert Insert new records into the database.
 func (builder *Builder) Insert(v interface{}) error {
+	builder.UseWrite()
 	values := xun.AnyToRows(v)
 	_, err := builder.Grammar.Insert(builder.Query, values)
 	return err
@@ -20,6 +21,7 @@ func (builder *Builder) MustInsert(v interface{}) {
 
 // InsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
+	builder.UseWrite()
 	values := xun.AnyToRows(v)
 	res, err := builder.Grammar.InsertIgnore(builder.Query, values)
 	if err != nil {
@@ -30,6 +32,7 @@ func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
 
 // MustInsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
+	builder.UseWrite()
 	affected, err := builder.InsertOrIgnore(v)
 	utils.PanicIF(err)
 	return affected
@@ -37,6 +40,7 @@ func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
 
 // InsertGetID Insert a new record and get the value of the primary key.
 func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, error) {
+	builder.UseWrite()
 	values := xun.AnyToRows(v)
 	seq := "id"
 	if len(sequence) == 1 {
@@ -47,6 +51,7 @@ func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, e
 
 // MustInsertGetID Insert a new record and get the value of the primary key.
 func (builder *Builder) MustInsertGetID(v interface{}, sequence ...string) int64 {
+	builder.UseWrite()
 	lastID, err := builder.InsertGetID(v, sequence...)
 	utils.PanicIF(err)
 	return lastID

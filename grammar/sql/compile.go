@@ -45,7 +45,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	sqls["orders"] = grammarSQL.CompileOrders(query, query.Orders, offset)
 	sqls["limit"] = grammarSQL.CompileLimit(query, query.Limit, offset)
 	sqls["offset"] = grammarSQL.CompileOffset(query, query.Offset)
-	// sqls["lock"] = grammarSQL.CompileLock()
+	sqls["lock"] = grammarSQL.CompileLock(query, query.Lock)
 
 	sql := ""
 	for _, name := range []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"} {
@@ -300,6 +300,15 @@ func (grammarSQL SQL) CompileOffset(query *dbal.Query, offset int) string {
 		return ""
 	}
 	return fmt.Sprintf("offset %d", offset)
+}
+
+// CompileLock the lock into SQL.
+func (grammarSQL SQL) CompileLock(query *dbal.Query, lock interface{}) string {
+	sql, ok := lock.(string)
+	if ok {
+		return sql
+	}
+	return ""
 }
 
 // CompileWheres Compile an update statement into SQL.

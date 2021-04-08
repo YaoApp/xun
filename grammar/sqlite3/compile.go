@@ -45,7 +45,7 @@ func (grammarSQL SQLite3) CompileSelectOffset(query *dbal.Query, offset *int) st
 	sqls["orders"] = grammarSQL.CompileOrders(query, query.Orders, offset)
 	sqls["limit"] = grammarSQL.CompileLimit(query, query.Limit, offset)
 	sqls["offset"] = grammarSQL.CompileOffset(query, query.Offset)
-	// sqls["lock"] = grammarSQL.CompileLock()
+	sqls["lock"] = grammarSQL.CompileLock(query, query.Lock)
 
 	sql := ""
 	for _, name := range []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"} {
@@ -139,4 +139,9 @@ func (grammarSQL SQLite3) WhereDateBased(typ string, query *dbal.Query, where db
 	}
 
 	return fmt.Sprintf("strftime('%s',%s) %s cast(%s as text)", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+}
+
+// CompileLock the lock into SQL.
+func (grammarSQL SQLite3) CompileLock(query *dbal.Query, lock interface{}) string {
+	return ""
 }

@@ -45,7 +45,7 @@ func (grammarSQL Postgres) CompileSelectOffset(query *dbal.Query, offset *int) s
 	sqls["orders"] = grammarSQL.CompileOrders(query, query.Orders, offset)
 	sqls["limit"] = grammarSQL.CompileLimit(query, query.Limit, offset)
 	sqls["offset"] = grammarSQL.CompileOffset(query, query.Offset)
-	// sqls["lock"] = grammarSQL.CompileLock()
+	sqls["lock"] = grammarSQL.CompileLock(query, query.Lock)
 
 	sql := ""
 	for _, name := range []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"} {
@@ -181,4 +181,17 @@ func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where d
 		value = where.Value.(dbal.Expression).GetValue()
 	}
 	return fmt.Sprintf("extract(%s from %s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+}
+
+// CompileLock the lock into SQL.
+func (grammarSQL Postgres) CompileLock(query *dbal.Query, lock interface{}) string {
+	lockType, ok := lock.(string)
+	if ok == false {
+		return ""
+	} else if lockType == "share" {
+		return "for share"
+	} else if lockType == "update" {
+		return "for update"
+	}
+	return ""
 }

@@ -7,14 +7,22 @@ import (
 
 // Query The database Query interface
 type Query interface {
-	DB(readonly ...bool) *sqlx.DB
-	Table(name string) Query
+
+	// defined in the builder.go file
 
 	// defined in the query.go file
+	Table(name string) Query
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
 	ToSQL() string
 	GetBindings() []interface{}
+
+	// defined in the connection.go file
+	DB(readonly ...bool) *sqlx.DB
+	IsRead() bool
+	UseRead() Query
+	UseWrite() Query
+	IsWrite() bool
 
 	// defined in the aggregate.go file
 	Count(columns ...interface{}) (int64, error)
@@ -109,6 +117,10 @@ type Query interface {
 	Offset(value int) Query
 	Take(value int) Query
 	Limit(value int) Query
+
+	// defined in the lock.go file
+	SharedLock() Query
+	LockForUpdate() Query
 
 	// defined in the insert.go file
 	Insert(v interface{}) error

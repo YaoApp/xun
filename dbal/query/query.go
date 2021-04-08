@@ -16,11 +16,7 @@ func (builder *Builder) Table(name string) Query {
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() ([]xun.R, error) {
 
-	db := builder.Conn.Read
-	if builder.Query.UseWriteConnection {
-		db = builder.Conn.Write
-	}
-
+	db := builder.DB()
 	rows, err := db.Query(builder.ToSQL(), builder.GetBindings()...)
 	if err != nil {
 		return nil, err
@@ -125,8 +121,4 @@ func (builder *Builder) DoesntExist() {
 
 // MustDoesntExist Determine if no rows exist for the current query.
 func (builder *Builder) MustDoesntExist() {
-}
-
-// PrintSQL Get and print the SQL representation of the query.
-func (builder *Builder) PrintSQL() {
 }
