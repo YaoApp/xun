@@ -72,7 +72,8 @@ func (builder *Builder) MustInsertGetID(v interface{}, args ...interface{}) int6
 func (builder *Builder) InsertUsing(qb interface{}, columns ...interface{}) (int64, error) {
 
 	columns = builder.prepareColumns(columns...)
-	sql, bindings, _ := builder.createSub(qb)
+	sub, bindings, _ := builder.createSub(qb)
+	sql := builder.parseSub(sub)
 	sql = builder.Grammar.CompileInsertUsing(builder.Query, columns, sql)
 	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	if err != nil {

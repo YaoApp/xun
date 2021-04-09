@@ -88,6 +88,38 @@ func TestInsertMustUpsertUpdateRaw(t *testing.T) {
 	}
 }
 
+func TestInsertMustUpdate(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update").
+		Where("id", ">", 2).
+		MustUpdate(xun.R{
+			"vote":  20,
+			"score": 99.98,
+		})
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestInsertMustUpdateWithJoin(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update as t1").
+		JoinSub(func(qb Query) {
+			qb.From("table_test_update").
+				Where("id", ">", 1).
+				Select("id as join_id", "score_grade as join_score")
+		}, "t2", "t2.join_id", "=", "t1.id").
+		Where("t1.id", ">", 2).
+		MustUpdate(xun.R{
+			"vote":  20,
+			"score": 99.98,
+		})
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+}
+
 // clean the test data
 func TestUpdateClean(t *testing.T) {
 	builder := getTestSchemaBuilder()

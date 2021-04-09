@@ -41,16 +41,21 @@ func Time(value interface{}) T {
 
 // AnyToR convert any struct to R type
 func AnyToR(v interface{}) R {
-	res := R{}
+
 	if v == nil {
+		return R{}
+	} else if res, ok := v.(R); ok {
 		return res
 	}
-	typ := reflect.TypeOf(v)
+
+	res := R{}
 	reflectValue := reflect.ValueOf(v)
 	reflectValue = reflect.Indirect(reflectValue)
+	typ := reflectValue.Type()
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
+
 	for i := 0; i < typ.NumField(); i++ {
 		tag := typ.Field(i).Tag.Get("json")
 		field := reflectValue.Field(i).Interface()
@@ -152,17 +157,24 @@ func MapScan(rows *sql.Rows) ([]R, error) {
 			reflectValue := reflect.ValueOf(values[i])
 			value := reflect.Indirect(reflectValue).Interface()
 			switch value.(type) {
-			case []uint8:
+			case []byte:
 				bytes := ""
-				for _, v := range value.([]uint8) {
+				for _, v := range value.([]byte) {
 					bytes = fmt.Sprintf("%s%s", bytes, string(v))
 				}
 
 				dest[column] = bytes
 				if len(bytes) < 20 {
-					num, err := strconv.ParseInt(bytes, 10, 64)
+					intv, err := strconv.ParseInt(bytes, 10, 64)
 					if err == nil {
-						dest[column] = num
+						dest[column] = intv
+						break
+					}
+
+					floatv, err := strconv.ParseFloat(bytes, 64)
+					if err == nil {
+						dest[column] = floatv
+						break
 					}
 				}
 

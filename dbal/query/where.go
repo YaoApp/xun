@@ -82,8 +82,9 @@ func (builder *Builder) where(column interface{}, operator string, value interfa
 	// Where( func(qb Query){ qb.Where("name", "Ken")... }, ">", 5, "or")
 	if whereType == "sub" {
 		sub, bindings, whereOffset := builder.createSub(column)
+		segment := builder.parseSub(sub)
 		builder.Query.AddBinding("where", bindings)
-		builder.Where(dbal.Raw(fmt.Sprintf("(%s)", sub)), operator, value, boolean, whereOffset)
+		builder.Where(dbal.Raw(fmt.Sprintf("(%s)", segment)), operator, value, boolean, whereOffset)
 		return builder
 	}
 
@@ -209,26 +210,26 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 }
 
 // createSub Creates a subquery and parse it.
-func (builder *Builder) createSub(subquery interface{}) (string, []interface{}, int) {
+func (builder *Builder) createSub(subquery interface{}) (interface{}, []interface{}, int) {
 	if builder.isClosure(subquery) {
 		callback := subquery.(func(qb Query))
 		qb := builder.forSubQuery()
 		callback(qb)
 		subquery = qb
 	}
-	return builder.parseSub(subquery)
+	return builder.makeSub(subquery)
 }
 
-// Parse the subquery into SQL and bindings.
-func (builder *Builder) parseSub(subquery interface{}) (string, []interface{}, int) {
-
+// make the subquery and bindings.
+func (builder *Builder) makeSub(subquery interface{}) (interface{}, []interface{}, int) {
 	switch subquery.(type) {
 	case *Builder:
 		qb := builder.prependDatabaseNameIfCrossDatabaseQuery(subquery.(*Builder))
 		offset := len(builder.GetBindings())
 		bindings := qb.GetBindings()
 		whereOffset := offset + len(utils.Flatten(bindings))
-		return builder.Grammar.CompileSelectOffset(qb.Query, &offset), bindings, whereOffset
+		qb.Query.BindingOffset = offset
+		return qb.Query, bindings, whereOffset
 	case dbal.Expression:
 		return subquery.(dbal.Expression).GetValue(), []interface{}{}, 1
 	case string:
@@ -448,7 +449,8 @@ func (builder *Builder) whereIn(column interface{}, values interface{}, boolean 
 	// query accordingly so that this query is properly executed when it is run.
 	if builder.isQueryable(values) {
 		sub, bindings, offset := builder.createSub(values)
-		values = dbal.Raw(sub)
+		segment := builder.parseSub(sub)
+		values = dbal.Raw(segment)
 		builder.Query.AddBinding("where", bindings)
 		inOffset = offset
 	}

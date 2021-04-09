@@ -54,20 +54,3 @@ func (grammarSQL SQL) ProcessInsertGetID(sql string, bindings []interface{}, seq
 func (grammarSQL SQL) CompileInsertUsing(query *dbal.Query, columns []interface{}, sql string) string {
 	return fmt.Sprintf("INSERT INTO %s (%s) %s", grammarSQL.WrapTable(query.From), grammarSQL.Columnize(columns), sql)
 }
-
-// GetOperators get the operators
-func (grammarSQL SQL) GetOperators() []string {
-	return []string{
-		"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-		"like", "like binary", "not like", "ilike",
-		"&", "|", "^", "<<", ">>",
-		"rlike", "not rlike", "regexp", "not regexp",
-		"~", "~*", "!~", "!~*", "similar to",
-		"not similar to", "not ilike", "~~*", "!~~*",
-	}
-}
-
-//GetSelectComponents Get The components that make up a select clause.
-func (grammarSQL SQL) GetSelectComponents() []string {
-	return []string{"aggregate", "columns", "from", "joins", "wheres", "groups", "havings", "orders", "limit", "offset", "lock"}
-}

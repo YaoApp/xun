@@ -132,8 +132,9 @@ func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset 
 	sql := ""
 	for _, join := range joins {
 		table := grammarSQL.WrapTable(join.Name)
-		if join.SQL != "" && join.Alias != "" {
-			table = fmt.Sprintf("(%s) as %s", join.SQL, join.Alias)
+		if join.SQL != nil && join.Alias != "" {
+			sql := grammarSQL.CompileSub(join.SQL, offset)
+			table = fmt.Sprintf("(%s) as %s", sql, join.Alias)
 		}
 		nestedJoins := " "
 		if len(join.Query.Joins) > 0 {
@@ -150,6 +151,20 @@ func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset 
 		)
 	}
 	return sql
+}
+
+// CompileSub Parse the subquery into SQL and bindings.
+func (grammarSQL SQL) CompileSub(sub interface{}, offset *int) string {
+	switch sub.(type) {
+	case *dbal.Query:
+		query := sub.(*dbal.Query)
+		return grammarSQL.CompileSelectOffset(query, offset)
+	case dbal.Expression:
+		return sub.(dbal.Expression).GetValue()
+	case string:
+		return sub.(string)
+	}
+	panic(fmt.Errorf("a subquery must be a query builder instance, a Closure, or a string"))
 }
 
 // CompileColumns Compile the "select *" portion of the query.

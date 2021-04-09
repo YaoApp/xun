@@ -135,6 +135,8 @@ type Query interface {
 	// defined in the update.go file
 	Upsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) (int64, error)
 	MustUpsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) int64
+	Update(v interface{}) (int64, error)
+	MustUpdate(v interface{}) int64
 
 	// defined in the debug.go file
 	DD()

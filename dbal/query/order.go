@@ -26,7 +26,8 @@ func (builder *Builder) OrderBy(column interface{}, args ...string) Query {
 	}
 
 	if builder.isQueryable(column) {
-		sql, bindings, subQueryOffset := builder.createSub(column)
+		sub, bindings, subQueryOffset := builder.createSub(column)
+		sql := builder.parseSub(sub)
 		offset = subQueryOffset
 		column = dbal.Raw(fmt.Sprintf("(%s)", sql))
 		builder.Query.AddBinding(orderName, bindings)

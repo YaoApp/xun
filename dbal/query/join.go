@@ -115,7 +115,7 @@ func (builder *Builder) join(table interface{}, alias string, first interface{},
 		join.Name = table
 		if alias != "" {
 			join.Alias = alias
-			join.SQL = dbal.Raw(table).GetValue()
+			join.SQL = table
 		}
 		builder.Query.Joins = append(builder.Query.Joins, join)
 		builder.Query.AddBinding("join", qb.GetBindings())

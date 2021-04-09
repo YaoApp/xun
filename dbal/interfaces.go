@@ -15,7 +15,6 @@ type Grammar interface {
 	GetDatabase() string
 	GetSchema() string
 	GetOperators() []string
-	GetSelectComponents() []string
 
 	// Grammar for migrating
 	GetTables() ([]string, error)
@@ -35,6 +34,7 @@ type Grammar interface {
 	CompileInsertGetID(query *Query, columns []interface{}, values [][]interface{}, sequence string) (string, []interface{})
 	CompileInsertUsing(query *Query, columns []interface{}, sql string) string
 	CompileUpsert(query *Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
+	CompileUpdate(query *Query, values map[string]interface{}) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
 

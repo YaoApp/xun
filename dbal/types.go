@@ -180,7 +180,7 @@ type Join struct {
 	Name   interface{} // The table the join clause is joining to.
 	Query  *Query
 	Alias  string
-	SQL    string
+	SQL    interface{}
 	Offset int
 }
 
@@ -240,7 +240,6 @@ type Select struct {
 type Query struct {
 	UseWriteConnection bool                     // Whether to use write connection for the select. default is false
 	Lock               interface{}              //  Indicates whether row locking is being used.
-	Operators          []string                 // All of the available clause operators.
 	From               From                     // The table which the query is targeting.
 	Columns            []interface{}            // The columns that should be returned. (Name or Expression)
 	Aggregate          Aggregate                // An aggregate function and column to be run.
@@ -256,8 +255,8 @@ type Query struct {
 	Groups             []interface{}            // The groupings for the query.
 	Havings            []Having                 // The having constraints for the query.
 	Bindings           map[string][]interface{} // The current query value bindings.
-	BindingKeys        []string                 // The  query bindings keys
 	Distinct           bool                     // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false
 	DistinctColumns    []interface{}            // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct.
 	IsJoinClause       bool                     // Determine if the query is a join clause.
+	BindingOffset      int                      // The Binding offset before select
 }

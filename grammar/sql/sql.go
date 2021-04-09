@@ -135,3 +135,15 @@ func (grammarSQL SQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read
 func (grammarSQL SQL) OnConnected() error {
 	return nil
 }
+
+// GetOperators get the operators
+func (grammarSQL SQL) GetOperators() []string {
+	return []string{
+		"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+		"like", "like binary", "not like", "ilike",
+		"&", "|", "^", "<<", ">>",
+		"rlike", "not rlike", "regexp", "not regexp",
+		"~", "~*", "!~", "!~*", "similar to",
+		"not similar to", "not ilike", "~~*", "!~~*",
+	}
+}

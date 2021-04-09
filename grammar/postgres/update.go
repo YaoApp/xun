@@ -63,3 +63,28 @@ func (grammarSQL Postgres) CompileUpsert(query *dbal.Query, columns []interface{
 
 	return fmt.Sprintf("%s %s", sql, strings.Join(segments, ", ")), bindings
 }
+
+// CompileUpdate Compile an update statement into SQL.
+func (grammarSQL Postgres) CompileUpdate(query *dbal.Query, values map[string]interface{}) (string, []interface{}) {
+
+	if len(query.Joins) == 0 && query.Limit < 0 {
+		return grammarSQL.SQL.CompileUpdate(query, values)
+	}
+
+	offset := 0
+	bindings := []interface{}{}
+	table := grammarSQL.WrapTable(query.From)
+
+	columns, columnsBindings := grammarSQL.CompileUpdateColumns(query, values, &offset)
+	bindings = append(bindings, columnsBindings...)
+
+	alias := query.From.Alias
+	query.Columns = []interface{}{fmt.Sprintf("%s.ctid", alias)}
+
+	selectSQL := grammarSQL.CompileSelectOffset(query, &offset)
+
+	bindings = append(bindings, query.GetBindings()...)
+	sql := fmt.Sprintf("update %s set %s where %s in (%s)", table, columns, grammarSQL.Wrap("ctid"), selectSQL)
+
+	return sql, bindings
+}

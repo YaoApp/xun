@@ -9,6 +9,24 @@ import (
 // Grammars loaded grammar driver
 var Grammars = map[string]Grammar{}
 
+// BindingKeys the binding key orders
+var BindingKeys = []string{
+	"select", "from", "join", "where",
+	"groupBy", "having",
+	"order",
+	"union", "unionOrder",
+}
+
+// Operators the default Operators
+var Operators = []string{
+	"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+	"like", "like binary", "not like", "ilike",
+	"&", "|", "^", "<<", ">>",
+	"rlike", "not rlike", "regexp", "not regexp",
+	"~", "~*", "!~", "!~*", "similar to",
+	"not similar to", "not ilike", "~~*", "!~~*",
+}
+
 // Register register the grammar driver
 func Register(name string, grammar Grammar) {
 	Grammars[name] = grammar
@@ -75,20 +93,7 @@ func NewQuery() *Query {
 		Offset:             -1,
 		UnionLimit:         -1,
 		UnionOffset:        -1,
-		Operators: []string{
-			"=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
-			"like", "like binary", "not like", "ilike",
-			"&", "|", "^", "<<", ">>",
-			"rlike", "not rlike", "regexp", "not regexp",
-			"~", "~*", "!~", "!~*", "similar to",
-			"not similar to", "not ilike", "~~*", "!~~*",
-		},
-		BindingKeys: []string{
-			"select", "from", "join", "where",
-			"groupBy", "having",
-			"order",
-			"union", "unionOrder",
-		},
+		BindingOffset:      0,
 		Bindings: map[string][]interface{}{
 			"select":     {},
 			"from":       {},
@@ -297,4 +302,26 @@ func (query *Query) AddBinding(typ string, value interface{}) {
 	} else {
 		query.Bindings[typ] = append(query.Bindings[typ], value)
 	}
+}
+
+// GetBindings Get the current query value bindings in a flattened array.
+func (query *Query) GetBindings(key ...string) []interface{} {
+
+	if len(key) > 0 {
+		name := key[0]
+		values, has := query.Bindings[name]
+		if !has {
+			panic(fmt.Errorf("The %s of bindings does not exist", name))
+		}
+		return values
+	}
+
+	bindings := []interface{}{}
+	for _, name := range BindingKeys {
+		values, has := query.Bindings[name]
+		if has && len(values) > 0 {
+			bindings = append(bindings, values...)
+		}
+	}
+	return bindings
 }

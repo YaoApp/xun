@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -104,6 +105,25 @@ func (builder *Builder) prepareColumns(v ...interface{}) []interface{} {
 	return v
 }
 
+// Parse the subquery into SQL and bindings.
+func (builder *Builder) parseSub(sub interface{}) string {
+	switch sub.(type) {
+	case *Builder:
+		qb := sub.(*Builder)
+		offset := qb.Query.BindingOffset
+		return qb.Grammar.CompileSelectOffset(qb.Query, &offset)
+	case *dbal.Query:
+		query := sub.(*dbal.Query)
+		offset := query.BindingOffset
+		return builder.Grammar.CompileSelectOffset(query, &offset)
+	case dbal.Expression:
+		return sub.(dbal.Expression).GetValue()
+	case string:
+		return sub.(string)
+	}
+	panic(fmt.Errorf("a subquery must be a query builder instance, a Closure, or a string"))
+}
+
 func (builder *Builder) isClosure(v interface{}) bool {
 	if v == nil {
 		return false
@@ -151,14 +171,14 @@ func (builder *Builder) isQueryable(value interface{}) bool {
 
 // Determine if the given operator and value combination is legal.
 func (builder *Builder) invalidOperator(operator string) bool {
-	return !utils.StringHave(builder.Query.Operators, operator) &&
+	return !utils.StringHave(dbal.Operators, operator) &&
 		!utils.StringHave(builder.Grammar.GetOperators(), operator)
 }
 
 // Determine if the given operator is supported.
 func (builder *Builder) invalidOperatorAndValue(operator string, value interface{}) bool {
 	return value == nil &&
-		utils.StringHave(builder.Query.Operators, operator) &&
+		utils.StringHave(dbal.Operators, operator) &&
 		utils.StringHave([]string{"=", "<>", "!="}, operator)
 }
 

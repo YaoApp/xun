@@ -35,10 +35,11 @@ func (builder *Builder) SelectRaw(expression string, bindings ...interface{}) Qu
 // SelectSub Add a subselect expression to the query.
 func (builder *Builder) SelectSub(qb interface{}, as string) Query {
 	sub, bindings, selectOffset := builder.createSub(qb)
+	sql := builder.parseSub(sub)
 	column := dbal.Select{
 		Type:   "sub",
 		Alias:  as,
-		SQL:    fmt.Sprintf("(%s)", sub),
+		SQL:    fmt.Sprintf("(%s)", sql),
 		Offset: selectOffset - 1,
 	}
 	builder.addSelect(column)

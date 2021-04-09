@@ -42,14 +42,7 @@ func (builder *Builder) ToSQL() string {
 
 // GetBindings Get the current query value bindings in a flattened array.
 func (builder *Builder) GetBindings() []interface{} {
-	bindings := []interface{}{}
-	for _, name := range builder.Query.BindingKeys {
-		values, has := builder.Query.Bindings[name]
-		if has && len(values) > 0 {
-			bindings = append(bindings, values...)
-		}
-	}
-	return bindings
+	return builder.Query.GetBindings()
 }
 
 // MustGet Execute the query as a "select" statement.
