@@ -65,6 +65,12 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 	return strings.Trim(sql, " ")
 }
 
+// CompileExists Compile an exists statement into SQL.
+func (grammarSQL SQL) CompileExists(query *dbal.Query) string {
+	sql := grammarSQL.CompileSelect(query)
+	return fmt.Sprintf("select exists(%s) as %s", sql, grammarSQL.Wrap("exists"))
+}
+
 // CompileUnionAggregate Compile a union aggregate query into SQL.
 func (grammarSQL SQL) CompileUnionAggregate(query *dbal.Query) string {
 	qb := &(*query)

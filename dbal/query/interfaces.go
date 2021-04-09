@@ -14,6 +14,10 @@ type Query interface {
 	Table(name string) Query
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
+	Exists() (bool, error)
+	MustExists() bool
+	DoesntExist() (bool, error)
+	MustDoesntExist() bool
 	ToSQL() string
 	GetBindings() []interface{}
 

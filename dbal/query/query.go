@@ -1,6 +1,8 @@
 package query
 
 import (
+	"fmt"
+
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
@@ -15,24 +17,19 @@ func (builder *Builder) Table(name string) Query {
 
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() ([]xun.R, error) {
-
 	db := builder.DB()
 	rows, err := db.Query(builder.ToSQL(), builder.GetBindings()...)
 	if err != nil {
 		return nil, err
 	}
-
 	return xun.MapScan(rows)
+}
 
-	// res := []xun.R{}
-	// for rows.Next() {
-	// 	row := map[string]interface{}{}
-	// 	rows.MapScan(row)
-	// 	utils.Println(row)
-	// 	res = append(res, xun.MapToR(row))
-	// }
-
-	// return res, nil
+// MustGet Execute the query as a "select" statement.
+func (builder *Builder) MustGet() []xun.R {
+	res, err := builder.Get()
+	utils.PanicIF(err)
+	return res
 }
 
 // ToSQL Get the SQL representation of the query.
@@ -45,11 +42,48 @@ func (builder *Builder) GetBindings() []interface{} {
 	return builder.Query.GetBindings()
 }
 
-// MustGet Execute the query as a "select" statement.
-func (builder *Builder) MustGet() []xun.R {
-	res, err := builder.Get()
+// Exists Determine if any rows exist for the current query.
+func (builder *Builder) Exists() (bool, error) {
+	sql := builder.Grammar.CompileExists(builder.Query)
+
+	db := builder.DB()
+	rows, err := db.Query(sql, builder.GetBindings()...)
+	if err != nil {
+		return false, err
+	}
+
+	res, err := xun.MapScan(rows)
+	if err != nil {
+		return false, err
+	}
+
+	if len(res) == 1 {
+		exists := fmt.Sprintf("%v", res[0]["exists"])
+		return (exists == "1" || exists == "true"), nil
+	}
+
+	return false, nil
+}
+
+// MustExists Determine if any rows exist for the current query.
+func (builder *Builder) MustExists() bool {
+	res, err := builder.Exists()
 	utils.PanicIF(err)
 	return res
+}
+
+// DoesntExist Determine if no rows exist for the current query.
+func (builder *Builder) DoesntExist() (bool, error) {
+	res, err := builder.Exists()
+	if err != nil {
+		return false, err
+	}
+	return !res, nil
+}
+
+// MustDoesntExist Determine if no rows exist for the current query.
+func (builder *Builder) MustDoesntExist() bool {
+	return !builder.MustExists()
 }
 
 // Find Execute a query for a single record by ID.
@@ -98,20 +132,4 @@ func (builder *Builder) Chunk() {
 
 // MustChunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
 func (builder *Builder) MustChunk() {
-}
-
-// Exists Determine if any rows exist for the current query.
-func (builder *Builder) Exists() {
-}
-
-// MustExists Determine if any rows exist for the current query.
-func (builder *Builder) MustExists() {
-}
-
-// DoesntExist Determine if no rows exist for the current query.
-func (builder *Builder) DoesntExist() {
-}
-
-// MustDoesntExist Determine if no rows exist for the current query.
-func (builder *Builder) MustDoesntExist() {
 }

@@ -40,6 +40,7 @@ type Grammar interface {
 	CompileUpdate(query *Query, values map[string]interface{}) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
+	CompileExists(query *Query) string
 
 	ProcessInsertGetID(sql string, bindings []interface{}, sequence string) (int64, error)
 }
