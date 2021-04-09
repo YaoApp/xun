@@ -62,7 +62,7 @@ func (builder *Builder) where(column interface{}, operator string, value interfa
 	// If the column is an array, we will assume it is an array of key-value pairs
 	// and can add them each as a where clause. We will maintain the boolean we
 	// received when the method was called and pass it into the Wheres attribute.
-	if columnKind == reflect.Array || columnKind == reflect.Slice {
+	if columnKind == reflect.Array || columnKind == reflect.Slice || columnKind == reflect.Map {
 		builder.addArrayOfWheres(column, boolean)
 		return builder
 	}
@@ -189,6 +189,17 @@ func (builder *Builder) whereColumn(first interface{}, operator string, second i
 func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean string, whereColumn ...bool) *Builder {
 
 	switch inputColumns.(type) {
+	case map[string]interface{}, xun.R:
+		columns, ok := inputColumns.(map[string]interface{})
+		if !ok {
+			columns = inputColumns.(xun.R).ToMap()
+		}
+		return builder.whereNested(func(qb Query) {
+			for column, value := range columns {
+				qb.Where(column, "=", value, "and", 1)
+			}
+		}, boolean)
+
 	case [][]interface{}:
 		columns := inputColumns.([][]interface{})
 		return builder.whereNested(func(qb Query) {

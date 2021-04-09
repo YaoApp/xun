@@ -57,7 +57,11 @@ func (grammarSQL SQLite3) CompileUpdate(query *dbal.Query, values map[string]int
 	bindings = append(bindings, columnsBindings...)
 
 	alias := query.From.Alias
-	query.Columns = []interface{}{fmt.Sprintf("%s.rowid", alias)}
+	if alias != "" {
+		query.Columns = []interface{}{fmt.Sprintf("%s.rowid", alias)}
+	} else {
+		query.Columns = []interface{}{"rowid"}
+	}
 
 	selectSQL := grammarSQL.CompileSelectOffset(query, &offset)
 

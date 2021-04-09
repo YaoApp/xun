@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -201,6 +202,40 @@ func TestUpdateMustDecrementWithExra(t *testing.T) {
 
 	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
 	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestUpdateMustUpdateOrInsertInsert(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	res := qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+		"email": "max@yao.run", "name": "Max", "vote": 19, "score": 86.32, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16",
+	})
+	assert.True(t, res, "the return value should be true")
+	assert.True(t, qb.Table("table_test_update").Where("email", "max@yao.run").MustExists(), "the return value should be true")
+}
+
+func TestUpdateMustUpdateOrInsertUpdateDothing(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	res := qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+		"email": "lee@yao.run", "name": "Lee", "vote": 5, "status": "PENDING", "created_at": "2021-03-25 08:30:15",
+	})
+	assert.True(t, res, "the return value should be true")
+	assert.True(t, qb.Table("table_test_update").Where("email", "lee@yao.run").MustExists(), "the return value should be true")
+}
+
+func TestUpdateMustUpdateOrInsertUpdateScore(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	res := qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+		"email": "lee@yao.run", "name": "Lee", "vote": 5, "status": "PENDING", "created_at": "2021-03-25 08:30:15",
+	}, xun.R{"score": 99.85})
+	assert.True(t, res, "the return value should be true")
+	rows := qb.Table("table_test_update").Where("email", "lee@yao.run").MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should have 1 item")
+	if len(rows) == 1 {
+		assert.Equal(t, "99.85", fmt.Sprintf("%.2f", rows[0]["score"]), "the score value should be changed to 99.85")
+	}
 }
 
 // clean the test data

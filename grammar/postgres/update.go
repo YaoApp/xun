@@ -79,7 +79,11 @@ func (grammarSQL Postgres) CompileUpdate(query *dbal.Query, values map[string]in
 	bindings = append(bindings, columnsBindings...)
 
 	alias := query.From.Alias
-	query.Columns = []interface{}{fmt.Sprintf("%s.ctid", alias)}
+	if alias != "" {
+		query.Columns = []interface{}{fmt.Sprintf("%s.ctid", alias)}
+	} else {
+		query.Columns = []interface{}{"ctid"}
+	}
 
 	selectSQL := grammarSQL.CompileSelectOffset(query, &offset)
 

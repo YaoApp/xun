@@ -388,3 +388,13 @@ func (row R) KeysString() []string {
 	}
 	return keys
 }
+
+// Merge get keys of R
+func (row *R) Merge(v ...interface{}) {
+	values := AnyToRows(v)
+	for _, value := range values {
+		for k, v := range value {
+			(*row)[k] = v
+		}
+	}
+}

@@ -33,11 +33,41 @@ func (builder *Builder) MustUpdate(v interface{}) int64 {
 }
 
 // UpdateOrInsert Insert or update a record matching the attributes, and fill it with values.
-func (builder *Builder) UpdateOrInsert() {
+func (builder *Builder) UpdateOrInsert(attributes interface{}, values ...interface{}) (bool, error) {
+
+	exists, err := builder.Where(attributes).Exists()
+	if err != nil {
+		return false, err
+	}
+
+	if !exists {
+		insertValues := xun.AnyToR(attributes)
+		if len(values) > 0 {
+			insertValues.Merge(values[0])
+		}
+		err = builder.Insert(insertValues)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	if len(values) == 0 {
+		return true, nil
+	}
+
+	updateValues := values[0]
+	_, err = builder.Limit(1).Update(updateValues)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // MustUpdateOrInsert Insert or update a record matching the attributes, and fill it with values.
-func (builder *Builder) MustUpdateOrInsert() {
+func (builder *Builder) MustUpdateOrInsert(attributes interface{}, values ...interface{}) bool {
+	res, err := builder.UpdateOrInsert(attributes, values...)
+	utils.PanicIF(err)
+	return res
 }
 
 // Upsert new records or update the existing ones.
