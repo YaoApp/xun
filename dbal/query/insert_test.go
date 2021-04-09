@@ -82,6 +82,50 @@ func TestInsertMustInsert(t *testing.T) {
 
 }
 
+func TestInsertMustInsertWithColumns(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_insert").MustInsert([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, []string{"email", "vote"})
+
+	checkInsertWithColumns(t, qb)
+}
+
+func TestInsertMustInsertWithColumnsStyle2(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_insert").MustInsert([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, "email,vote")
+
+	checkInsertWithColumns(t, qb)
+}
+
+func TestInsertMustInsertWithColumnsStyle3(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_insert").MustInsert([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, []string{"email,vote"})
+
+	checkInsertWithColumns(t, qb)
+}
+
+func TestInsertMustInsertWithColumnsStyle4(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_insert").MustInsert([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, "email", "vote")
+
+	checkInsertWithColumns(t, qb)
+}
+
 func TestInsertMustInsertOrIgnore(t *testing.T) {
 	NewTableForInsertTest()
 	qb := getTestBuilder()
@@ -233,4 +277,15 @@ func NewTableForInsertTest() {
 		table.String("email").Unique()
 		table.Integer("vote")
 	})
+}
+
+func checkInsertWithColumns(t *testing.T, qb Query) {
+	users := qb.Select("email", "vote").OrderBy("vote").MustGet()
+	assert.Equal(t, 2, len(users), "The return users should be 2")
+	if len(users) == 2 {
+		assert.Equal(t, "picard@example.com", users[0]["email"].(string), "The email of the first row should be picard@example.com")
+		assert.Equal(t, int64(1), users[0]["vote"].(int64), "The vote of the first row should be 1")
+		assert.Equal(t, "janeway@example.com", users[1]["email"].(string), "The email of the second row should be janeway@example.com")
+		assert.Equal(t, int64(2), users[1]["vote"].(int64), "The vote of the second row should be 2")
+	}
 }

@@ -123,18 +123,18 @@ type Query interface {
 	LockForUpdate() Query
 
 	// defined in the insert.go file
-	Insert(v interface{}) error
-	MustInsert(v interface{})
-	InsertOrIgnore(v interface{}) (int64, error)
-	MustInsertOrIgnore(v interface{}) int64
-	InsertGetID(v interface{}, sequence ...string) (int64, error)
-	MustInsertGetID(v interface{}, sequence ...string) int64
+	Insert(v interface{}, columns ...interface{}) error
+	MustInsert(v interface{}, columns ...interface{})
+	InsertOrIgnore(v interface{}, columns ...interface{}) (int64, error)
+	MustInsertOrIgnore(v interface{}, columns ...interface{}) int64
+	InsertGetID(v interface{}, args ...interface{}) (int64, error)
+	MustInsertGetID(v interface{}, args ...interface{}) int64
 	InsertUsing(qb interface{}, columns ...interface{}) (int64, error)
 	MustInsertUsing(qb interface{}, columns ...interface{}) int64
 
 	// defined in the update.go file
-	Upsert(values interface{}, uniqueBy interface{}, update interface{}) (int64, error)
-	MustUpsert(values interface{}, uniqueBy interface{}, update interface{}) int64
+	Upsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) (int64, error)
+	MustUpsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) int64
 
 	// defined in the debug.go file
 	DD()

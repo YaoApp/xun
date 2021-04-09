@@ -15,7 +15,7 @@ func (builder *Builder) Where(column interface{}, args ...interface{}) Query {
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, boolean, offset := builder.prepareArgs(args...)
+	operator, value, boolean, offset := builder.prepareWhereArgs(args...)
 	whereType := "basic"
 
 	// If the columns is actually a Closure instance, we will assume the developer
@@ -48,7 +48,7 @@ func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, _, offset := builder.prepareArgs(args...)
+	operator, value, _, offset := builder.prepareWhereArgs(args...)
 	return builder.Where(column, operator, value, "or", offset)
 
 }
@@ -138,7 +138,7 @@ func (builder *Builder) WhereColumn(first interface{}, args ...interface{}) Quer
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, second, _, offset := builder.prepareArgs(args...)
+	operator, second, _, offset := builder.prepareWhereArgs(args...)
 
 	return builder.whereColumn(first, operator, second, "and", offset)
 }
@@ -149,7 +149,7 @@ func (builder *Builder) OrWhereColumn(first interface{}, args ...interface{}) Qu
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, second, _, offset := builder.prepareArgs(args...)
+	operator, second, _, offset := builder.prepareWhereArgs(args...)
 
 	return builder.whereColumn(first, operator, second, "or", offset)
 }
@@ -194,7 +194,7 @@ func (builder *Builder) addArrayOfWheres(inputColumns interface{}, boolean strin
 			for _, args := range columns {
 				if len(args) > 1 && reflect.TypeOf(args[0]).Kind() == reflect.String {
 					column := args[0].(string)
-					operator, value, boolean, offset := builder.prepareArgs(args[1:]...)
+					operator, value, boolean, offset := builder.prepareWhereArgs(args[1:]...)
 					if len(whereColumn) > 0 && whereColumn[0] {
 						qb.WhereColumn(column, operator, value, boolean, offset)
 					} else {
@@ -345,7 +345,7 @@ func (builder *Builder) OrWhereNull(column interface{}) Query {
 
 // WhereNotNull Add a "where not null" clause to the query.
 func (builder *Builder) WhereNotNull(column interface{}, args ...interface{}) Query {
-	boolean, _, _, _ := builder.prepareArgs(args...)
+	boolean, _, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereNull(column, boolean, true)
 }
 
@@ -508,7 +508,7 @@ func (builder *Builder) whereExists(closure func(qb Query), boolean string, not 
 
 // WhereDate Add a "where date" statement to the query.
 func (builder *Builder) WhereDate(column interface{}, args ...interface{}) Query {
-	operator, value, boolean, _ := builder.prepareArgs(args...)
+	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
 		value = xun.Time(value).MustToTime().Format("2006-01-02")
@@ -518,13 +518,13 @@ func (builder *Builder) WhereDate(column interface{}, args ...interface{}) Query
 
 // OrWhereDate Add an "or where date" statement to the query.
 func (builder *Builder) OrWhereDate(column interface{}, args ...interface{}) Query {
-	operator, value, _, _ := builder.prepareArgs(args...)
+	operator, value, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereDate(column, operator, value, "or")
 }
 
 // WhereTime Add a "where time" statement to the query.
 func (builder *Builder) WhereTime(column interface{}, args ...interface{}) Query {
-	operator, value, boolean, _ := builder.prepareArgs(args...)
+	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
 		value = xun.Time(value).MustToTime().Format("15:04:05")
@@ -534,13 +534,13 @@ func (builder *Builder) WhereTime(column interface{}, args ...interface{}) Query
 
 // OrWhereTime Add an "or where time" statement to the query.
 func (builder *Builder) OrWhereTime(column interface{}, args ...interface{}) Query {
-	operator, value, _, _ := builder.prepareArgs(args...)
+	operator, value, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereTime(column, operator, value, "or")
 }
 
 // WhereYear Add a "where year" statement to the query.
 func (builder *Builder) WhereYear(column interface{}, args ...interface{}) Query {
-	operator, value, boolean, _ := builder.prepareArgs(args...)
+	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
 		value = xun.Time(value).MustToTime().Year()
@@ -550,13 +550,13 @@ func (builder *Builder) WhereYear(column interface{}, args ...interface{}) Query
 
 // OrWhereYear Add an "or where year" statement to the query.
 func (builder *Builder) OrWhereYear(column interface{}, args ...interface{}) Query {
-	operator, value, _, _ := builder.prepareArgs(args...)
+	operator, value, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereYear(column, operator, value, "or")
 }
 
 // WhereMonth Add a "where month" statement to the query.
 func (builder *Builder) WhereMonth(column interface{}, args ...interface{}) Query {
-	operator, value, boolean, _ := builder.prepareArgs(args...)
+	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
 		value = xun.Time(value).MustToTime().Month()
@@ -566,13 +566,13 @@ func (builder *Builder) WhereMonth(column interface{}, args ...interface{}) Quer
 
 // OrWhereMonth Add an "or where month" statement to the query.
 func (builder *Builder) OrWhereMonth(column interface{}, args ...interface{}) Query {
-	operator, value, _, _ := builder.prepareArgs(args...)
+	operator, value, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereMonth(column, operator, value, "or")
 }
 
 // WhereDay Add a "where day" statement to the query.
 func (builder *Builder) WhereDay(column interface{}, args ...interface{}) Query {
-	operator, value, boolean, _ := builder.prepareArgs(args...)
+	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
 		value = xun.Time(value).MustToTime().Day()
@@ -582,7 +582,7 @@ func (builder *Builder) WhereDay(column interface{}, args ...interface{}) Query 
 
 // OrWhereDay Add an "or where day" statement to the query.
 func (builder *Builder) OrWhereDay(column interface{}, args ...interface{}) Query {
-	operator, value, _, _ := builder.prepareArgs(args...)
+	operator, value, _, _ := builder.prepareWhereArgs(args...)
 	return builder.WhereDay(column, operator, value, "or")
 }
 

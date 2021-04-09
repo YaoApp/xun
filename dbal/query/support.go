@@ -4,12 +4,13 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/utils"
 )
 
-// prepareArgs Prepare the value, operator, boolean and offset for a where clause.
-func (builder *Builder) prepareArgs(args ...interface{}) (string, interface{}, string, int) {
+// prepareWhereArgs Prepare the value, operator, boolean and offset for a where clause.
+func (builder *Builder) prepareWhereArgs(args ...interface{}) (string, interface{}, string, int) {
 
 	var operator string = "="
 	var value interface{} = nil
@@ -41,6 +42,66 @@ func (builder *Builder) prepareArgs(args ...interface{}) (string, interface{}, s
 	}
 
 	return operator, value, boolean, offset
+}
+
+// prepareInsertValues prepare the insert values
+func (builder *Builder) prepareInsertValues(v interface{}, columns ...interface{}) ([]interface{}, [][]interface{}) {
+
+	if _, ok := v.([][]interface{}); len(columns) > 0 && ok {
+		columns = builder.prepareColumns(columns...)
+		return columns, v.([][]interface{})
+	}
+
+	values := xun.AnyToRows(v)
+	columns = values[0].Keys()
+	insertValues := [][]interface{}{}
+	for _, row := range values {
+		insertValue := []interface{}{}
+		for _, column := range columns {
+			insertValue = append(insertValue, row.MustGet(column))
+		}
+		insertValues = append(insertValues, insertValue)
+	}
+	return columns, insertValues
+}
+
+// prepareColumns parepare the select columns
+// Select("field1", "field2")
+// Select("field1", "field2 as f2")
+// Select("field1", dbal.Raw("Count(id) as v"))
+// Select("field1,field2")
+// Select([]string{"field1", "field2"})
+func (builder *Builder) prepareColumns(v ...interface{}) []interface{} {
+
+	// columns  "field1,field2", []string{"field1", "field2"}
+	if len(v) == 1 {
+		col, ok := v[0].(string)
+		if ok && strings.Contains(col, ",") {
+			cols := strings.Split(col, ",")
+			columns := []interface{}{}
+			for _, col := range cols {
+				columns = append(columns, strings.Trim(col, " "))
+			}
+			return columns
+		} else if !ok {
+			reflectValue := reflect.ValueOf(v[0])
+			kind := reflectValue.Kind()
+			columns := []interface{}{}
+			if kind == reflect.Array || kind == reflect.Slice {
+				if reflectValue.Len() == 1 {
+					col, ok := reflectValue.Index(0).Interface().(string)
+					if ok && strings.Contains(col, ",") {
+						return builder.prepareColumns(reflectValue.Index(0).Interface())
+					}
+				}
+				for i := 0; i < reflectValue.Len(); i++ {
+					columns = append(columns, reflectValue.Index(i).Interface())
+				}
+				return columns
+			}
+		}
+	}
+	return v
 }
 
 func (builder *Builder) isClosure(v interface{}) bool {

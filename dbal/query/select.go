@@ -17,6 +17,8 @@ func (builder *Builder) Select(columns ...interface{}) Query {
 	if len(columns) == 0 {
 		builder.Query.AddColumn(dbal.Raw("*"))
 	}
+
+	columns = builder.prepareColumns(columns...)
 	for _, column := range columns {
 		builder.addSelect(column)
 	}

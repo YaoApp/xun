@@ -24,9 +24,9 @@ func (builder *Builder) MustUpdateOrInsert() {
 }
 
 // Upsert new records or update the existing ones.
-func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update interface{}) (int64, error) {
+func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) (int64, error) {
 
-	columns, values := builder.prepareInsertValues(v)
+	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileUpsert(builder.Query, columns, values, utils.Flatten(uniqueBy), update)
 	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
 
@@ -39,8 +39,8 @@ func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update inter
 }
 
 // MustUpsert new records or update the existing ones.
-func (builder *Builder) MustUpsert(values interface{}, uniqueBy interface{}, update interface{}) int64 {
-	affected, err := builder.Upsert(values, uniqueBy, update)
+func (builder *Builder) MustUpsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) int64 {
+	affected, err := builder.Upsert(values, uniqueBy, update, columns...)
 	utils.PanicIF(err)
 	return affected
 }

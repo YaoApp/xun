@@ -26,7 +26,7 @@ func (builder *Builder) Having(column interface{}, args ...interface{}) Query {
 	// Here we will make some assumptions about the operator. If only 2 values are
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
-	operator, value, boolean, offset := builder.prepareArgs(args...)
+	operator, value, boolean, offset := builder.prepareWhereArgs(args...)
 
 	builder.Query.Havings = append(builder.Query.Havings, dbal.Having{
 		Type:     typ,
@@ -47,7 +47,7 @@ func (builder *Builder) Having(column interface{}, args ...interface{}) Query {
 
 // OrHaving Add an "or having" clause to the query.
 func (builder *Builder) OrHaving(column interface{}, args ...interface{}) Query {
-	operator, value, _, offset := builder.prepareArgs(args...)
+	operator, value, _, offset := builder.prepareWhereArgs(args...)
 	return builder.Having(column, operator, value, "or", offset)
 }
 
