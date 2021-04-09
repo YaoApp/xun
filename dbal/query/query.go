@@ -83,7 +83,9 @@ func (builder *Builder) DoesntExist() (bool, error) {
 
 // MustDoesntExist Determine if no rows exist for the current query.
 func (builder *Builder) MustDoesntExist() bool {
-	return !builder.MustExists()
+	res, err := builder.DoesntExist()
+	utils.PanicIF(err)
+	return res
 }
 
 // Find Execute a query for a single record by ID.
