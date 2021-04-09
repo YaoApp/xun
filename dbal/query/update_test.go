@@ -24,6 +24,17 @@ func TestInsertMustUpsert(t *testing.T) {
 		assert.Equal(t, int64(2), affected, "The affected rows should be 2")
 	}
 }
+func TestInsertMustUpsertError(t *testing.T) {
+	NewTableForUpdateTest()
+	assert.Panics(t, func() {
+		newQuery := New(unit.Driver(), unit.DSN())
+		newQuery.DB().Close()
+		newQuery.Table("table_test_update").MustUpsert([]xun.R{
+			{"email": "max@yao.run", "name": "Max", "vote": 19, "score": 86.32, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16"},
+			{"email": "john@yao.run", "name": "John", "vote": 20, "score": 96.32, "score_grade": 99.27, "status": "WAITING", "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16"},
+		}, []string{"email"}, []string{"vote"})
+	})
+}
 
 func TestInsertMustUpsertWithColumns(t *testing.T) {
 	NewTableForUpdateTest()
