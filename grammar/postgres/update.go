@@ -14,19 +14,30 @@ import (
 
 // Upsert Upsert new records or update the existing ones.
 func (grammarSQL Postgres) Upsert(query *dbal.Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (sql.Result, error) {
-	sql, bindings := grammarSQL.CompileUpsert(query, values, uniqueBy, updateValues)
+
+	columns := values[0].Keys()
+	insertValues := [][]interface{}{}
+	for _, row := range values {
+		insertValue := []interface{}{}
+		for _, column := range columns {
+			insertValue = append(insertValue, row.MustGet(column))
+		}
+		insertValues = append(insertValues, insertValue)
+	}
+
+	sql, bindings := grammarSQL.CompileUpsert(query, columns, insertValues, uniqueBy, updateValues)
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 	return grammarSQL.DB.Exec(sql, bindings...)
 }
 
 // CompileUpsert Upsert new records or update the existing ones.
-func (grammarSQL Postgres) CompileUpsert(query *dbal.Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (string, []interface{}) {
+func (grammarSQL Postgres) CompileUpsert(query *dbal.Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{}) {
 
 	if len(values) == 0 {
 		return fmt.Sprintf("insert into %s default values", grammarSQL.WrapTable(query.From)), []interface{}{}
 	}
 
-	sql, bindings := grammarSQL.CompileInsert(query, values)
+	sql, bindings := grammarSQL.CompileInsert(query, columns, values)
 	sql = fmt.Sprintf("%s on conflict (%s) do update set", sql, grammarSQL.Columnize(uniqueBy))
 	offset := len(bindings) + 1
 

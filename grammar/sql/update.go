@@ -14,6 +14,6 @@ func (grammarSQL SQL) Upsert(query *dbal.Query, values []xun.R, uniqueBy []inter
 }
 
 // CompileUpsert Upsert new records or update the existing ones.
-func (grammarSQL SQL) CompileUpsert(query *dbal.Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (string, []interface{}) {
+func (grammarSQL SQL) CompileUpsert(query *dbal.Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{}) {
 	panic(fmt.Errorf("This database engine does not support upserts"))
 }

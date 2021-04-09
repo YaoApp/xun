@@ -40,8 +40,8 @@ type Grammar interface {
 
 	Upsert(query *Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (sql.Result, error)
 
-	CompileInsert(query *Query, values []xun.R) (string, []interface{})
-	CompileUpsert(query *Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
+	CompileInsert(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
+	CompileUpsert(query *Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
 }

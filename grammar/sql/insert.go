@@ -13,18 +13,6 @@ import (
 
 // Insert Insert new records into the database.
 func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, error) {
-	sql, bindings := grammarSQL.CompileInsert(query, values)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.Exec(sql, bindings...)
-}
-
-// CompileInsert Compile an insert statement into SQL.
-func (grammarSQL SQL) CompileInsert(query *dbal.Query, values []xun.R) (string, []interface{}) {
-
-	table := grammarSQL.WrapTable(query.From)
-	if len(values) == 0 {
-		return fmt.Sprintf("insert into %s default values", table), nil
-	}
 
 	columns := values[0].Keys()
 	insertValues := [][]interface{}{}
@@ -36,10 +24,33 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, values []xun.R) (string, 
 		insertValues = append(insertValues, insertValue)
 	}
 
+	sql, bindings := grammarSQL.CompileInsert(query, columns, insertValues)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	return grammarSQL.DB.Exec(sql, bindings...)
+}
+
+// CompileInsert Compile an insert statement into SQL.
+func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
+
+	table := grammarSQL.WrapTable(query.From)
+	if len(values) == 0 {
+		return fmt.Sprintf("insert into %s default values", table), nil
+	}
+
+	// columns := values[0].Keys()
+	// insertValues := [][]interface{}{}
+	// for _, row := range values {
+	// 	insertValue := []interface{}{}
+	// 	for _, column := range columns {
+	// 		insertValue = append(insertValue, row.MustGet(column))
+	// 	}
+	// 	insertValues = append(insertValues, insertValue)
+	// }
+
 	offset := 0
 	parameters := []string{}
 	bindings := []interface{}{}
-	for _, value := range insertValues {
+	for _, value := range values {
 		parameters = append(parameters, fmt.Sprintf("(%s)", grammarSQL.Parameterize(value, offset)))
 		for _, v := range value {
 			if !dbal.IsExpression(v) {
