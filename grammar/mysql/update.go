@@ -1,32 +1,12 @@
 package mysql
 
 import (
-	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
-	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 )
-
-// Upsert Upsert new records or update the existing ones.
-func (grammarSQL MySQL) Upsert(query *dbal.Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (sql.Result, error) {
-	columns := values[0].Keys()
-	insertValues := [][]interface{}{}
-	for _, row := range values {
-		insertValue := []interface{}{}
-		for _, column := range columns {
-			insertValue = append(insertValue, row.MustGet(column))
-		}
-		insertValues = append(insertValues, insertValue)
-	}
-	sql, bindings := grammarSQL.CompileUpsert(query, columns, insertValues, uniqueBy, updateValues)
-	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.Exec(sql, bindings...)
-}
 
 // CompileUpsert Upsert new records or update the existing ones.
 func (grammarSQL MySQL) CompileUpsert(query *dbal.Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{}) {

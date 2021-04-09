@@ -3,17 +3,39 @@ package query
 import (
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
 // Insert Insert new records into the database.
 func (builder *Builder) Insert(v interface{}) error {
-	builder.UseWrite()
-	values := xun.AnyToRows(v)
-	_, err := builder.Grammar.Insert(builder.Query, values)
+	columns, values := builder.prepareInsertValues(v)
+	sql, bindings := builder.Grammar.CompileInsert(builder.Query, columns, values)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+
+	_, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	return err
+}
+
+// prepareInsertValues prepare the insert values
+func (builder *Builder) prepareInsertValues(v interface{}, columns ...interface{}) ([]interface{}, [][]interface{}) {
+	if _, ok := v.([][]interface{}); len(columns) > 1 && ok {
+		return columns, v.([][]interface{})
+	}
+	values := xun.AnyToRows(v)
+	columns = values[0].Keys()
+	insertValues := [][]interface{}{}
+	for _, row := range values {
+		insertValue := []interface{}{}
+		for _, column := range columns {
+			insertValue = append(insertValue, row.MustGet(column))
+		}
+		insertValues = append(insertValues, insertValue)
+	}
+	return columns, insertValues
 }
 
 // MustInsert Insert new records into the database.
@@ -24,9 +46,11 @@ func (builder *Builder) MustInsert(v interface{}) {
 
 // InsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) InsertOrIgnore(v interface{}) (int64, error) {
-	builder.UseWrite()
-	values := xun.AnyToRows(v)
-	res, err := builder.Grammar.InsertIgnore(builder.Query, values)
+	columns, values := builder.prepareInsertValues(v)
+	sql, bindings := builder.Grammar.CompileInsertIgnore(builder.Query, columns, values)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+
+	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	if err != nil {
 		return 0, err
 	}
@@ -42,13 +66,14 @@ func (builder *Builder) MustInsertOrIgnore(v interface{}) int64 {
 
 // InsertGetID Insert a new record and get the value of the primary key.
 func (builder *Builder) InsertGetID(v interface{}, sequence ...string) (int64, error) {
-	builder.UseWrite()
-	values := xun.AnyToRows(v)
 	seq := "id"
 	if len(sequence) == 1 {
 		seq = sequence[0]
 	}
-	return builder.Grammar.InsertGetID(builder.Query, values, seq)
+	columns, values := builder.prepareInsertValues(v)
+	sql, bindings := builder.Grammar.CompileInsertGetID(builder.Query, columns, values, seq)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	return builder.Grammar.ProcessInsertGetID(sql, bindings, seq)
 }
 
 // MustInsertGetID Insert a new record and get the value of the primary key.
@@ -85,10 +110,12 @@ func (builder *Builder) InsertUsing(qb interface{}, columns ...interface{}) (int
 
 	builder.UseWrite()
 	sql, bindings, _ := builder.createSub(qb)
-	res, err := builder.Grammar.InsertUsing(builder.Query, columns, sql, bindings)
+	sql = builder.Grammar.CompileInsertUsing(builder.Query, columns, sql)
+	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	if err != nil {
 		return 0, err
 	}
+
 	return res.RowsAffected()
 }
 

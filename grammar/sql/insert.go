@@ -1,33 +1,11 @@
 package sql
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 )
-
-// Insert Insert new records into the database.
-func (grammarSQL SQL) Insert(query *dbal.Query, values []xun.R) (sql.Result, error) {
-
-	columns := values[0].Keys()
-	insertValues := [][]interface{}{}
-	for _, row := range values {
-		insertValue := []interface{}{}
-		for _, column := range columns {
-			insertValue = append(insertValue, row.MustGet(column))
-		}
-		insertValues = append(insertValues, insertValue)
-	}
-
-	sql, bindings := grammarSQL.CompileInsert(query, columns, insertValues)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.Exec(sql, bindings...)
-}
 
 // CompileInsert Compile an insert statement into SQL.
 func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
@@ -36,16 +14,6 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, va
 	if len(values) == 0 {
 		return fmt.Sprintf("insert into %s default values", table), nil
 	}
-
-	// columns := values[0].Keys()
-	// insertValues := [][]interface{}{}
-	// for _, row := range values {
-	// 	insertValue := []interface{}{}
-	// 	for _, column := range columns {
-	// 		insertValue = append(insertValue, row.MustGet(column))
-	// 	}
-	// 	insertValues = append(insertValues, insertValue)
-	// }
 
 	offset := 0
 	parameters := []string{}
@@ -63,36 +31,28 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, va
 	return fmt.Sprintf("insert into %s (%s) values %s", table, grammarSQL.Columnize(columns), strings.Join(parameters, ",")), bindings
 }
 
-// InsertIgnore Insert ignore new records into the database.
-func (grammarSQL SQL) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Result, error) {
-
-	safeFields := []string{}
-	bindVars := []string{}
-	for field := range values[0] {
-		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field))
-	}
-
-	sql := fmt.Sprintf(`INSERT IGNORE INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.NamedExec(sql, values)
-
+// CompileInsertIgnore Compile an insert ignore statement into SQL.
+func (grammarSQL SQL) CompileInsertIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
+	panic(fmt.Errorf("This database engine does not support upserts"))
 }
 
-// InsertGetID Insert new records into the database and return the last insert ID
-func (grammarSQL SQL) InsertGetID(query *dbal.Query, values []xun.R, sequence string) (int64, error) {
-	res, err := grammarSQL.Insert(query, values)
+// CompileInsertGetID Compile an insert and get ID statement into SQL.
+func (grammarSQL SQL) CompileInsertGetID(query *dbal.Query, columns []interface{}, values [][]interface{}, sequence string) (string, []interface{}) {
+	return grammarSQL.CompileInsert(query, columns, values)
+}
+
+// ProcessInsertGetID Execute an insert and get ID statement and return the id
+func (grammarSQL SQL) ProcessInsertGetID(sql string, bindings []interface{}, sequence string) (int64, error) {
+	res, err := grammarSQL.DB.Exec(sql, bindings...)
 	if err != nil {
 		return 0, err
 	}
 	return res.LastInsertId()
 }
 
-// InsertUsing Compile and run an insert statement using a subquery into SQL.
-func (grammarSQL SQL) InsertUsing(query *dbal.Query, columns []interface{}, sql string, bindings []interface{}) (sql.Result, error) {
-	sql = fmt.Sprintf("INSERT INTO %s (%s) %s", grammarSQL.WrapTable(query.From), grammarSQL.Columnize(columns), sql)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.Exec(sql, bindings...)
+// CompileInsertUsing Compile an insert statement using a subquery into SQL.
+func (grammarSQL SQL) CompileInsertUsing(query *dbal.Query, columns []interface{}, sql string) string {
+	return fmt.Sprintf("INSERT INTO %s (%s) %s", grammarSQL.WrapTable(query.From), grammarSQL.Columnize(columns), sql)
 }
 
 // GetOperators get the operators

@@ -1,10 +1,7 @@
 package dbal
 
 import (
-	"database/sql"
-
 	"github.com/jmoiron/sqlx"
-	"github.com/yaoapp/xun"
 )
 
 // Grammar the SQL Grammar inteface
@@ -33,17 +30,15 @@ type Grammar interface {
 	GetColumnListing(dbName string, tableName string) ([]*Column, error)
 
 	// Grammar for querying
-	Insert(query *Query, values []xun.R) (sql.Result, error)
-	InsertIgnore(query *Query, values []xun.R) (sql.Result, error)
-	InsertUsing(query *Query, columns []interface{}, sql string, bindings []interface{}) (sql.Result, error)
-	InsertGetID(query *Query, values []xun.R, sequence string) (int64, error)
-
-	Upsert(query *Query, values []xun.R, uniqueBy []interface{}, updateValues interface{}) (sql.Result, error)
-
 	CompileInsert(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
+	CompileInsertIgnore(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
+	CompileInsertGetID(query *Query, columns []interface{}, values [][]interface{}, sequence string) (string, []interface{})
+	CompileInsertUsing(query *Query, columns []interface{}, sql string) string
 	CompileUpsert(query *Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
+
+	ProcessInsertGetID(sql string, bindings []interface{}, sequence string) (int64, error)
 }
 
 // Quoter the database quoting query text intrface

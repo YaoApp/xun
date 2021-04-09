@@ -1,46 +1,29 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
-	"strings"
-	"time"
 
-	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 )
 
-// InsertIgnore Insert ignore new records into the database.
-func (grammarSQL Postgres) InsertIgnore(query *dbal.Query, values []xun.R) (sql.Result, error) {
-
-	safeFields := []string{}
-	bindVars := []string{}
-	for field := range values[0] {
-		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field))
-	}
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
-	sql, args, _ := grammarSQL.DB.BindNamed(sql, values)
-	sql = sql + " ON CONFLICT DO NOTHING"
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
-	return grammarSQL.DB.Exec(sql, args...)
+// CompileInsertIgnore Compile an insert ignore statement into SQL.
+func (grammarSQL Postgres) CompileInsertIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
+	sql, bindings := grammarSQL.CompileInsert(query, columns, values)
+	sql = fmt.Sprintf("%s on conflict do nothing", sql)
+	return sql, bindings
 }
 
-// InsertGetID Insert new records into the database and return the last insert ID
-func (grammarSQL Postgres) InsertGetID(query *dbal.Query, values []xun.R, sequence string) (int64, error) {
-	safeFields := []string{}
-	bindVars := []string{}
-	for field := range values[0] {
-		bindVars = append(bindVars, ":"+field)
-		safeFields = append(safeFields, grammarSQL.ID(field))
-	}
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, grammarSQL.WrapTable(query.From), strings.Join(safeFields, ","), strings.Join(bindVars, ","))
-	sql, args, _ := grammarSQL.DB.BindNamed(sql, values)
-	sql = sql + " RETURNING " + grammarSQL.ID(sequence)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+// CompileInsertGetID Compile an insert and get ID statement into SQL.
+func (grammarSQL Postgres) CompileInsertGetID(query *dbal.Query, columns []interface{}, values [][]interface{}, sequence string) (string, []interface{}) {
+	sql, bindings := grammarSQL.CompileInsert(query, columns, values)
+	sql = fmt.Sprintf("%s returning %s", sql, grammarSQL.ID(sequence))
+	return sql, bindings
+}
+
+// ProcessInsertGetID Execute an insert and get ID statement and return the id
+func (grammarSQL Postgres) ProcessInsertGetID(sql string, bindings []interface{}, sequence string) (int64, error) {
 	var seq int64
-	err := grammarSQL.DB.Get(&seq, sql, args...)
+	err := grammarSQL.DB.Get(&seq, sql, bindings...)
 	if err != nil {
 		return 0, err
 	}

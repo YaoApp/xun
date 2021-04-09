@@ -1,7 +1,9 @@
 package query
 
 import (
-	"github.com/yaoapp/xun"
+	"time"
+
+	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -22,12 +24,17 @@ func (builder *Builder) MustUpdateOrInsert() {
 }
 
 // Upsert new records or update the existing ones.
-func (builder *Builder) Upsert(values interface{}, uniqueBy interface{}, update interface{}) (int64, error) {
-	builder.UseWrite()
-	res, err := builder.Grammar.Upsert(builder.Query, xun.AnyToRows(values), utils.Flatten(uniqueBy), update)
+func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update interface{}) (int64, error) {
+
+	columns, values := builder.prepareInsertValues(v)
+	sql, bindings := builder.Grammar.CompileUpsert(builder.Query, columns, values, utils.Flatten(uniqueBy), update)
+	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+
+	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	if err != nil {
 		return 0, err
 	}
+
 	return res.RowsAffected()
 }
 
