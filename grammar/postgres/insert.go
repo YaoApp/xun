@@ -6,8 +6,8 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
-// CompileInsertIgnore Compile an insert ignore statement into SQL.
-func (grammarSQL Postgres) CompileInsertIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
+// CompileInsertOrIgnore Compile an insert ignore statement into SQL.
+func (grammarSQL Postgres) CompileInsertOrIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
 	sql, bindings := grammarSQL.CompileInsert(query, columns, values)
 	sql = fmt.Sprintf("%s on conflict do nothing", sql)
 	return sql, bindings

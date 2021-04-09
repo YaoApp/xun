@@ -25,6 +25,22 @@ func TestInsertMustUpsert(t *testing.T) {
 	}
 }
 
+func TestInsertMustUpsertWithColumns(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.Table("table_test_update").MustUpsert([][]interface{}{
+		{"max@yao.run", "Max", 19, 86.32, 99.27, "DONE", "2021-03-27 07:16:16", "2021-03-27 07:16:16"},
+		{"john@yao.run", "John", 20, 96.32, 99.27, "WAITING", "2021-03-27 07:16:16", "2021-03-27 07:16:16"},
+	}, []string{"email"}, []string{"vote"}, []string{
+		"email", "name", "vote", "score", "score_grade", "status", "created_at", "updated_at",
+	})
+	if unit.DriverIs("mysql") {
+		assert.Equal(t, int64(3), affected, "The affected rows should be 3")
+	} else if unit.DriverIs("postgres") {
+		assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	}
+}
+
 func TestInsertMustUpsertUpdateValue(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
 )
@@ -80,6 +81,28 @@ func TestInsertMustInsert(t *testing.T) {
 		assert.Equal(t, 5, users[5].Vote, "The vote  of the first row should be 5")
 	}
 
+}
+
+func TestInsertMustInsertRaw(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	raw := "random()"
+	if unit.DriverIs("mysql") {
+		raw = "rand()"
+	}
+
+	qb.Table("table_test_insert").MustInsert([][]interface{}{
+		{"picard@example.com", dbal.Raw(raw)},
+		{"janeway@example.com", 2},
+	}, []string{"email", "vote"})
+
+	users := qb.Select("id", "email", "vote").OrderBy("id").MustGet()
+
+	assert.Equal(t, 2, len(users), "The return users should be 2")
+	if len(users) == 2 {
+		assert.Equal(t, "picard@example.com", users[0]["email"].(string), "The email of the first row should be picard@example.com")
+		assert.Equal(t, "janeway@example.com", users[1]["email"].(string), "The email of the second row should be janeway@example.com")
+	}
 }
 
 func TestInsertMustInsertWithColumns(t *testing.T) {
@@ -160,6 +183,17 @@ func TestInsertMustInsertOrIgnore(t *testing.T) {
 	assert.Error(t, err, "the return value sholud be error")
 }
 
+func TestInsertMustInsertOrIgnoreWithColumns(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_insert").MustInsertOrIgnore([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, "email,vote")
+
+	checkInsertWithColumns(t, qb)
+}
+
 func TestInsertMustInsertGetID(t *testing.T) {
 	NewTableForInsertTest()
 	qb := getTestBuilder()
@@ -199,6 +233,23 @@ func TestInsertMustInsertGetID(t *testing.T) {
 	newQuery.DB().Close()
 	_, err := newQuery.Table("table_test_insert").InsertGetID(users)
 	assert.Error(t, err, "the return value sholud be error")
+}
+
+func TestInsertMustInsertGetIdWithColumns(t *testing.T) {
+	NewTableForInsertTest()
+	qb := getTestBuilder()
+	id := qb.Table("table_test_insert").MustInsertGetID([][]interface{}{
+		{"picard@example.com", 1},
+		{"janeway@example.com", 2},
+	}, "id", "email,vote")
+
+	if unit.DriverIs("sqlite3") {
+		assert.Equal(t, int64(2), id, "The return last id should be 2")
+	} else {
+		assert.Equal(t, int64(1), id, "The return last id should be 1")
+	}
+
+	checkInsertWithColumns(t, qb)
 }
 
 func TestInsertMustInsertUsing(t *testing.T) {

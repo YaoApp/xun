@@ -27,7 +27,7 @@ func (builder *Builder) MustInsert(v interface{}, columns ...interface{}) {
 // InsertOrIgnore Insert new records into the database while ignoring errors.
 func (builder *Builder) InsertOrIgnore(v interface{}, columns ...interface{}) (int64, error) {
 	columns, values := builder.prepareInsertValues(v, columns...)
-	sql, bindings := builder.Grammar.CompileInsertIgnore(builder.Query, columns, values)
+	sql, bindings := builder.Grammar.CompileInsertOrIgnore(builder.Query, columns, values)
 	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
 
 	res, err := builder.UseWrite().DB().Exec(sql, bindings...)

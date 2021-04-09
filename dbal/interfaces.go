@@ -31,7 +31,7 @@ type Grammar interface {
 
 	// Grammar for querying
 	CompileInsert(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
-	CompileInsertIgnore(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
+	CompileInsertOrIgnore(query *Query, columns []interface{}, values [][]interface{}) (string, []interface{})
 	CompileInsertGetID(query *Query, columns []interface{}, values [][]interface{}, sequence string) (string, []interface{})
 	CompileInsertUsing(query *Query, columns []interface{}, sql string) string
 	CompileUpsert(query *Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})

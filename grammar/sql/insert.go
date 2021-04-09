@@ -31,8 +31,8 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, va
 	return fmt.Sprintf("insert into %s (%s) values %s", table, grammarSQL.Columnize(columns), strings.Join(parameters, ",")), bindings
 }
 
-// CompileInsertIgnore Compile an insert ignore statement into SQL.
-func (grammarSQL SQL) CompileInsertIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
+// CompileInsertOrIgnore Compile an insert ignore statement into SQL.
+func (grammarSQL SQL) CompileInsertOrIgnore(query *dbal.Query, columns []interface{}, values [][]interface{}) (string, []interface{}) {
 	panic(fmt.Errorf("This database engine does not support upserts"))
 }
 
