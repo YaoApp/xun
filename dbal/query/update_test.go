@@ -145,6 +145,17 @@ func TestUpdateMustIncrement(t *testing.T) {
 	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
 }
 
+func TestUpdateMustIncrementError(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	assert.PanicsWithError(t, "non-numeric value passed to increment method", func() {
+		qb.From("table_test_update").
+			Where("id", ">", 2).
+			MustIncrement("vote", "hello")
+
+	})
+}
+
 func TestUpdateMustIncrementWithExra(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
@@ -167,6 +178,16 @@ func TestUpdateMustDecrement(t *testing.T) {
 
 	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
 	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestUpdateMustDecrementError(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	assert.PanicsWithError(t, "non-numeric value passed to decrement method", func() {
+		qb.From("table_test_update").
+			Where("id", ">", 2).
+			MustDecrement("vote", "hello")
+	})
 }
 
 func TestUpdateMustDecrementWithExra(t *testing.T) {

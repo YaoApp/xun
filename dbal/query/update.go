@@ -86,7 +86,7 @@ func (builder *Builder) MustIncrement(column interface{}, amount interface{}, ex
 // Decrement Decrement a column's value by a given amount.
 func (builder *Builder) Decrement(column interface{}, amount interface{}, extra ...interface{}) (int64, error) {
 	if !utils.IsNumeric(amount) {
-		panic(fmt.Errorf("non-numeric value passed to increment method"))
+		panic(fmt.Errorf("non-numeric value passed to decrement method"))
 	}
 	wrapped := builder.Grammar.Wrap(column)
 	values := map[string]interface{}{}
