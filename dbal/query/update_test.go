@@ -102,6 +102,20 @@ func TestInsertMustUpdate(t *testing.T) {
 	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
 }
 
+func TestInsertMustUpdateError(t *testing.T) {
+	NewTableForUpdateTest()
+	assert.Panics(t, func() {
+		newQuery := New(unit.Driver(), unit.DSN())
+		newQuery.DB().Close()
+		newQuery.From("table_test_update").
+			Where("id", ">", 2).
+			MustUpdate(xun.R{
+				"vote":  20,
+				"score": 99.98,
+			})
+	})
+}
+
 func TestInsertMustUpdateWithJoin(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
