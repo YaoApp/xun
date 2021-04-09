@@ -46,6 +46,8 @@ func AnyToR(v interface{}) R {
 		return R{}
 	} else if res, ok := v.(R); ok {
 		return res
+	} else if res, ok := v.(map[string]interface{}); ok {
+		return res
 	}
 
 	res := R{}
@@ -54,6 +56,18 @@ func AnyToR(v interface{}) R {
 	typ := reflectValue.Type()
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
+	}
+
+	kind := typ.Kind()
+	if kind == reflect.Array || kind == reflect.Slice {
+		if reflectValue.Len() == 0 {
+			return R{}
+		}
+		return AnyToR(reflectValue.Index(0).Interface())
+	}
+
+	if typ.Kind() != reflect.Struct {
+		panic(fmt.Errorf("The type of given value is %s, should be struct", typ.String()))
 	}
 
 	for i := 0; i < typ.NumField(); i++ {

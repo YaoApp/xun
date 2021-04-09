@@ -137,6 +137,10 @@ type Query interface {
 	MustUpsert(values interface{}, uniqueBy interface{}, update interface{}, columns ...interface{}) int64
 	Update(v interface{}) (int64, error)
 	MustUpdate(v interface{}) int64
+	Increment(column interface{}, amount interface{}, extra ...interface{}) (int64, error)
+	MustIncrement(column interface{}, amount interface{}, extra ...interface{}) int64
+	Decrement(column interface{}, amount interface{}, extra ...interface{}) (int64, error)
+	MustDecrement(column interface{}, amount interface{}, extra ...interface{}) int64
 
 	// defined in the debug.go file
 	DD()

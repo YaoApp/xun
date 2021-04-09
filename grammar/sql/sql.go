@@ -147,3 +147,13 @@ func (grammarSQL SQL) GetOperators() []string {
 		"not similar to", "not ilike", "~~*", "!~~*",
 	}
 }
+
+// Wrap a value in keyword identifiers.
+func (grammarSQL SQL) Wrap(value interface{}) string {
+	return grammarSQL.Quoter.Wrap(value)
+}
+
+// WrapTable Wrap a table in keyword identifiers.
+func (grammarSQL SQL) WrapTable(value interface{}) string {
+	return grammarSQL.Quoter.WrapTable(value)
+}

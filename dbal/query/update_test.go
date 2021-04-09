@@ -10,7 +10,7 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
-func TestInsertMustUpsert(t *testing.T) {
+func TestUpdateMustUpsert(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 	affected := qb.Table("table_test_update").MustUpsert([]xun.R{
@@ -24,7 +24,7 @@ func TestInsertMustUpsert(t *testing.T) {
 		assert.Equal(t, int64(2), affected, "The affected rows should be 2")
 	}
 }
-func TestInsertMustUpsertError(t *testing.T) {
+func TestUpdateMustUpsertError(t *testing.T) {
 	NewTableForUpdateTest()
 	assert.Panics(t, func() {
 		newQuery := New(unit.Driver(), unit.DSN())
@@ -36,7 +36,7 @@ func TestInsertMustUpsertError(t *testing.T) {
 	})
 }
 
-func TestInsertMustUpsertWithColumns(t *testing.T) {
+func TestUpdateMustUpsertWithColumns(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 	affected := qb.Table("table_test_update").MustUpsert([][]interface{}{
@@ -52,7 +52,7 @@ func TestInsertMustUpsertWithColumns(t *testing.T) {
 	}
 }
 
-func TestInsertMustUpsertUpdateValue(t *testing.T) {
+func TestUpdateMustUpsertUpdateValue(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 	affected := qb.Table("table_test_update").MustUpsert([]xun.R{
@@ -67,7 +67,7 @@ func TestInsertMustUpsertUpdateValue(t *testing.T) {
 	}
 }
 
-func TestInsertMustUpsertUpdateRaw(t *testing.T) {
+func TestUpdateMustUpsertUpdateRaw(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 
@@ -88,7 +88,7 @@ func TestInsertMustUpsertUpdateRaw(t *testing.T) {
 	}
 }
 
-func TestInsertMustUpdate(t *testing.T) {
+func TestUpdateMustUpdate(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 	affected := qb.From("table_test_update").
@@ -102,7 +102,7 @@ func TestInsertMustUpdate(t *testing.T) {
 	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
 }
 
-func TestInsertMustUpdateError(t *testing.T) {
+func TestUpdateMustUpdateError(t *testing.T) {
 	NewTableForUpdateTest()
 	assert.Panics(t, func() {
 		newQuery := New(unit.Driver(), unit.DSN())
@@ -116,7 +116,7 @@ func TestInsertMustUpdateError(t *testing.T) {
 	})
 }
 
-func TestInsertMustUpdateWithJoin(t *testing.T) {
+func TestUpdateMustUpdateWithJoin(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
 	affected := qb.From("table_test_update as t1").
@@ -132,6 +132,54 @@ func TestInsertMustUpdateWithJoin(t *testing.T) {
 		})
 
 	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+}
+
+func TestUpdateMustIncrement(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update").
+		Where("id", ">", 2).
+		MustIncrement("vote", 1)
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestUpdateMustIncrementWithExra(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update").
+		Where("id", ">", 2).
+		MustIncrement("vote", 1, xun.R{
+			"score": 99.98,
+		})
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestUpdateMustDecrement(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update").
+		Where("id", ">", 2).
+		MustDecrement("vote", 1)
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
+}
+
+func TestUpdateMustDecrementWithExra(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	affected := qb.From("table_test_update").
+		Where("id", ">", 2).
+		MustDecrement("vote", 1, xun.R{
+			"score": 99.98,
+		})
+
+	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
+	// utils.Println(qb.Table("table_test_update").Select("id", "vote", "score").MustGet())
 }
 
 // clean the test data

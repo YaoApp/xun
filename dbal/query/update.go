@@ -1,9 +1,11 @@
 package query
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
@@ -61,17 +63,43 @@ func (builder *Builder) MustUpsert(values interface{}, uniqueBy interface{}, upd
 }
 
 // Increment Increment a column's value by a given amount.
-func (builder *Builder) Increment() {
+func (builder *Builder) Increment(column interface{}, amount interface{}, extra ...interface{}) (int64, error) {
+	if !utils.IsNumeric(amount) {
+		panic(fmt.Errorf("non-numeric value passed to increment method"))
+	}
+	wrapped := builder.Grammar.Wrap(column)
+	values := map[string]interface{}{}
+	if len(extra) > 0 {
+		values = xun.AnyToR(extra[0]).ToMap()
+	}
+	values[wrapped] = dbal.Raw(fmt.Sprintf("%s+%v", wrapped, amount))
+	return builder.Update(values)
 }
 
 // MustIncrement Increment a column's value by a given amount.
-func (builder *Builder) MustIncrement() {
+func (builder *Builder) MustIncrement(column interface{}, amount interface{}, extra ...interface{}) int64 {
+	affected, err := builder.Increment(column, amount, extra...)
+	utils.PanicIF(err)
+	return affected
 }
 
 // Decrement Decrement a column's value by a given amount.
-func (builder *Builder) Decrement() {
+func (builder *Builder) Decrement(column interface{}, amount interface{}, extra ...interface{}) (int64, error) {
+	if !utils.IsNumeric(amount) {
+		panic(fmt.Errorf("non-numeric value passed to increment method"))
+	}
+	wrapped := builder.Grammar.Wrap(column)
+	values := map[string]interface{}{}
+	if len(extra) > 0 {
+		values = xun.AnyToR(extra[0]).ToMap()
+	}
+	values[wrapped] = dbal.Raw(fmt.Sprintf("%s-%v", wrapped, amount))
+	return builder.Update(values)
 }
 
 // MustDecrement Decrement a column's value by a given amount.
-func (builder *Builder) MustDecrement() {
+func (builder *Builder) MustDecrement(column interface{}, amount interface{}, extra ...interface{}) int64 {
+	affected, err := builder.Decrement(column, amount, extra...)
+	utils.PanicIF(err)
+	return affected
 }

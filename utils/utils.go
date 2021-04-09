@@ -148,3 +148,21 @@ func Flatten(value interface{}) []interface{} {
 
 	return res
 }
+
+// IsNumeric determine if the given value is numberic
+func IsNumeric(v interface{}) bool {
+	return StringHave([]string{
+		reflect.Float32.String(),
+		reflect.Float64.String(),
+		reflect.Int.String(),
+		reflect.Int8.String(),
+		reflect.Int16.String(),
+		reflect.Int32.String(),
+		reflect.Int64.String(),
+		reflect.Uint.String(),
+		reflect.Uint8.String(),
+		reflect.Uint16.String(),
+		reflect.Uint32.String(),
+		reflect.Uint64.String(),
+	}, reflect.TypeOf(v).Kind().String())
+}
