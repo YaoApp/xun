@@ -99,7 +99,7 @@ func (builder *Builder) aggregate(fn string, columns []interface{}) (interface{}
 // numericAggregate Execute a numeric aggregate function on the database.
 func (builder *Builder) numericAggregate(fn string, columns []interface{}) (xun.N, error) {
 	value, err := builder.aggregate(fn, columns)
-	return xun.N{Value: value}, err
+	return xun.MakeNum(value), err
 }
 
 // setAggregate Set the aggregate property without running the query.

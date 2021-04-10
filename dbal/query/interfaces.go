@@ -14,6 +14,8 @@ type Query interface {
 	Table(name string) Query
 	Get() ([]xun.R, error)
 	MustGet() []xun.R
+	Bind(v interface{}) error
+	MustBind(v interface{})
 	Exists() (bool, error)
 	MustExists() bool
 	DoesntExist() (bool, error)

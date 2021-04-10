@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
@@ -18,11 +19,15 @@ func (builder *Builder) Table(name string) Query {
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get() ([]xun.R, error) {
 	db := builder.DB()
-	rows, err := db.Query(builder.ToSQL(), builder.GetBindings()...)
+	stmt, err := db.Prepare(builder.ToSQL())
 	if err != nil {
 		return nil, err
 	}
-	return xun.MapScan(rows)
+	rows, err := stmt.Query(builder.GetBindings()...)
+	if err != nil {
+		return nil, err
+	}
+	return builder.mapScan(rows)
 }
 
 // MustGet Execute the query as a "select" statement.
@@ -30,6 +35,31 @@ func (builder *Builder) MustGet() []xun.R {
 	res, err := builder.Get()
 	utils.PanicIF(err)
 	return res
+}
+
+// Bind Execute the query as a "select" statement.
+func (builder *Builder) Bind(v interface{}) error {
+
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return fmt.Errorf("The input param is %s, it should be a pointer", reflect.TypeOf(v).Kind().String())
+	}
+
+	db := builder.DB()
+	stmt, err := db.Prepare(builder.ToSQL())
+	if err != nil {
+		return err
+	}
+	rows, err := stmt.Query(builder.GetBindings()...)
+	if err != nil {
+		return err
+	}
+	return builder.structScan(rows, v)
+}
+
+// MustBind Execute the query as a "select" statement.
+func (builder *Builder) MustBind(v interface{}) {
+	err := builder.Bind(v)
+	utils.PanicIF(err)
 }
 
 // ToSQL Get the SQL representation of the query.
@@ -52,7 +82,7 @@ func (builder *Builder) Exists() (bool, error) {
 		return false, err
 	}
 
-	res, err := xun.MapScan(rows)
+	res, err := builder.mapScan(rows)
 	if err != nil {
 		return false, err
 	}

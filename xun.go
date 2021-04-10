@@ -1,7 +1,7 @@
 package xun
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -32,75 +32,13 @@ func UpperFirst(str string) string {
 	return first + other
 }
 
-// MapScan scan the result from sql.Rows
-func MapScan(rows *sql.Rows) ([]R, error) {
-	defer rows.Close()
-	res := []R{}
-
-	columns, err := rows.Columns()
-	if err != nil {
-		return nil, err
-	}
-	numColumns := len(columns)
-
-	values := make([]interface{}, numColumns)
-	for i := range values {
-		values[i] = new(interface{})
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(values...); err != nil {
-			return nil, err
-		}
-
-		dest := R{}
-		for i, column := range columns {
-			reflectValue := reflect.ValueOf(values[i])
-			value := reflect.Indirect(reflectValue).Interface()
-			switch value.(type) {
-			case []byte:
-				bytes := ""
-				for _, v := range value.([]byte) {
-					bytes = fmt.Sprintf("%s%s", bytes, string(v))
-				}
-
-				dest[column] = bytes
-				if len(bytes) < 20 {
-					intv, err := strconv.ParseInt(bytes, 10, 64)
-					if err == nil {
-						dest[column] = intv
-						break
-					}
-
-					floatv, err := strconv.ParseFloat(bytes, 64)
-					if err == nil {
-						dest[column] = floatv
-						break
-					}
-				}
-
-			default:
-				dest[column] = value
-			}
-
-		}
-		res = append(res, dest)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
 // MakeTime Create a new time struct
 func MakeTime(value ...interface{}) T {
 	if len(value) == 0 {
-		return T{Value: time.Now()}
+		return T{Time: time.Now()}
 	}
 	return T{
-		Value: value[0],
+		Time: value[0],
 	}
 }
 
@@ -116,12 +54,12 @@ func (t T) ToTime(formats ...string) (time.Time, error) {
 		}
 	}
 
-	switch t.Value.(type) {
+	switch t.Time.(type) {
 	case int, int64, int32, int16, int8, uint8:
 		var err error
 		var i int64
 		var s int64
-		strValue := fmt.Sprintf("%v", t.Value)
+		strValue := fmt.Sprintf("%v", t.Time)
 		if len(strValue) == 10 {
 			i, err = strconv.ParseInt(strValue, 10, 64)
 			s = 0
@@ -142,7 +80,7 @@ func (t T) ToTime(formats ...string) (time.Time, error) {
 
 	case string, []byte:
 		var err error
-		strValue := fmt.Sprintf("%s", t.Value)
+		strValue := fmt.Sprintf("%s", t.Time)
 		dateValue := time.Now()
 		for _, format := range formats {
 			dateValue, err = time.Parse(format, strValue)
@@ -153,9 +91,9 @@ func (t T) ToTime(formats ...string) (time.Time, error) {
 		if err != nil {
 			return dateValue, fmt.Errorf("%s(%s)", err, formats)
 		}
-		return dateValue, fmt.Errorf("cannot parse %s (%s)", t.Value, formats)
+		return dateValue, fmt.Errorf("cannot parse %s (%s)", t.Time, formats)
 	case time.Time:
-		return t.Value.(time.Time), nil
+		return t.Time.(time.Time), nil
 	default:
 		return time.Now(), nil
 	}
@@ -168,6 +106,27 @@ func (t T) MustToTime(formats ...string) time.Time {
 		panic(err)
 	}
 	return value
+}
+
+// IsNull determine if the time is null
+func (t T) IsNull() bool {
+	return utils.IsNil(t.Time)
+}
+
+// Scan for db scan
+func (t *T) Scan(src interface{}) error {
+	*t = MakeTime(src)
+	return nil
+}
+
+// Value for db driver value
+func (t *T) Value() (driver.Value, error) {
+	return t.ToTime()
+}
+
+// MakeRow create a new R struct alias MakeR
+func MakeRow(value ...interface{}) R {
+	return MakeR(value...)
 }
 
 // MakeR create a new R struct
@@ -248,7 +207,7 @@ func (row *R) Merge(v ...interface{}) {
 	}
 }
 
-// MakeRows alias MakeRSlice
+// MakeRows convert any struct to R slice alias MakeRSlice
 func MakeRows(value ...interface{}) []R {
 	return MakeRSlice(value...)
 }
@@ -329,13 +288,34 @@ func GetTagName(field reflect.StructField, name string) string {
 	return tag
 }
 
+// MakeNum Create a new xun.N struct ( alias MakeN )
+func MakeNum(v interface{}) N {
+	return MakeN(v)
+}
+
+// MakeN Create a new xun.N struct
+func MakeN(v interface{}) N {
+	return N{Number: v}
+}
+
+// Scan for db scan
+func (n *N) Scan(src interface{}) error {
+	*n = MakeN(src)
+	return nil
+}
+
+// Value for db driver value
+func (n *N) Value() (driver.Value, error) {
+	return n.Number, nil
+}
+
 // ToFixed the return value is the type of float64 and keeps the given decimal places
 func (n N) ToFixed(places int) (float64, error) {
-	if n.Value == nil {
+	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
 	format := "%" + fmt.Sprintf(".%df", places)
-	return strconv.ParseFloat(fmt.Sprintf(format, n.Value), 64)
+	return strconv.ParseFloat(fmt.Sprintf(format, n.Number), 64)
 }
 
 // MustToFixed the return value is the type of float64 and keeps the given decimal places
@@ -347,10 +327,10 @@ func (n N) MustToFixed(places int) float64 {
 
 // Int64 the return value is the type of int64 and remove the decimal
 func (n N) Int64() (int64, error) {
-	if n.Value == nil {
+	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
-	return strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 64)
+	return strconv.ParseInt(fmt.Sprintf("%v", n.Number), 10, 64)
 }
 
 // MustInt64  the return value is the type of int64 and remove the decimal
@@ -362,10 +342,10 @@ func (n N) MustInt64() int64 {
 
 // Int32 the return value is the type of int64 and remove the decimal
 func (n N) Int32() (int32, error) {
-	if n.Value == nil {
+	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
-	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 32)
+	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Number), 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -381,10 +361,10 @@ func (n N) MustInt32() int32 {
 
 // Int the return value is the type of int and remove the decimal
 func (n N) Int() (int, error) {
-	if n.Value == nil {
+	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
-	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Value), 10, 64)
+	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Number), 10, 64)
 	if err != nil {
 		return 0, err
 	}

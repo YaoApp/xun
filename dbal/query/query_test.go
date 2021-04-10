@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,10 +10,67 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
-func TestQueryMustExistsTrue(t *testing.T) {
-	NewTableFoSelectTest()
+func TestQueryMustGet(t *testing.T) {
+	NewTableForQueryTest()
 	qb := getTestBuilder()
-	res := qb.From("table_test_select as t").
+	rows := qb.From("table_test_query as t").
+		Where("email", "like", "%@yao.run").
+		OrderBy("id").
+		MustGet()
+
+	assert.Equal(t, 4, len(rows), "the return rows should have 4 items")
+	if len(rows) == 4 {
+		assert.Equal(t, "96.32", fmt.Sprintf("%.2f", rows[0].Get("score")), "the return value should be true")
+		assert.Equal(t, "64.56", fmt.Sprintf("%.2f", rows[1].Get("score")), "the return value should be true")
+		assert.Equal(t, "99.27", fmt.Sprintf("%.2f", rows[2].Get("score")), "the return value should be true")
+		assert.Equal(t, "48.12", fmt.Sprintf("%.2f", rows[3].Get("score")), "the return value should be true")
+	}
+}
+
+func TestQueryMustBind(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+
+	rows := []Item{}
+	qb.From("table_test_query as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "score", "vote", "status", "score_grade", "created_at", "updated_at").
+		OrderBy("id").
+		MustBind(&rows)
+
+	assert.Equal(t, 4, len(rows), "the return rows should have 4 items")
+	if len(rows) == 4 {
+		assert.Equal(t, "96.32", fmt.Sprintf("%.2f", rows[0].Score), "the return value should be true")
+		assert.Equal(t, 10, rows[0].Vote, "the return value should be true")
+		assert.Equal(t, 99.27, rows[0].ScoreGrade.MustToFixed(2), "the return value should be true")
+		assert.Equal(t, "WAITING", rows[0].PaymentStatus, "the return value should be true")
+		assert.Equal(t, 2021, rows[0].CreatedAt.MustToTime().Year(), "the return value should be true")
+		assert.True(t, rows[0].UpdatedAt.IsNull(), "the return value should be true")
+
+		assert.Equal(t, "64.56", fmt.Sprintf("%.2f", rows[1].Score), "the return value should be true")
+		assert.Equal(t, 5, rows[1].Vote, "the return value should be true")
+		assert.Equal(t, "99.27", fmt.Sprintf("%.2f", rows[2].Score), "the return value should be true")
+		assert.Equal(t, 125, rows[2].Vote, "the return value should be true")
+		assert.Equal(t, "48.12", fmt.Sprintf("%.2f", rows[3].Score), "the return value should be true")
+		assert.Equal(t, 6, rows[3].Vote, "the return value should be true")
+	}
+}
+
+func TestQueryMustExistsTrue(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	res := qb.From("table_test_query as t").
 		Where("email", "like", "%@yao.run").
 		OrderBy("id").
 		MustExists()
@@ -21,9 +79,9 @@ func TestQueryMustExistsTrue(t *testing.T) {
 }
 
 func TestQueryMustExistsFalse(t *testing.T) {
-	NewTableFoSelectTest()
+	NewTableForQueryTest()
 	qb := getTestBuilder()
-	res := qb.From("table_test_select as t").
+	res := qb.From("table_test_query as t").
 		Where("email", "like", "%@iqka.com").
 		OrderBy("id").
 		MustExists()
@@ -32,9 +90,9 @@ func TestQueryMustExistsFalse(t *testing.T) {
 }
 
 func TestQueryMustDoesntExistTrue(t *testing.T) {
-	NewTableFoSelectTest()
+	NewTableForQueryTest()
 	qb := getTestBuilder()
-	res := qb.From("table_test_select as t").
+	res := qb.From("table_test_query as t").
 		Where("email", "like", "%@iqka.com").
 		OrderBy("id").
 		MustDoesntExist()
@@ -43,9 +101,9 @@ func TestQueryMustDoesntExistTrue(t *testing.T) {
 }
 
 func TestQueryMustDoesntExistFalse(t *testing.T) {
-	NewTableFoSelectTest()
+	NewTableForQueryTest()
 	qb := getTestBuilder()
-	res := qb.From("table_test_select as t").
+	res := qb.From("table_test_query as t").
 		Where("email", "like", "%@yao.run").
 		OrderBy("id").
 		MustDoesntExist()

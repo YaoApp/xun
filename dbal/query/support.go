@@ -1,9 +1,11 @@
 package query
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
@@ -202,4 +204,144 @@ func (builder *Builder) cleanBindings(bindings interface{}) []interface{} {
 func (builder *Builder) flattenValue(value interface{}) interface{} {
 	values := utils.Flatten(value)
 	return values[0]
+}
+
+// MapScan scan the result from sql.Rows
+func (builder *Builder) mapScan(rows *sql.Rows) ([]xun.R, error) {
+	defer rows.Close()
+	res := []xun.R{}
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	values := builder.makeValues(len(columns))
+
+	for rows.Next() {
+		if err := rows.Scan(values...); err != nil {
+			return nil, err
+		}
+		dest := xun.R{}
+		for i, column := range columns {
+			dest[column] = builder.getValue(values[i])
+		}
+		res = append(res, dest)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// structScan scan the result from sql.Rows
+func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+
+	structType, err := builder.getStructType(v)
+	if err != nil {
+		return err
+	}
+
+	fieldMap, err := builder.getFieldMap(structType)
+	if err != nil {
+		return err
+	}
+
+	vPtr := reflect.ValueOf(v)
+	vRows := reflect.Indirect(vPtr)
+	for rows.Next() {
+		dest := reflect.New(structType)
+		values, err := builder.makeScanValues(dest, fieldMap, columns)
+		if err != nil {
+			return err
+		}
+		if err := rows.Scan(values...); err != nil {
+			return err
+		}
+		value := reflect.Indirect(dest)
+		vRows = reflect.Append(vRows, value)
+	}
+
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	vPtr.Elem().Set(vRows)
+	return nil
+}
+
+func (builder *Builder) getStructType(v interface{}) (reflect.Type, error) {
+
+	reflectValue := reflect.ValueOf(v)
+	if reflectValue.Kind() != reflect.Ptr {
+		return nil, fmt.Errorf("Thedest type is %s, it should be a pointer", reflectValue.Kind().String())
+	}
+
+	reflectValue = reflect.Indirect(reflectValue)
+	structType := reflectValue.Type()
+	if structType.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("Thedest type is %s, it should be a pointer of slice", reflectValue.Kind().String())
+	}
+
+	structType = reflectValue.Type().Elem()
+	if structType.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("non-struct dest type %s not support scan", reflectValue.Type().String())
+	}
+	return structType, nil
+}
+
+func (builder *Builder) getFieldMap(structType reflect.Type) (map[string]reflect.StructField, error) {
+	fieldMap := map[string]reflect.StructField{}
+	for i := 0; i < structType.NumField(); i++ {
+		tag := xun.GetTagName(structType.Field(i), "json")
+		if tag != "" && tag != "-" {
+			fieldMap[tag] = structType.Field(i)
+		}
+	}
+	return fieldMap, nil
+}
+
+func (builder *Builder) getValue(src interface{}) interface{} {
+	value := src
+	if reflect.TypeOf(src).Kind() == reflect.Ptr {
+		value = reflect.Indirect(reflect.ValueOf(src)).Interface()
+	}
+	switch value.(type) {
+	case []byte:
+		return string(value.([]byte))
+	default:
+		return value
+	}
+}
+
+func (builder *Builder) makeValues(length int) []interface{} {
+	values := make([]interface{}, length)
+	for i := range values {
+		values[i] = new(interface{})
+	}
+	return values
+}
+
+func (builder *Builder) makeScanValues(dest reflect.Value, fieldMap map[string]reflect.StructField, columns []string) ([]interface{}, error) {
+
+	values := []interface{}{}
+	for _, column := range columns {
+		field, has := fieldMap[column]
+		if !has {
+			return nil, fmt.Errorf("sql: expected %s destination arguments in Scan", column)
+		}
+		value := dest.Elem().FieldByName(field.Name)
+		vPtr := reflect.NewAt(value.Type(), unsafe.Pointer(value.UnsafeAddr()))
+		values = append(values, vPtr.Interface())
+	}
+
+	return values, nil
 }

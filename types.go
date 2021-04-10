@@ -5,10 +5,10 @@ type R map[string]interface{}
 
 // N an numberic value,  R is the first letter of "Numberic"
 type N struct {
-	Value interface{}
+	Number interface{}
 }
 
 // T an datetime value, T is the first letter of "Time"
 type T struct {
-	Value interface{}
+	Time interface{}
 }
