@@ -27,6 +27,40 @@ func TestQueryMustGet(t *testing.T) {
 	}
 }
 
+func TestQueryMustGetError(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.From("table_test_query as t").
+			Where("title", "like", "%@yao.run").
+			OrderBy("id").
+			MustGet()
+	})
+}
+
+func TestQueryMustGetBindError(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	var v int
+	assert.PanicsWithError(t, "The input param is int, it should be a pointer", func() {
+		qb.From("table_test_query as t").
+			Where("email", "like", "%@yao.run").
+			OrderBy("id").
+			MustGet(v)
+	})
+}
+
+func TestQueryMustGetBindScanError(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	var v int
+	assert.PanicsWithError(t, "sql: expected 10 destination arguments in Scan, not 1", func() {
+		qb.From("table_test_query as t").
+			Where("email", "like", "%@yao.run").
+			OrderBy("id").
+			MustGet(&v)
+	})
+}
 func TestQueryMustGetBind(t *testing.T) {
 	NewTableForQueryTest()
 	qb := getTestBuilder()
