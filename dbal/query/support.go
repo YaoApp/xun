@@ -269,14 +269,17 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 		return err
 	}
 
-	structType, err := builder.getStructType(v)
+	structType, vStruct, err := builder.getStructType(v)
 	if err != nil {
 		return err
 	}
 
-	fieldMap, err := builder.getFieldMap(structType)
-	if err != nil {
-		return err
+	var fieldMap map[string]reflect.StructField
+	if vStruct {
+		fieldMap, err = builder.getFieldMap(structType)
+		if err != nil {
+			return err
+		}
 	}
 
 	vPtr := reflect.ValueOf(v)
@@ -284,13 +287,22 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 	vSlice := vRows.Kind() == reflect.Slice
 	for rows.Next() {
 		dest := reflect.New(structType)
-		values, err := builder.makeStructValues(dest, fieldMap, columns)
-		if err != nil {
-			return err
+		if vStruct {
+			values, err := builder.makeStructValues(dest, fieldMap, columns)
+			if err != nil {
+				return err
+			}
+			if err := rows.Scan(values...); err != nil {
+				return err
+			}
+
+		} else {
+			if err := rows.Scan(v); err != nil {
+				return err
+			}
+			return nil
 		}
-		if err := rows.Scan(values...); err != nil {
-			return err
-		}
+
 		value := reflect.Indirect(dest)
 		if vSlice {
 			vRows = reflect.Append(vRows, value)
@@ -310,11 +322,11 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 	return nil
 }
 
-func (builder *Builder) getStructType(v interface{}) (reflect.Type, error) {
+func (builder *Builder) getStructType(v interface{}) (reflect.Type, bool, error) {
 
 	reflectValue := reflect.ValueOf(v)
 	if reflectValue.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("The dest type is %s, it should be a pointer", reflectValue.Kind().String())
+		return nil, false, fmt.Errorf("The dest type is %s, it should be a pointer", reflectValue.Kind().String())
 	}
 
 	reflectValue = reflect.Indirect(reflectValue)
@@ -323,10 +335,7 @@ func (builder *Builder) getStructType(v interface{}) (reflect.Type, error) {
 		structType = reflectValue.Type().Elem()
 	}
 
-	if structType.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("non-struct dest type %s not support scan", reflectValue.Type().String())
-	}
-	return structType, nil
+	return structType, structType.Kind() == reflect.Struct, nil
 }
 
 func (builder *Builder) getFieldMap(structType reflect.Type) (map[string]reflect.StructField, error) {

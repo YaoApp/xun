@@ -139,11 +139,24 @@ func (builder *Builder) MustFind(id interface{}, args ...interface{}) xun.R {
 }
 
 // Value Get a single column's value from the first result of a query.
-func (builder *Builder) Value() {
+func (builder *Builder) Value(column string, v ...interface{}) (interface{}, error) {
+	row, err := builder.Select(column).First(v...)
+	if err != nil {
+		return nil, err
+	}
+
+	if row == nil || row.IsEmpty() {
+		return nil, nil
+	}
+
+	return row.Get(column), nil
 }
 
 // MustValue Get a single column's value from the first result of a query.
-func (builder *Builder) MustValue() {
+func (builder *Builder) MustValue(column string, v ...interface{}) interface{} {
+	res, err := builder.Value(column, v...)
+	utils.PanicIF(err)
+	return res
 }
 
 // Pluck Get an array with the values of a given column.

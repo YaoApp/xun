@@ -122,6 +122,28 @@ func TestQueryMustFirst(t *testing.T) {
 	assert.Equal(t, "john@yao.run", row.Get("email"), "the email should be true")
 }
 
+func TestQueryMustFirstEmpty(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	row := qb.From("table_test_query as t").
+		Where("email", "like", "%@yaorun").
+		OrderBy("id").
+		MustFirst()
+
+	assert.True(t, row.IsEmpty(), "the return row should be empty")
+}
+
+func TestQueryMustFirstError(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.From("table_test_query as t").
+			Where("ping", "like", "%@yaorun").
+			OrderBy("id").
+			MustFirst()
+	})
+}
+
 func TestQueryMustFirstBind(t *testing.T) {
 	type Item struct {
 		ID            int64
@@ -203,26 +225,24 @@ func TestQueryMustFindWithKeyBind(t *testing.T) {
 	assert.Equal(t, "ken@yao.run", row.Email, "the email should be ken@yao.run")
 }
 
-func TestQueryMustFirstEmpty(t *testing.T) {
+func TestQueryMustValue(t *testing.T) {
 	NewTableForQueryTest()
 	qb := getTestBuilder()
-	row := qb.From("table_test_query as t").
-		Where("email", "like", "%@yaorun").
-		OrderBy("id").
-		MustFirst()
-
-	assert.True(t, row.IsEmpty(), "the return row should be empty")
+	email := qb.From("table_test_query as t").Where("email", "ken@yao.run").MustValue("email")
+	assert.Equal(t, "ken@yao.run", email, "the email should be ken@yao.run")
 }
 
-func TestQueryMustFirstError(t *testing.T) {
+func TestQueryMustValueBind(t *testing.T) {
 	NewTableForQueryTest()
 	qb := getTestBuilder()
-	assert.Panics(t, func() {
-		qb.From("table_test_query as t").
-			Where("ping", "like", "%@yaorun").
-			OrderBy("id").
-			MustFirst()
-	})
+	var email string
+	var vote int
+	qb.From("table_test_query as t").Where("email", "ken@yao.run").MustValue("email", &email)
+	assert.Equal(t, "ken@yao.run", email, "the email should be ken@yao.run")
+
+	qb.From("table_test_query as t").Where("email", "ken@yao.run").MustValue("vote", &vote)
+	assert.Equal(t, 125, vote, "the vote should be 125")
+
 }
 
 // clean the test data

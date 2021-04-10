@@ -18,6 +18,8 @@ type Query interface {
 	MustFirst(v ...interface{}) xun.R
 	Find(id interface{}, args ...interface{}) (xun.R, error)
 	MustFind(id interface{}, args ...interface{}) xun.R
+	Value(column string, v ...interface{}) (interface{}, error)
+	MustValue(column string, v ...interface{}) interface{}
 	Exists() (bool, error)
 	MustExists() bool
 	DoesntExist() (bool, error)
