@@ -16,6 +16,8 @@ type Query interface {
 	MustGet(v ...interface{}) []xun.R
 	First(v ...interface{}) (xun.R, error)
 	MustFirst(v ...interface{}) xun.R
+	Find(id interface{}, args ...interface{}) (xun.R, error)
+	MustFind(id interface{}, args ...interface{}) xun.R
 	Exists() (bool, error)
 	MustExists() bool
 	DoesntExist() (bool, error)

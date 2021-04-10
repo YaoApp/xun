@@ -145,7 +145,62 @@ func TestQueryMustFirstBind(t *testing.T) {
 		OrderBy("id").
 		MustFirst(&row)
 
-	assert.Equal(t, "john@yao.run", row.Email, "the email should be true")
+	assert.Equal(t, "john@yao.run", row.Email, "the email should be john@yao.run")
+}
+
+func TestQueryMustFind(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	row := qb.From("table_test_query as t").MustFind(3)
+	assert.Equal(t, "ken@yao.run", row.Get("email"), "the email should be ken@yao.run")
+}
+
+func TestQueryMustFindBind(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+	row := Item{}
+	qb.From("table_test_query as t").
+		Select("id", "email", "score", "vote", "status", "score_grade", "created_at", "updated_at").
+		MustFind(3, &row)
+	assert.Equal(t, "ken@yao.run", row.Email, "the email should be ken@yao.run")
+}
+
+func TestQueryMustFindWithKey(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	row := qb.From("table_test_query as t").MustFind("ken@yao.run", "email")
+	assert.Equal(t, "ken@yao.run", row.Get("email"), "the email should be ken@yao.run")
+}
+func TestQueryMustFindWithKeyBind(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+	row := Item{}
+	qb.From("table_test_query as t").
+		Select("id", "email", "score", "vote", "status", "score_grade", "created_at", "updated_at").
+		MustFind("ken@yao.run", "email", &row)
+	assert.Equal(t, "ken@yao.run", row.Email, "the email should be ken@yao.run")
 }
 
 func TestQueryMustFirstEmpty(t *testing.T) {

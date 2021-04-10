@@ -28,7 +28,7 @@ func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 		return nil, err
 	}
 
-	if len(v) == 1 {
+	if len(v) == 1 && v[0] != nil {
 		if reflect.TypeOf(v[0]).Kind() != reflect.Ptr {
 			return nil, fmt.Errorf("The input param is %s, it should be a pointer", reflect.TypeOf(v[0]).Kind().String())
 		}
@@ -125,11 +125,17 @@ func (builder *Builder) MustDoesntExist() bool {
 }
 
 // Find Execute a query for a single record by ID.
-func (builder *Builder) Find() {
+func (builder *Builder) Find(id interface{}, args ...interface{}) (xun.R, error) {
+	key := interface{}("id")
+	key, v := builder.prepareFindArgs(args...)
+	return builder.Where(key, id).First(v)
 }
 
 // MustFind  Execute a query for a single record by ID.
-func (builder *Builder) MustFind() {
+func (builder *Builder) MustFind(id interface{}, args ...interface{}) xun.R {
+	res, err := builder.Find(id, args...)
+	utils.PanicIF(err)
+	return res
 }
 
 // Value Get a single column's value from the first result of a query.

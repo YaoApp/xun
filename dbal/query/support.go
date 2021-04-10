@@ -107,6 +107,30 @@ func (builder *Builder) prepareColumns(v ...interface{}) []interface{} {
 	return v
 }
 
+// prepareFindArgs parepare the find args
+// Find(1)
+// Find(1, &v)
+// Find(1, "join_id")
+// Find(1, "join_id", &v)
+func (builder *Builder) prepareFindArgs(v ...interface{}) (interface{}, interface{}) {
+	var ptr interface{} = nil
+	var column = interface{}("id")
+	var nums = len(v)
+	if nums == 0 {
+		return column, nil
+	} else if nums == 1 {
+		if reflect.TypeOf(v[0]).Kind() == reflect.Ptr {
+			ptr = v[0]
+		} else {
+			column = v[0]
+		}
+	} else if nums > 1 {
+		column = v[0]
+		ptr = v[1]
+	}
+	return column, ptr
+}
+
 // Parse the subquery into SQL and bindings.
 func (builder *Builder) parseSub(sub interface{}) string {
 	switch sub.(type) {
