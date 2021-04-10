@@ -216,7 +216,7 @@ func (builder *Builder) mapScan(rows *sql.Rows) ([]xun.R, error) {
 		return nil, err
 	}
 
-	values := builder.makeValues(len(columns))
+	values := builder.makeMapValues(len(columns))
 
 	for rows.Next() {
 		if err := rows.Scan(values...); err != nil {
@@ -259,7 +259,7 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 	vRows := reflect.Indirect(vPtr)
 	for rows.Next() {
 		dest := reflect.New(structType)
-		values, err := builder.makeScanValues(dest, fieldMap, columns)
+		values, err := builder.makeStructValues(dest, fieldMap, columns)
 		if err != nil {
 			return err
 		}
@@ -322,7 +322,7 @@ func (builder *Builder) getValue(src interface{}) interface{} {
 	}
 }
 
-func (builder *Builder) makeValues(length int) []interface{} {
+func (builder *Builder) makeMapValues(length int) []interface{} {
 	values := make([]interface{}, length)
 	for i := range values {
 		values[i] = new(interface{})
@@ -330,7 +330,7 @@ func (builder *Builder) makeValues(length int) []interface{} {
 	return values
 }
 
-func (builder *Builder) makeScanValues(dest reflect.Value, fieldMap map[string]reflect.StructField, columns []string) ([]interface{}, error) {
+func (builder *Builder) makeStructValues(dest reflect.Value, fieldMap map[string]reflect.StructField, columns []string) ([]interface{}, error) {
 
 	values := []interface{}{}
 	for _, column := range columns {
