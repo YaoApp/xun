@@ -12,10 +12,10 @@ type Query interface {
 
 	// defined in the query.go file
 	Table(name string) Query
-	Get() ([]xun.R, error)
-	MustGet() []xun.R
-	Bind(v interface{}) error
-	MustBind(v interface{})
+	Get(v ...interface{}) ([]xun.R, error)
+	MustGet(v ...interface{}) []xun.R
+	First(v ...interface{}) (xun.R, error)
+	MustFirst(v ...interface{}) xun.R
 	Exists() (bool, error)
 	MustExists() bool
 	DoesntExist() (bool, error)

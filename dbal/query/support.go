@@ -257,6 +257,7 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 
 	vPtr := reflect.ValueOf(v)
 	vRows := reflect.Indirect(vPtr)
+	vSlice := vRows.Kind() == reflect.Slice
 	for rows.Next() {
 		dest := reflect.New(structType)
 		values, err := builder.makeStructValues(dest, fieldMap, columns)
@@ -267,14 +268,21 @@ func (builder *Builder) structScan(rows *sql.Rows, v interface{}) error {
 			return err
 		}
 		value := reflect.Indirect(dest)
-		vRows = reflect.Append(vRows, value)
+		if vSlice {
+			vRows = reflect.Append(vRows, value)
+		} else {
+			vPtr.Elem().Set(value)
+			break
+		}
 	}
 
 	if err := rows.Err(); err != nil {
 		return err
 	}
 
-	vPtr.Elem().Set(vRows)
+	if vSlice {
+		vPtr.Elem().Set(vRows)
+	}
 	return nil
 }
 
@@ -282,16 +290,15 @@ func (builder *Builder) getStructType(v interface{}) (reflect.Type, error) {
 
 	reflectValue := reflect.ValueOf(v)
 	if reflectValue.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("Thedest type is %s, it should be a pointer", reflectValue.Kind().String())
+		return nil, fmt.Errorf("The dest type is %s, it should be a pointer", reflectValue.Kind().String())
 	}
 
 	reflectValue = reflect.Indirect(reflectValue)
 	structType := reflectValue.Type()
-	if structType.Kind() != reflect.Slice {
-		return nil, fmt.Errorf("Thedest type is %s, it should be a pointer of slice", reflectValue.Kind().String())
+	if structType.Kind() == reflect.Slice {
+		structType = reflectValue.Type().Elem()
 	}
 
-	structType = reflectValue.Type().Elem()
 	if structType.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("non-struct dest type %s not support scan", reflectValue.Type().String())
 	}
@@ -336,7 +343,7 @@ func (builder *Builder) makeStructValues(dest reflect.Value, fieldMap map[string
 	for _, column := range columns {
 		field, has := fieldMap[column]
 		if !has {
-			return nil, fmt.Errorf("sql: expected %s destination arguments in Scan", column)
+			return nil, fmt.Errorf("scan: expected `%s` destination arguments in Scan", column)
 		}
 		value := dest.Elem().FieldByName(field.Name)
 		vPtr := reflect.NewAt(value.Type(), unsafe.Pointer(value.UnsafeAddr()))

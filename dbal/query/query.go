@@ -17,7 +17,7 @@ func (builder *Builder) Table(name string) Query {
 }
 
 // Get Execute the query as a "select" statement.
-func (builder *Builder) Get() ([]xun.R, error) {
+func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
 	stmt, err := db.Prepare(builder.ToSQL())
 	if err != nil {
@@ -27,39 +27,45 @@ func (builder *Builder) Get() ([]xun.R, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if len(v) == 1 {
+		if reflect.TypeOf(v[0]).Kind() != reflect.Ptr {
+			return nil, fmt.Errorf("The input param is %s, it should be a pointer", reflect.TypeOf(v[0]).Kind().String())
+		}
+		err := builder.structScan(rows, v[0])
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
 	return builder.mapScan(rows)
 }
 
 // MustGet Execute the query as a "select" statement.
-func (builder *Builder) MustGet() []xun.R {
-	res, err := builder.Get()
+func (builder *Builder) MustGet(v ...interface{}) []xun.R {
+	res, err := builder.Get(v...)
 	utils.PanicIF(err)
 	return res
 }
 
-// Bind Execute the query as a "select" statement.
-func (builder *Builder) Bind(v interface{}) error {
-
-	if reflect.TypeOf(v).Kind() != reflect.Ptr {
-		return fmt.Errorf("The input param is %s, it should be a pointer", reflect.TypeOf(v).Kind().String())
-	}
-
-	db := builder.DB()
-	stmt, err := db.Prepare(builder.ToSQL())
+// First Execute the query and get the first result.
+func (builder *Builder) First(v ...interface{}) (xun.R, error) {
+	rows, err := builder.Take(1).Get(v...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	rows, err := stmt.Query(builder.GetBindings()...)
-	if err != nil {
-		return err
+	if len(rows) == 1 {
+		return rows[0], err
 	}
-	return builder.structScan(rows, v)
+	return xun.MakeR(), nil
 }
 
-// MustBind Execute the query as a "select" statement.
-func (builder *Builder) MustBind(v interface{}) {
-	err := builder.Bind(v)
+// MustFirst Execute the query and get the first result.
+func (builder *Builder) MustFirst(v ...interface{}) xun.R {
+	res, err := builder.First(v...)
 	utils.PanicIF(err)
+	return res
 }
 
 // ToSQL Get the SQL representation of the query.

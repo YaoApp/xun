@@ -197,6 +197,11 @@ func (row R) KeysString() []string {
 	return keys
 }
 
+// IsEmpty determine if the row is null
+func (row R) IsEmpty() bool {
+	return len(row.Keys()) == 0
+}
+
 // Merge get keys of R
 func (row *R) Merge(v ...interface{}) {
 	values := MakeRSlice(v...)

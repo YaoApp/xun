@@ -27,7 +27,7 @@ func TestQueryMustGet(t *testing.T) {
 	}
 }
 
-func TestQueryMustBind(t *testing.T) {
+func TestQueryMustGetBind(t *testing.T) {
 	NewTableForQueryTest()
 	qb := getTestBuilder()
 	type Item struct {
@@ -47,7 +47,7 @@ func TestQueryMustBind(t *testing.T) {
 		Where("email", "like", "%@yao.run").
 		Select("id", "email", "score", "vote", "status", "score_grade", "created_at", "updated_at").
 		OrderBy("id").
-		MustBind(&rows)
+		MustGet(&rows)
 
 	assert.Equal(t, 4, len(rows), "the return rows should have 4 items")
 	if len(rows) == 4 {
@@ -109,6 +109,65 @@ func TestQueryMustDoesntExistFalse(t *testing.T) {
 		MustDoesntExist()
 
 	assert.False(t, res, "the return value should be false")
+}
+
+func TestQueryMustFirst(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	row := qb.From("table_test_query as t").
+		Where("email", "like", "%@yao.run").
+		OrderBy("id").
+		MustFirst()
+
+	assert.Equal(t, "john@yao.run", row.Get("email"), "the email should be true")
+}
+
+func TestQueryMustFirstBind(t *testing.T) {
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+
+	row := Item{}
+	qb.From("table_test_query as t").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "score", "vote", "status", "score_grade", "created_at", "updated_at").
+		OrderBy("id").
+		MustFirst(&row)
+
+	assert.Equal(t, "john@yao.run", row.Email, "the email should be true")
+}
+
+func TestQueryMustFirstEmpty(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	row := qb.From("table_test_query as t").
+		Where("email", "like", "%@yaorun").
+		OrderBy("id").
+		MustFirst()
+
+	assert.True(t, row.IsEmpty(), "the return row should be empty")
+}
+
+func TestQueryMustFirstError(t *testing.T) {
+	NewTableForQueryTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.From("table_test_query as t").
+			Where("ping", "like", "%@yaorun").
+			OrderBy("id").
+			MustFirst()
+	})
 }
 
 // clean the test data
