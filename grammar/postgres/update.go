@@ -20,7 +20,7 @@ func (grammarSQL Postgres) Upsert(query *dbal.Query, values []xun.R, uniqueBy []
 	for _, row := range values {
 		insertValue := []interface{}{}
 		for _, column := range columns {
-			insertValue = append(insertValue, row.MustGet(column))
+			insertValue = append(insertValue, row.Get(column))
 		}
 		insertValues = append(insertValues, insertValue)
 	}

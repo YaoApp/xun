@@ -524,7 +524,7 @@ func (builder *Builder) WhereDate(column interface{}, args ...interface{}) Query
 	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
-		value = xun.Time(value).MustToTime().Format("2006-01-02")
+		value = xun.MakeTime(value).MustToTime().Format("2006-01-02")
 	}
 	return builder.whereDateTime("date", column, operator, value, boolean)
 }
@@ -540,7 +540,7 @@ func (builder *Builder) WhereTime(column interface{}, args ...interface{}) Query
 	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
-		value = xun.Time(value).MustToTime().Format("15:04:05")
+		value = xun.MakeTime(value).MustToTime().Format("15:04:05")
 	}
 	return builder.whereDateTime("time", column, operator, value, boolean)
 }
@@ -556,7 +556,7 @@ func (builder *Builder) WhereYear(column interface{}, args ...interface{}) Query
 	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
-		value = xun.Time(value).MustToTime().Year()
+		value = xun.MakeTime(value).MustToTime().Year()
 	}
 	return builder.whereDateTime("year", column, operator, value, boolean)
 }
@@ -572,7 +572,7 @@ func (builder *Builder) WhereMonth(column interface{}, args ...interface{}) Quer
 	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
-		value = xun.Time(value).MustToTime().Month()
+		value = xun.MakeTime(value).MustToTime().Month()
 	}
 	return builder.whereDateTime("month", column, operator, value, boolean)
 }
@@ -588,7 +588,7 @@ func (builder *Builder) WhereDay(column interface{}, args ...interface{}) Query 
 	operator, value, boolean, _ := builder.prepareWhereArgs(args...)
 	// date Format
 	if !builder.isExpression(value) {
-		value = xun.Time(value).MustToTime().Day()
+		value = xun.MakeTime(value).MustToTime().Day()
 	}
 	return builder.whereDateTime("day", column, operator, value, boolean)
 }

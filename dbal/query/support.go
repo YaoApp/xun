@@ -53,13 +53,13 @@ func (builder *Builder) prepareInsertValues(v interface{}, columns ...interface{
 		return columns, v.([][]interface{})
 	}
 
-	values := xun.AnyToRows(v)
+	values := xun.MakeRows(v)
 	columns = values[0].Keys()
 	insertValues := [][]interface{}{}
 	for _, row := range values {
 		insertValue := []interface{}{}
 		for _, column := range columns {
-			insertValue = append(insertValue, row.MustGet(column))
+			insertValue = append(insertValue, row.Get(column))
 		}
 		insertValues = append(insertValues, insertValue)
 	}

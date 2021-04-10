@@ -13,7 +13,7 @@ import (
 // Update Update records in the database.
 func (builder *Builder) Update(v interface{}) (int64, error) {
 
-	values := xun.AnyToR(v).ToMap()
+	values := xun.MakeR(v).ToMap()
 	sql, bindings := builder.Grammar.CompileUpdate(builder.Query, values)
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 
@@ -41,7 +41,7 @@ func (builder *Builder) UpdateOrInsert(attributes interface{}, values ...interfa
 	}
 
 	if !exists {
-		insertValues := xun.AnyToR(attributes)
+		insertValues := xun.MakeR(attributes)
 		if len(values) > 0 {
 			insertValues.Merge(values[0])
 		}
@@ -100,7 +100,7 @@ func (builder *Builder) Increment(column interface{}, amount interface{}, extra 
 	wrapped := builder.Grammar.Wrap(column)
 	values := map[string]interface{}{}
 	if len(extra) > 0 {
-		values = xun.AnyToR(extra[0]).ToMap()
+		values = xun.MakeR(extra[0]).ToMap()
 	}
 	values[wrapped] = dbal.Raw(fmt.Sprintf("%s+%v", wrapped, amount))
 	return builder.Update(values)
@@ -121,7 +121,7 @@ func (builder *Builder) Decrement(column interface{}, amount interface{}, extra 
 	wrapped := builder.Grammar.Wrap(column)
 	values := map[string]interface{}{}
 	if len(extra) > 0 {
-		values = xun.AnyToR(extra[0]).ToMap()
+		values = xun.MakeR(extra[0]).ToMap()
 	}
 	values[wrapped] = dbal.Raw(fmt.Sprintf("%s-%v", wrapped, amount))
 	return builder.Update(values)
