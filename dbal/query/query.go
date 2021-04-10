@@ -126,7 +126,6 @@ func (builder *Builder) MustDoesntExist() bool {
 
 // Find Execute a query for a single record by ID.
 func (builder *Builder) Find(id interface{}, args ...interface{}) (xun.R, error) {
-	key := interface{}("id")
 	key, v := builder.prepareFindArgs(args...)
 	return builder.Where(key, id).First(v)
 }
