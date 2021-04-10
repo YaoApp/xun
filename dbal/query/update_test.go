@@ -214,6 +214,52 @@ func TestUpdateMustUpdateOrInsertInsert(t *testing.T) {
 	assert.True(t, qb.Table("table_test_update").Where("email", "max@yao.run").MustExists(), "the return value should be true")
 }
 
+func TestUpdateMustUpdateOrInsertInsertMerge(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	res := qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+		"email": "max@yao.run", "name": "Max", "vote": 19, "status": "DONE", "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16",
+	}, xun.R{"score": 99.95, "score_grade": 99.27})
+	assert.True(t, res, "the return value should be true")
+
+	rows := qb.Table("table_test_update").Where("email", "max@yao.run").MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should have 1 item")
+	if len(rows) == 1 {
+		assert.Equal(t, "99.95", fmt.Sprintf("%.2f", rows[0].Get("score")), "the return value should be true")
+		assert.Equal(t, "99.27", fmt.Sprintf("%.2f", rows[0].Get("score_grade")), "the return value should be true")
+	}
+}
+
+func TestUpdateMustUpdateOrInsertExistError(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+			"email": "max@yao.run", "name": "Max", "vote": 19, "status": dbal.Raw("NotExistFuncs()"), "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16",
+		}, xun.R{"score": 99.95, "score_grade": 99.27})
+	})
+}
+
+func TestUpdateMustUpdateOrInsertInsertError(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+			"email": "max@yao.run", "name": "Max", "vote": 19, "status": "DONE", "created_at": "2021-03-27 07:16:16", "updated_at": "2021-03-27 07:16:16",
+		}, xun.R{"score": 99.95, "score_grade": dbal.Raw("NotExistFuncs()")})
+	})
+}
+
+func TestUpdateMustUpdateOrInsertUpdateError(t *testing.T) {
+	NewTableForUpdateTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.Table("table_test_update").MustUpdateOrInsert(xun.R{
+			"email": "lee@yao.run", "name": "Lee", "vote": 5, "status": "PENDING", "created_at": "2021-03-25 08:30:15",
+		}, xun.R{"score": dbal.Raw("NotExistFuncs()")})
+	})
+}
+
 func TestUpdateMustUpdateOrInsertUpdateDothing(t *testing.T) {
 	NewTableForUpdateTest()
 	qb := getTestBuilder()
