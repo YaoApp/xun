@@ -17,3 +17,10 @@ func TestSupportIsQueryable(t *testing.T) {
 	assert.True(t, builder.isQueryable(builder), "The builder instance should be queryable")
 	assert.True(t, builder.isQueryable(qb), "The Query interface should be queryable")
 }
+
+func TestSupportIsBoolean(t *testing.T) {
+	builder := getTestBuilderInstance()
+	assert.True(t, builder.isBoolean("and"), "The return value should be true")
+	assert.True(t, builder.isBoolean("or"), "The return value should be true")
+	assert.False(t, builder.isBoolean("not"), "The return value should be false")
+}
