@@ -210,6 +210,27 @@ func (builder *Builder) cleanBindings(bindings interface{}) []interface{} {
 	return values
 }
 
+// mergeBindings Merge an array of bindings into our bindings.
+func (builder *Builder) mergeBindings(new *Builder) *Builder {
+	bindings := builder.Query.Bindings
+	for key, binding := range new.Query.Bindings {
+		bindings[key] = append(bindings[key], binding...)
+	}
+	builder.Query.Bindings = bindings
+	return builder
+}
+
+// withoutSelectAliases Remove the column aliases since they will break count queries.
+func (builder *Builder) withoutSelectAliases(columns []interface{}) []interface{} {
+	for i, column := range columns {
+		if value, ok := column.(string); ok && strings.Contains(value, " as ") {
+			idx := strings.Index(value, " as ") + 4
+			columns[i] = strings.Trim(value[idx:], " ")
+		}
+	}
+	return columns
+}
+
 // Get a scalar type value from an unknown type of input.
 func (builder *Builder) flattenValue(value interface{}) interface{} {
 	values := utils.Flatten(value)

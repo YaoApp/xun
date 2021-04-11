@@ -12,3 +12,16 @@ type N struct {
 type T struct {
 	Time interface{}
 }
+
+// P an Paginator struct, P is the first letter of "Paginator"
+type P struct {
+	Items        []interface{}
+	Total        int
+	PageCount    int
+	Perpage      int
+	CurrentPage  int
+	NextPage     int
+	PreviousPage int
+	LastPage     int
+	Options      map[string]interface{}
+}

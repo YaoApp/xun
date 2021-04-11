@@ -86,5 +86,39 @@ func (builder *Builder) InRandomOrder() {
 }
 
 // Reorder Remove all existing orders and optionally add a new order. @todo
-func (builder *Builder) Reorder() {
+func (builder *Builder) Reorder(args ...interface{}) Query {
+	builder.Query.Orders = []dbal.Order{}
+	builder.Query.UnionOrders = []dbal.Order{}
+	builder.Query.Bindings["order"] = []interface{}{}
+	builder.Query.Bindings["unionOrder"] = []interface{}{}
+
+	if len(args) == 1 {
+		return builder.OrderBy(args[0])
+	} else if len(args) == 2 {
+		direction := "asc"
+		if _, ok := args[0].(string); ok {
+			direction = args[0].(string)
+		}
+		return builder.OrderBy(args[0], direction)
+	}
+
+	return builder
+}
+
+// removeExistingOrdersFor Get an array with all orders with a given column removed.
+func (builder *Builder) removeExistingOrdersFor(column interface{}) []dbal.Order {
+	index := 0
+	remove := false
+	orders := builder.Query.Orders
+	for i, order := range orders {
+		if order.Column == column {
+			remove = true
+			index = i
+			break
+		}
+	}
+	if remove {
+		orders = append(orders[:index], orders[index+1:]...)
+	}
+	return orders
 }

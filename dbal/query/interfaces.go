@@ -27,6 +27,10 @@ type Query interface {
 	ToSQL() string
 	GetBindings() []interface{}
 
+	// defined in the paginate.go file
+	Paginate(perpage int, page int, v ...interface{}) (xun.P, error)
+	MustPaginate(perpage int, page int, v ...interface{}) xun.P
+
 	// defined in the connection.go file
 	DB(usewrite ...bool) *sqlx.DB
 	IsRead() bool

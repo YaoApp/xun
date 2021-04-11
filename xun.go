@@ -2,7 +2,9 @@ package xun
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -124,6 +126,17 @@ func (t *T) Value() (driver.Value, error) {
 	return t.ToTime()
 }
 
+// MarshalJSON for json marshalJSON
+func (t *T) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Time)
+}
+
+// UnmarshalJSON for json marshalJSON
+func (t *T) UnmarshalJSON(data []byte) error {
+	*t = MakeTime(data)
+	return nil
+}
+
 // MakeRow create a new R struct alias MakeR
 func MakeRow(value ...interface{}) R {
 	return MakeR(value...)
@@ -150,6 +163,47 @@ func MakeR(value ...interface{}) R {
 	}
 
 	panic(fmt.Errorf("The type of given value is %s, should be struct", reflectValue.Type().String()))
+}
+
+// MakePaginator create a new P struct alias MakeP
+func MakePaginator(total int, perPage int, currentPage int, items ...interface{}) P {
+	return MakeP(total, perPage, currentPage, items...)
+}
+
+// MakeP create a new P struct
+func MakeP(total int, perPage int, currentPage int, items ...interface{}) P {
+	if perPage < 1 {
+		perPage = 15
+	}
+
+	if currentPage < 1 {
+		currentPage = 1
+	}
+
+	pagecnt := int(math.Ceil(float64(total) / float64(perPage)))
+	next := currentPage + 1
+	prev := currentPage - 1
+	last := pagecnt
+
+	if next > pagecnt {
+		next = -1
+	}
+
+	if prev <= 0 {
+		prev = -1
+	}
+
+	return P{
+		Items:        items,
+		Total:        total,
+		PageCount:    pagecnt,
+		Perpage:      perPage,
+		CurrentPage:  currentPage,
+		NextPage:     next,
+		PreviousPage: prev,
+		LastPage:     last,
+	}
+
 }
 
 // Get get the value of the given key
@@ -312,6 +366,22 @@ func (n *N) Scan(src interface{}) error {
 // Value for db driver value
 func (n *N) Value() (driver.Value, error) {
 	return n.Number, nil
+}
+
+// MarshalJSON for json marshalJSON
+func (n *N) MarshalJSON() ([]byte, error) {
+	return json.Marshal(n.Number)
+}
+
+// UnmarshalJSON for json marshalJSON
+func (n *N) UnmarshalJSON(data []byte) error {
+	var v float64
+	err := json.Unmarshal(data, &v)
+	if err != nil {
+		return err
+	}
+	*n = MakeN(v)
+	return nil
 }
 
 // ToFixed the return value is the type of float64 and keeps the given decimal places

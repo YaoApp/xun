@@ -166,14 +166,6 @@ func (builder *Builder) Pluck() {
 func (builder *Builder) MustPluck() {
 }
 
-// Paginate paginate the given query into a simple paginator.
-func (builder *Builder) Paginate() {
-}
-
-// MustPaginate paginate the given query into a simple paginator.
-func (builder *Builder) MustPaginate() {
-}
-
 // When Executes the given closure when the first argument is true.
 func (builder *Builder) When() {
 }

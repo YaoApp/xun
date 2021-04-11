@@ -26,6 +26,8 @@ func Use(conn *Connection) Query {
 // clone create a new builder instance with current builder
 func (builder *Builder) clone() *Builder {
 	new := *builder
+	query := *builder.Query
+	new.Query = &query
 	return &new
 }
 
