@@ -86,6 +86,28 @@ func TestWhereWhereArrayErrorType(t *testing.T) {
 	}
 }
 
+func TestWhereWhereInvalidOperator(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		Where("id", "invalid-operator", 1)
+
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "id" = $1`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `id` = ?", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "the return value should be have 1 row")
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0]["id"].(int64), "the 2nd binding should be 10")
+	}
+}
+
 func TestWhereWhereClosure(t *testing.T) {
 	NewTableForWhereTest()
 	qb := getTestBuilder()

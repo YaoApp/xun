@@ -56,6 +56,12 @@ func (builder *Builder) OrWhere(column interface{}, args ...interface{}) Query {
 // Where Add a basic where clause to the query.
 func (builder *Builder) where(column interface{}, operator string, value interface{}, boolean string, offset int, whereType string) Query {
 
+	// If the given operator is not found in the list of valid operators we will
+	// assume that the developer is just short-cutting the '='
+	if builder.invalidOperator(operator) {
+		operator = "="
+	}
+
 	columnKind := reflect.TypeOf(column).Kind()
 
 	// Where([][]interface{}{ {"score", ">", 64.56},{"vote", 10}})

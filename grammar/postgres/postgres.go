@@ -133,3 +133,14 @@ func New() dbal.Grammar {
 
 	return pg
 }
+
+// GetOperators get the operators
+func (grammarSQL Postgres) GetOperators() []string {
+	return []string{
+		"=", "<", ">", "<=", ">=", "<>", "!=",
+		"like", "not like", "between", "ilike", "not ilike",
+		"~", "&", "|", "#", "<<", ">>", "<<=", ">>=",
+		"&&", "@>", "<@", "?", "?|", "?&", "||", "-", "@?", "@@", "#-",
+		"is distinct from", "is not distinct from",
+	}
+}

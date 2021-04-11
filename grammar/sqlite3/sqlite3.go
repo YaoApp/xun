@@ -113,3 +113,12 @@ func New() dbal.Grammar {
 
 	return sqlite
 }
+
+// GetOperators get the operators
+func (grammarSQL SQLite3) GetOperators() []string {
+	return []string{
+		"=", "<", ">", "<=", ">=", "<>", "!=",
+		"like", "not like", "ilike",
+		"&", "|", "<<", ">>",
+	}
+}

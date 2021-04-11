@@ -197,16 +197,15 @@ func (builder *Builder) isQueryable(value interface{}) bool {
 
 // Determine if the given operator and value combination is legal.
 func (builder *Builder) invalidOperator(operator string) bool {
-	return !utils.StringHave(dbal.Operators, operator) &&
-		!utils.StringHave(builder.Grammar.GetOperators(), operator)
+	return !utils.StringHave(builder.Grammar.GetOperators(), operator)
 }
 
 // Determine if the given operator is supported.
-func (builder *Builder) invalidOperatorAndValue(operator string, value interface{}) bool {
-	return value == nil &&
-		utils.StringHave(dbal.Operators, operator) &&
-		utils.StringHave([]string{"=", "<>", "!="}, operator)
-}
+// func (builder *Builder) invalidOperatorAndValue(operator string, value interface{}) bool {
+// 	return value == nil &&
+// 		utils.StringHave(dbal.Operators, operator) &&
+// 		utils.StringHave([]string{"=", "<>", "!="}, operator)
+// }
 
 // Remove all of the expressions from a list of bindings.
 func (builder *Builder) cleanBindings(bindings interface{}) []interface{} {
