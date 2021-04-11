@@ -151,48 +151,35 @@ func (builder *Builder) parseSub(sub interface{}) string {
 }
 
 func (builder *Builder) isClosure(v interface{}) bool {
-	if v == nil {
-		return false
-	}
-	typ := reflect.TypeOf(v)
-	return typ.Kind() == reflect.Func &&
-		typ.NumOut() == 0 &&
-		typ.NumIn() == 1 &&
-		typ.In(0).Kind() == reflect.Interface
+	_, ok := v.(func(Query))
+	return ok
 }
 
 func (builder *Builder) isBoolean(v interface{}) bool {
-	switch v.(type) {
-	case string:
-		return utils.StringHave([]string{"and", "or"}, strings.ToLower(v.(string)))
-	default:
-		return false
+	if value, ok := v.(string); ok {
+		return utils.StringHave([]string{"and", "or"}, strings.ToLower(value))
 	}
+	return false
 }
 
 // isExpression Determine if the given value is a raw expression.
 func (builder *Builder) isExpression(value interface{}) bool {
-	switch value.(type) {
-	case dbal.Expression:
-		return true
-	default:
-		return false
-	}
+	_, ok := value.(dbal.Expression)
+	return ok
 }
 
 // Determine if the value is a query builder instance or a Closure.
 func (builder *Builder) isQueryable(value interface{}) bool {
-	typ := reflect.TypeOf(value)
-	kind := typ.Kind()
-	if kind == reflect.Ptr {
-		reflectValue := reflect.Indirect(reflect.ValueOf(value))
-		typ = reflectValue.Type()
-		kind = typ.Kind()
+
+	if builder.isClosure(value) {
+		return true
 	}
 
-	return builder.isClosure(value) ||
-		(kind == reflect.Interface && typ.Name() == "Query") ||
-		(kind == reflect.Struct && typ.Name() == "Builder")
+	if _, ok := value.(*Builder); ok {
+		return true
+	}
+
+	return false
 }
 
 // Determine if the given operator and value combination is legal.
