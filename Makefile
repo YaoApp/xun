@@ -5,6 +5,7 @@ VETPACKAGES ?= $(shell $(GO) list ./... | grep -v /examples/)
 GOFILES := $(shell find . -name "*.go")
 
 TESTFOLDER := $(shell $(GO) list ./... | grep -E 'dbal/schema$$|dbal/query$$|dbal/model/test$$' | grep -v examples)
+# TESTFOLDER := $(shell $(GO) list ./... | grep -E 'dbal/model/test$$' | grep -v examples)
 TESTTAGS ?= ""
 
 XUN_MODE ?= "test"
@@ -15,7 +16,7 @@ XUN_UNIT_DSN ?= "mysql"
 test:
 	echo "mode: count" > coverage.out
 	for d in $(TESTFOLDER); do \
-		$(GO) test -tags $(TESTTAGS) -v -covermode=count -coverprofile=profile.out $$d > tmp.out; \
+		$(GO) test -tags $(TESTTAGS) -v -covermode=count -coverprofile=profile.out -coverpkg=$$(echo $$d | sed "s/\/test$$//g") $$d > tmp.out; \
 		cat tmp.out; \
 		if grep -q "^--- FAIL" tmp.out; then \
 			rm tmp.out; \
