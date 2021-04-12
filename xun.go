@@ -166,21 +166,21 @@ func MakeR(value ...interface{}) R {
 }
 
 // MakePaginator create a new P struct alias MakeP
-func MakePaginator(total int, perPage int, currentPage int, items ...interface{}) P {
-	return MakeP(total, perPage, currentPage, items...)
+func MakePaginator(total int, pageSize int, currentPage int, items ...interface{}) P {
+	return MakeP(total, pageSize, currentPage, items...)
 }
 
 // MakeP create a new P struct
-func MakeP(total int, perPage int, currentPage int, items ...interface{}) P {
-	if perPage < 1 {
-		perPage = 15
+func MakeP(total int, pageSize int, currentPage int, items ...interface{}) P {
+	if pageSize < 1 {
+		pageSize = 15
 	}
 
 	if currentPage < 1 {
 		currentPage = 1
 	}
 
-	pagecnt := int(math.Ceil(float64(total) / float64(perPage)))
+	pagecnt := int(math.Ceil(float64(total) / float64(pageSize)))
 	next := currentPage + 1
 	prev := currentPage - 1
 	last := pagecnt
@@ -196,8 +196,8 @@ func MakeP(total int, perPage int, currentPage int, items ...interface{}) P {
 	return P{
 		Items:        items,
 		Total:        total,
-		PageCount:    pagecnt,
-		Perpage:      perPage,
+		TotalPages:   pagecnt,
+		PageSize:     pageSize,
 		CurrentPage:  currentPage,
 		NextPage:     next,
 		PreviousPage: prev,

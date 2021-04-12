@@ -17,8 +17,8 @@ type T struct {
 type P struct {
 	Items        []interface{}
 	Total        int
-	PageCount    int
-	Perpage      int
+	TotalPages   int
+	PageSize     int
 	CurrentPage  int
 	NextPage     int
 	PreviousPage int

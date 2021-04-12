@@ -22,6 +22,8 @@ func TestPaginateBasic(t *testing.T) {
 
 	// cheking paginateor
 	assert.Equal(t, 4, paginateor.Total, "The records total should be 4")
+	assert.Equal(t, 2, paginateor.PageSize, "The page size should be 2")
+	assert.Equal(t, 2, paginateor.TotalPages, "The total pages should be 2")
 	assert.Equal(t, 1, paginateor.CurrentPage, "The current page should be 1")
 	assert.Equal(t, 2, paginateor.NextPage, "The next page should be 2")
 	assert.Equal(t, -1, paginateor.PreviousPage, "The previous page should be -1")

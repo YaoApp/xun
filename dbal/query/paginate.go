@@ -85,23 +85,23 @@ func (builder *Builder) ChunkByID() {}
 func (builder *Builder) MustChunkByID() {}
 
 // Paginate paginate the given query into a simple paginator.
-func (builder *Builder) Paginate(perpage int, page int, v ...interface{}) (xun.P, error) {
+func (builder *Builder) Paginate(pageSize int, page int, v ...interface{}) (xun.P, error) {
 	if page < 1 {
 		page = 1
 	}
 
-	if perpage < 1 {
-		perpage = 15
+	if pageSize < 1 {
+		pageSize = 15
 	}
 
 	total, err := builder.getCountForPagination([]interface{}{"*"})
 	if err != nil {
-		return xun.MakePaginator(0, perpage, page), err
+		return xun.MakePaginator(0, pageSize, page), err
 	}
 
-	rows, err := builder.forPage(page, perpage).Get(v...)
+	rows, err := builder.forPage(page, pageSize).Get(v...)
 	if err != nil {
-		return xun.MakePaginator(0, perpage, page), err
+		return xun.MakePaginator(0, pageSize, page), err
 	}
 
 	items := []interface{}{}
@@ -113,44 +113,44 @@ func (builder *Builder) Paginate(perpage int, page int, v ...interface{}) (xun.P
 		reflectRows := reflect.ValueOf(v[0])
 		reflectRows = reflect.Indirect(reflectRows)
 		if reflectRows.Kind() != reflect.Slice {
-			return xun.MakeP(0, perpage, page), fmt.Errorf("The given binding var shoule be a slice pointer")
+			return xun.MakeP(0, pageSize, page), fmt.Errorf("The given binding var shoule be a slice pointer")
 		}
 		for i := 0; i < reflectRows.Len(); i++ {
 			items = append(items, reflectRows.Index(i).Interface())
 		}
 	}
 
-	return xun.MakePaginator(total, perpage, page, items...), nil
+	return xun.MakePaginator(total, pageSize, page, items...), nil
 }
 
 // MustPaginate paginate the given query into a simple paginator.
-func (builder *Builder) MustPaginate(perpage int, page int, v ...interface{}) xun.P {
-	res, err := builder.Paginate(perpage, page, v...)
+func (builder *Builder) MustPaginate(pageSize int, page int, v ...interface{}) xun.P {
+	res, err := builder.Paginate(pageSize, page, v...)
 	utils.PanicIF(err)
 	return res
 }
 
 // Set the limit and offset for a given page.
-func (builder *Builder) forPage(page int, perpage int) Query {
-	return builder.Offset((page - 1) * perpage).Limit(perpage)
+func (builder *Builder) forPage(page int, pageSize int) Query {
+	return builder.Offset((page - 1) * pageSize).Limit(pageSize)
 }
 
 // forPageBeforeID  Constrain the query to the previous "page" of results before a given ID.
-func (builder *Builder) forPageBeforeID(perpage int, lastID int, column string) Query {
+func (builder *Builder) forPageBeforeID(pageSize int, lastID int, column string) Query {
 	builder.Query.Orders = builder.removeExistingOrdersFor(column)
 	if lastID != 0 {
 		builder.Where(column, "<", lastID)
 	}
-	return builder.OrderBy(column, "desc").Limit(perpage)
+	return builder.OrderBy(column, "desc").Limit(pageSize)
 }
 
 // forPageAfterID  Constrain the query to the next "page" of results after a given ID.
-func (builder *Builder) forPageAfterID(perpage int, lastID int, column string) Query {
+func (builder *Builder) forPageAfterID(pageSize int, lastID int, column string) Query {
 	builder.Query.Orders = builder.removeExistingOrdersFor(column)
 	if lastID != 0 {
 		builder.Where(column, ">", lastID)
 	}
-	return builder.OrderBy(column, "asc").Limit(perpage)
+	return builder.OrderBy(column, "asc").Limit(pageSize)
 }
 
 // getCountForPagination  Get the count of the total records for the paginator.
