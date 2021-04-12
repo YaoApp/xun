@@ -10,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/dbal/model"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -168,8 +169,7 @@ func Query() query.Query {
 func (manager *Manager) Query() query.Query {
 	write := manager.GetPrimary()
 	read := manager.GetRead()
-	return newQuery(
-		write.Config.Driver,
+	return query.Use(
 		&query.Connection{
 			Write:       &write.DB,
 			WriteConfig: write.Config,
@@ -177,4 +177,19 @@ func (manager *Manager) Query() query.Query {
 			ReadConfig:  read.Config,
 			Option:      manager.Option,
 		})
+}
+
+// Model to build a new xun model instance
+func Model(v interface{}) *model.Model {
+	if Global == nil {
+		err := errors.New("the global capsule not set")
+		panic(err)
+	}
+	return Global.Model(v)
+}
+
+// Model to build a new xun model instance
+func (manager *Manager) Model(v interface{}) *model.Model {
+	query := manager.Query()
+	return model.Make(query, v)
 }
