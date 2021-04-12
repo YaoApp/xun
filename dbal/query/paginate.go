@@ -135,23 +135,23 @@ func (builder *Builder) forPage(page int, pageSize int) Query {
 	return builder.Offset((page - 1) * pageSize).Limit(pageSize)
 }
 
-// forPageBeforeID  Constrain the query to the previous "page" of results before a given ID.
-func (builder *Builder) forPageBeforeID(pageSize int, lastID int, column string) Query {
-	builder.Query.Orders = builder.removeExistingOrdersFor(column)
-	if lastID != 0 {
-		builder.Where(column, "<", lastID)
-	}
-	return builder.OrderBy(column, "desc").Limit(pageSize)
-}
+// @todo: forPageBeforeID  Constrain the query to the previous "page" of results before a given ID.
+// func (builder *Builder) forPageBeforeID(pageSize int, lastID int, column string) Query {
+// 	builder.Query.Orders = builder.removeExistingOrdersFor(column)
+// 	if lastID != 0 {
+// 		builder.Where(column, "<", lastID)
+// 	}
+// 	return builder.OrderBy(column, "desc").Limit(pageSize)
+// }
 
-// forPageAfterID  Constrain the query to the next "page" of results after a given ID.
-func (builder *Builder) forPageAfterID(pageSize int, lastID int, column string) Query {
-	builder.Query.Orders = builder.removeExistingOrdersFor(column)
-	if lastID != 0 {
-		builder.Where(column, ">", lastID)
-	}
-	return builder.OrderBy(column, "asc").Limit(pageSize)
-}
+// @todo: forPageAfterID  Constrain the query to the next "page" of results after a given ID.
+// func (builder *Builder) forPageAfterID(pageSize int, lastID int, column string) Query {
+// 	builder.Query.Orders = builder.removeExistingOrdersFor(column)
+// 	if lastID != 0 {
+// 		builder.Where(column, ">", lastID)
+// 	}
+// 	return builder.OrderBy(column, "asc").Limit(pageSize)
+// }
 
 // getCountForPagination  Get the count of the total records for the paginator.
 func (builder *Builder) getCountForPagination(columns []interface{}) (int, error) {
