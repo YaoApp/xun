@@ -122,3 +122,10 @@ func (builder *Builder) removeExistingOrdersFor(column interface{}) []dbal.Order
 	}
 	return orders
 }
+
+// Throw an exception if the query doesn't have an orderBy clause.
+func (builder *Builder) enforceOrderBy() {
+	if len(builder.Query.Orders) == 0 && len(builder.Query.UnionOrders) == 0 {
+		panic("You must specify an orderBy clause when using this function.")
+	}
+}

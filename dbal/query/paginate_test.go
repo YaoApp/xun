@@ -205,6 +205,92 @@ func TestPaginateWithGroupAndJoin(t *testing.T) {
 	assert.Equal(t, 2, len(paginateor.Items), "The items count should be 2")
 }
 
+func TestPaginateChunk(t *testing.T) {
+	NewTableForPaginateTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_paginate").
+		Where("email", "like", "%@yao.run").
+		Select("id", "name", "email", "vote", "score", "status").
+		OrderByDesc("id")
+	hits := 0
+	IDs := []int64{}
+	total := qb.MustCount()
+	assert.Equal(t, 4, int(total), "The query should have 4 items")
+	qb.MustChunk(2, func(items []interface{}, page int) error {
+		hits = hits + len(items)
+		for _, item := range items {
+			IDs = append(IDs, item.(xun.R).Get("id").(int64))
+		}
+		return nil
+	})
+	assert.Equal(t, hits, int(total), "The chunk items hits should be equal total")
+	assert.Equal(t, []int64{4, 3, 2, 1}, IDs, "The chunk id of items ids should be []int64{4,3,2,1}")
+}
+
+func TestPaginateChunkWithBind(t *testing.T) {
+
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+
+	NewTableForPaginateTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_paginate").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "vote", "score", "status").
+		OrderByDesc("id")
+	hits := 0
+	IDs := []int64{}
+	total := qb.MustCount()
+	assert.Equal(t, 4, int(total), "The query should have 4 items")
+	qb.MustChunk(2, func(items []interface{}, page int) error {
+		hits = hits + len(items)
+		for _, item := range items {
+			IDs = append(IDs, item.(Item).ID)
+		}
+		return nil
+	}, &[]Item{})
+	assert.Equal(t, hits, int(total), "The chunk items hits should be equal total")
+	assert.Equal(t, []int64{4, 3, 2, 1}, IDs, "The chunk id of items ids should be []int64{4,3,2,1}")
+
+}
+
+func TestPaginateChunkWithBindError(t *testing.T) {
+
+	type Item struct {
+		ID            int64
+		Email         string
+		Score         float64
+		Vote          int
+		ScoreGrade    xun.N
+		CreatedAt     xun.T
+		UpdatedAt     xun.T
+		PaymentStatus string `json:"status"`
+		Extra         string
+	}
+
+	NewTableForPaginateTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_paginate").
+		Where("email", "like", "%@yao.run").
+		Select("id", "email", "vote", "score", "status").
+		OrderByDesc("id")
+
+	assert.PanicsWithError(t, "The given binding var shoule be a slice pointer", func() {
+		qb.MustChunk(2, func(items []interface{}, page int) error {
+			return nil
+		}, &Item{})
+	})
+}
+
 // clean the test data
 func TestPaginateClean(t *testing.T) {
 	builder := getTestSchemaBuilder()

@@ -9,6 +9,75 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
+// Chunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
+func (builder *Builder) Chunk(size int, callback func([]interface{}, int) error, v ...interface{}) error {
+
+	builder.enforceOrderBy()
+	page := 1
+	if size < 1 {
+		size = 50
+	}
+
+	for {
+
+		var results []interface{} = nil
+		var countResults = 0
+
+		// We'll execute the query for the given page and get the results. If there are
+		// no results we can just break and return from here. When there are results
+		// we will call the callback with the current chunk of these results here.
+		if len(v) > 0 {
+
+			reflectValuesPtr := reflect.ValueOf(v[0])
+			reflectValues := reflect.Indirect(reflectValuesPtr)
+			if reflectValues.Kind() != reflect.Slice {
+				return fmt.Errorf("The given binding var shoule be a slice pointer")
+			}
+
+			reflectValuesType := reflectValues.Type()
+			reflectValuesPtr.Elem().Set(reflect.New(reflectValuesType).Elem())
+
+			_, err := builder.forPage(page, size).Get(v...)
+			if err != nil {
+				return err
+			}
+
+			countResults = reflectValues.Len()
+			for i := 0; i < countResults; i++ {
+				results = append(results, reflectValues.Index(i).Interface())
+			}
+		} else {
+			rows, err := builder.forPage(page, size).Get()
+			if err != nil {
+				return err
+			}
+
+			countResults = len(rows)
+			for _, row := range rows {
+				results = append(results, row)
+			}
+		}
+
+		if countResults == 0 || countResults != size {
+			break
+		}
+
+		if err := callback(results, page); err != nil {
+			return err
+		}
+
+		page++
+	}
+
+	return nil
+}
+
+// MustChunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
+func (builder *Builder) MustChunk(size int, callback func([]interface{}, int) error, v ...interface{}) {
+	err := builder.Chunk(size, callback, v...)
+	utils.PanicIF(err)
+}
+
 // Paginate paginate the given query into a simple paginator.
 func (builder *Builder) Paginate(perpage int, page int, v ...interface{}) (xun.P, error) {
 	if page < 1 {

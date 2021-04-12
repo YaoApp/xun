@@ -173,11 +173,3 @@ func (builder *Builder) When() {
 // MustWhen Executes the given closure when the first argument is true.
 func (builder *Builder) MustWhen() {
 }
-
-// Chunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
-func (builder *Builder) Chunk() {
-}
-
-// MustChunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
-func (builder *Builder) MustChunk() {
-}

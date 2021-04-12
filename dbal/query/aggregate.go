@@ -10,6 +10,11 @@ import (
 
 // Count Retrieve the "count" result of the query.
 func (builder *Builder) Count(columns ...interface{}) (int64, error) {
+	if len(columns) == 0 {
+		columns = []interface{}{"*"}
+	}
+
+	// Remove orders
 	value, err := builder.numericAggregate("count", columns)
 	if err != nil {
 		return 0, err
@@ -83,7 +88,7 @@ func (builder *Builder) aggregate(fn string, columns []interface{}) (interface{}
 	qb.setAggregate(fn, columns)
 
 	// Debug log
-	// fmt.Println("aggregate:", qb.ToSQL())
+	// qb.DD()
 
 	rows, err := qb.Get()
 	if err != nil {
@@ -98,7 +103,9 @@ func (builder *Builder) aggregate(fn string, columns []interface{}) (interface{}
 
 // numericAggregate Execute a numeric aggregate function on the database.
 func (builder *Builder) numericAggregate(fn string, columns []interface{}) (xun.N, error) {
-	value, err := builder.aggregate(fn, columns)
+	clone := builder.clone()
+	clone.Query.Orders = []dbal.Order{}
+	value, err := clone.aggregate(fn, columns)
 	return xun.MakeNum(value), err
 }
 
