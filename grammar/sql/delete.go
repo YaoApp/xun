@@ -35,3 +35,9 @@ func (grammarSQL SQL) CompileDelete(query *dbal.Query) (string, []interface{}) {
 
 	return fmt.Sprintf("delete from %s %s", table, wheres), bindings
 }
+
+// CompileTruncate Compile a truncate table statement into SQL.
+func (grammarSQL SQL) CompileTruncate(query *dbal.Query) ([]string, [][]interface{}) {
+	sql := fmt.Sprintf("truncate table %s", grammarSQL.WrapTable(query.From))
+	return []string{sql}, [][]interface{}{{}}
+}

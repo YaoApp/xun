@@ -45,6 +45,27 @@ func TestDeleteMustDeleteWithJoin(t *testing.T) {
 	assert.Equal(t, int64(2), affected, "The affected rows should be 2")
 }
 
+func TestDeleteMustTruncate(t *testing.T) {
+	NewTableForDeleteTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_delete").
+		Where("id", ">", 2).
+		MustTruncate()
+
+	assert.Equal(t, int64(0), qb.Table("table_test_delete").MustCount(), "The rows count should be 0, after truncate")
+}
+
+func TestDeleteMustTruncateError(t *testing.T) {
+	NewTableForDeleteTest()
+	qb := getTestBuilder()
+	assert.Panics(t, func() {
+		qb.Table("table_test_delete_not_exists").
+			Where("id", ">", 2).
+			MustTruncate()
+	})
+	assert.Equal(t, int64(4), qb.Table("table_test_delete").MustCount(), "The rows count should be 4, after truncate fail")
+}
+
 // clean the test data
 func TestDeleteClean(t *testing.T) {
 	builder := getTestSchemaBuilder()

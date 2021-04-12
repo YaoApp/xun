@@ -31,3 +31,9 @@ func (grammarSQL Postgres) CompileDelete(query *dbal.Query) (string, []interface
 
 	return sql, bindings
 }
+
+// CompileTruncate Compile a truncate table statement into SQL.
+func (grammarSQL Postgres) CompileTruncate(query *dbal.Query) ([]string, [][]interface{}) {
+	sql := fmt.Sprintf("truncate table %s restart identity cascade", grammarSQL.WrapTable(query.From))
+	return []string{sql}, [][]interface{}{{}}
+}

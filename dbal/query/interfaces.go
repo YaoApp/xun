@@ -165,6 +165,8 @@ type Query interface {
 	// defined in the delete.go file
 	Delete() (int64, error)
 	MustDelete() int64
+	Truncate() error
+	MustTruncate()
 
 	// defined in the debug.go file
 	DD()

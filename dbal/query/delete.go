@@ -28,9 +28,20 @@ func (builder *Builder) MustDelete() int64 {
 }
 
 // Truncate Run a truncate statement on the table.
-func (builder *Builder) Truncate() {
+func (builder *Builder) Truncate() error {
+	sqls, bindings := builder.Grammar.CompileTruncate(builder.Query)
+	for i, sql := range sqls {
+		defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
+		_, err := builder.UseWrite().DB().Exec(sql, bindings[i]...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // MustTruncate Run a truncate statement on the table.
 func (builder *Builder) MustTruncate() {
+	err := builder.Truncate()
+	utils.PanicIF(err)
 }
