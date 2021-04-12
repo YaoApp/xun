@@ -10,7 +10,7 @@ import (
 )
 
 // Chunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
-func (builder *Builder) Chunk(size int, callback func([]interface{}, int) error, v ...interface{}) error {
+func (builder *Builder) Chunk(size int, callback func(items []interface{}, page int) error, v ...interface{}) error {
 
 	builder.enforceOrderBy()
 	page := 1
@@ -73,10 +73,16 @@ func (builder *Builder) Chunk(size int, callback func([]interface{}, int) error,
 }
 
 // MustChunk Retrieves a small chunk of results at a time and feeds each chunk into a closure for processing.
-func (builder *Builder) MustChunk(size int, callback func([]interface{}, int) error, v ...interface{}) {
+func (builder *Builder) MustChunk(size int, callback func(items []interface{}, page int) error, v ...interface{}) {
 	err := builder.Chunk(size, callback, v...)
 	utils.PanicIF(err)
 }
+
+// ChunkByID chunk the results of a query by comparing IDs.
+func (builder *Builder) ChunkByID() {}
+
+// MustChunkByID chunk the results of a query by comparing IDs.
+func (builder *Builder) MustChunkByID() {}
 
 // Paginate paginate the given query into a simple paginator.
 func (builder *Builder) Paginate(perpage int, page int, v ...interface{}) (xun.P, error) {
