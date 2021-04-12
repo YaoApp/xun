@@ -162,6 +162,10 @@ type Query interface {
 	Decrement(column interface{}, amount interface{}, extra ...interface{}) (int64, error)
 	MustDecrement(column interface{}, amount interface{}, extra ...interface{}) int64
 
+	// defined in the delete.go file
+	Delete() (int64, error)
+	MustDelete() int64
+
 	// defined in the debug.go file
 	DD()
 	Dump()

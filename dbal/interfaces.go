@@ -38,6 +38,7 @@ type Grammar interface {
 	CompileInsertUsing(query *Query, columns []interface{}, sql string) string
 	CompileUpsert(query *Query, columns []interface{}, values [][]interface{}, uniqueBy []interface{}, updateValues interface{}) (string, []interface{})
 	CompileUpdate(query *Query, values map[string]interface{}) (string, []interface{})
+	CompileDelete(query *Query) (string, []interface{})
 	CompileSelect(query *Query) string
 	CompileSelectOffset(query *Query, offset *int) string
 	CompileExists(query *Query) string
