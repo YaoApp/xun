@@ -21,7 +21,7 @@ func (builder *Builder) Chunk(size int, callback func(items []interface{}, page 
 	for {
 
 		var results []interface{} = nil
-		var countResults = 0
+		var countResults int
 
 		// We'll execute the query for the given page and get the results. If there are
 		// no results we can just break and return from here. When there are results
