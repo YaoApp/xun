@@ -112,6 +112,8 @@ type Query interface {
 	OrWhereMonth(column interface{}, args ...interface{}) Query
 	WhereDay(column interface{}, args ...interface{}) Query
 	OrWhereDay(column interface{}, args ...interface{}) Query
+	When(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query
+	Unless(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query

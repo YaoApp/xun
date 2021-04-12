@@ -624,6 +624,26 @@ func (builder *Builder) whereDateTime(dateType string, column interface{}, opera
 	return builder
 }
 
+// When Apply the callback's query changes if the given "value" is true.
+func (builder *Builder) When(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query {
+	if value {
+		callback(builder, value)
+	} else if len(defaults) > 0 {
+		defaults[0](builder, value)
+	}
+	return builder
+}
+
+// Unless Apply the callback's query changes if the given "value" is false.
+func (builder *Builder) Unless(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query {
+	if !value {
+		callback(builder, value)
+	} else if len(defaults) > 0 {
+		defaults[0](builder, value)
+	}
+	return builder
+}
+
 // WhereJSONContains Add a "where JSON contains" clause to the query.
 func (builder *Builder) WhereJSONContains() {
 }

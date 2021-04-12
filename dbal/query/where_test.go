@@ -1391,6 +1391,134 @@ func TestWhereOrWhereDay(t *testing.T) {
 	}
 }
 
+func TestWhereWhenValueIsTrue(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		When(true, func(qb Query, value bool) {
+			qb.Where("vote", ">", 0)
+		})
+
+	// qb.DD()
+	checkVoteGT(t, qb)
+}
+
+func TestWhereWhenValueIsTrueWidthDefaults(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		When(true,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+			func(qb Query, value bool) {
+				qb.Where("score", ">", 0)
+			},
+		)
+
+	// qb.DD()
+	checkVoteGT(t, qb)
+}
+
+func TestWhereWhenValueIsFalse(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		When(false,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+		)
+
+	// qb.DD()
+	checkNone(t, qb)
+}
+
+func TestWhereWhenValueIsFalseWidthDefaults(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		When(false,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+			func(qb Query, value bool) {
+				qb.Where("score", ">", 0)
+			},
+		)
+
+	// qb.DD()
+	checkScoreGT(t, qb)
+}
+
+// --
+func TestWhereUnlessValueIsTrue(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Unless(true, func(qb Query, value bool) {
+			qb.Where("vote", ">", 0)
+		})
+
+	// qb.DD()
+	checkNone(t, qb)
+}
+
+func TestWhereUnlessValueIsTrueWidthDefaults(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Unless(true,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+			func(qb Query, value bool) {
+				qb.Where("score", ">", 0)
+			},
+		)
+
+	checkScoreGT(t, qb)
+}
+
+func TestWhereUnlessValueIsFalse(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Unless(false,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+		)
+
+	// qb.DD()
+	checkVoteGT(t, qb)
+}
+
+func TestWhereUnlessValueIsFalseWidthDefaults(t *testing.T) {
+	NewTableForWhereTest()
+	qb := getTestBuilder()
+	qb.Table("table_test_where").
+		OrderByDesc("id").
+		Unless(false,
+			func(qb Query, value bool) {
+				qb.Where("vote", ">", 0)
+			},
+			func(qb Query, value bool) {
+				qb.Where("score", ">", 0)
+			},
+		)
+
+	// qb.DD()
+	checkVoteGT(t, qb)
+}
+
 // clean the test data
 func TestWhereClean(t *testing.T) {
 	builder := getTestSchemaBuilder()
@@ -1420,4 +1548,64 @@ func NewTableForWhereTest() {
 		{"email": "ken@yao.run", "name": "Ken", "vote": 125, "score": 99.27, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-25 09:40:23"},
 		{"email": "ben@yao.run", "name": "Ben", "vote": 6, "score": 48.12, "score_grade": 99.27, "status": "DONE", "created_at": "2021-03-25 18:15:29"},
 	})
+}
+
+func checkVoteGT(t *testing.T, qb Query) {
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "vote" > $1 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `vote` > ? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	if len(rows) == 4 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(3), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(2), rows[2]["id"].(int64), "the id of the 3th row should be 1")
+		assert.Equal(t, int64(1), rows[3]["id"].(int64), "the id of the 4ht row should be 1")
+	}
+}
+
+func checkScoreGT(t *testing.T, qb Query) {
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" where "score" > $1 order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` where `score` > ? order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	if len(rows) == 4 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(3), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(2), rows[2]["id"].(int64), "the id of the 3th row should be 1")
+		assert.Equal(t, int64(1), rows[3]["id"].(int64), "the id of the 4ht row should be 1")
+	}
+}
+
+func checkNone(t *testing.T, qb Query) {
+	// checking sql
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_where" order by "id" desc`, sql, "the query sql not equal")
+	} else {
+		assert.Equal(t, "select * from `table_test_where` order by `id` desc", sql, "the query sql not equal")
+	}
+
+	// checking result
+	rows := qb.MustGet()
+	assert.Equal(t, 4, len(rows), "the return value should be have 4 rows")
+	if len(rows) == 4 {
+		assert.Equal(t, int64(4), rows[0]["id"].(int64), "the id of the 1st row should be 4")
+		assert.Equal(t, int64(3), rows[1]["id"].(int64), "the id of the 2nd row should be 2")
+		assert.Equal(t, int64(2), rows[2]["id"].(int64), "the id of the 3th row should be 1")
+		assert.Equal(t, int64(1), rows[3]["id"].(int64), "the id of the 4ht row should be 1")
+	}
 }

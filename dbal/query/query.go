@@ -165,11 +165,3 @@ func (builder *Builder) Pluck() {
 // MustPluck Get an array with the values of a given column.
 func (builder *Builder) MustPluck() {
 }
-
-// When Executes the given closure when the first argument is true.
-func (builder *Builder) When() {
-}
-
-// MustWhen Executes the given closure when the first argument is true.
-func (builder *Builder) MustWhen() {
-}
