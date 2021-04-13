@@ -61,21 +61,10 @@ func makeBySchema(query query.Query, schema schema.Schema, v interface{}, flow .
 	name := fmt.Sprintf("%s%s", v, flow)
 	factory, has := modelsRegistered[name]
 	if !has {
-		schema, ok := v.([]byte)
-		if !ok {
-			panic(fmt.Errorf("The schema type is %s, should be []byte", reflect.TypeOf(v).String()))
-		}
-
-		if len(flow) <= 0 {
-			Register(name, schema)
-		} else {
-			flowContent, ok := flow[0].([]byte)
-			if !ok {
-				panic(fmt.Errorf("The flow type is %s, should be []byte", reflect.TypeOf(flow[1]).String()))
-			}
-
-			Register(name, schema, flowContent)
-		}
+		args := []interface{}{}
+		args = append(args, v)
+		args = append(args, flow...)
+		Register(name, args...)
 
 		factory, has = modelsRegistered[name]
 		if !has {

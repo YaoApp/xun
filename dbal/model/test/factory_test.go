@@ -35,6 +35,16 @@ func TestMakeBySchema(t *testing.T) {
 	member.Find()
 }
 
+func TestMakeBySchemaRegistered(t *testing.T) {
+	defer unit.Catch()
+	member := makeModelTest(
+		models.SchemaFileContents["models/member.json"],
+		models.SchemaFileContents["models/member.flow.json"],
+	)
+	member.Search()
+	member.Find()
+}
+
 func TestMakeByStruct(t *testing.T) {
 	defer unit.Catch()
 	user := models.User{}
