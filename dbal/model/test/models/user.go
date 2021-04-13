@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	"github.com/yaoapp/xun/dbal/model"
 )
 
@@ -18,15 +16,19 @@ type User struct {
 }
 
 func init() {
-	model.Register(&User{}, SchemaFileContents["models/user.json"])
+	model.Register(&User{},
+		SchemaFileContents["models/user.json"],
+		SchemaFileContents["models/user.flow.json"],
+	)
 }
 
 // SetAddress extend method SetAddress
 func (user *User) SetAddress(address string) bool {
+	user.Address = address
 	return false
 }
 
 // Find user fild
-func (user *User) Find() {
-	fmt.Println("User find")
+func (user *User) Find() *User {
+	return user.Model.Find(user).(*User)
 }

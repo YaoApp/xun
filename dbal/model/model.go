@@ -1,17 +1,24 @@
 package model
 
-import "fmt"
-
-// Register register the grammar driver
-func Register(v interface{}, schema ...interface{}) error {
+// Search search by given params
+func (model *Model) Search() interface{} {
 	return nil
 }
 
-// Search search by given params
-func (model *Model) Search() {
+// Find find by primary key
+func (model *Model) Find(v ...interface{}) interface{} {
+	if len(v) > 0 {
+		return v[0]
+	}
+	return model
 }
 
-// Find find by primary key
-func (model *Model) Find() {
-	fmt.Println("Model find")
+// Flow process a flow by the given flow name and return the result
+func (model *Model) Flow(name string) interface{} {
+	return nil
+}
+
+// FlowRaw process a flow by the given json description file and return the result
+func (model *Model) FlowRaw(flow []byte) interface{} {
+	return nil
 }

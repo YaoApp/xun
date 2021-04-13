@@ -12,7 +12,7 @@ func TestAddConnection(t *testing.T) {
 		AddReadConn("secondary", "mysql", "xiang:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local")
 	manager.Schema()
 	manager.Query()
-	manager.Model("{}")
+	manager.Make("{}")
 
 }
 
@@ -28,7 +28,7 @@ func TestGlobal(t *testing.T) {
 	fmt.Printf("\n\n== TestGlobal ====================\n")
 	Schema()
 	Query()
-	Model("{}")
+	Make("{}")
 }
 
 func TestSetAsGlobal(t *testing.T) {
@@ -38,5 +38,5 @@ func TestSetAsGlobal(t *testing.T) {
 	manager.SetAsGlobal()
 	Schema()
 	Query()
-	Model("{}")
+	Make("{}")
 }

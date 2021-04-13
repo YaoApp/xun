@@ -26,6 +26,9 @@ var SchemaFileContents = map[string][]byte{
 		]
 	  }
 	`),
+	"models/member.flow.json": []byte(`{
+		"vip": {}
+	}`),
 
 	"models/user.json": []byte(`{
 		"name": "User",
@@ -36,4 +39,7 @@ var SchemaFileContents = map[string][]byte{
 		}
 	  }
 	`),
+	"models/user.flow.json": []byte(`{
+		"login": {}
+	}`),
 }

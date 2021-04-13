@@ -179,17 +179,18 @@ func (manager *Manager) Query() query.Query {
 		})
 }
 
-// Model to build a new xun model instance
-func Model(v interface{}) *model.Model {
+// Make to build a new xun model instance
+func Make(v interface{}, flow ...interface{}) *model.Model {
 	if Global == nil {
 		err := errors.New("the global capsule not set")
 		panic(err)
 	}
-	return Global.Model(v)
+	return Global.Make(v, flow...)
 }
 
-// Model to build a new xun model instance
-func (manager *Manager) Model(v interface{}) *model.Model {
+// Make to build a new xun model instance
+func (manager *Manager) Make(v interface{}, flow ...interface{}) *model.Model {
 	query := manager.Query()
-	return model.Make(query, v)
+	schema := manager.Schema()
+	return model.Make(query, schema, v, flow...)
 }
