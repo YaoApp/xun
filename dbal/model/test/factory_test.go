@@ -1,20 +1,21 @@
 package test
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun/dbal/model"
 	"github.com/yaoapp/xun/dbal/model/test/models"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
-	"github.com/yaoapp/xun/utils"
 )
 
 var testQueryBuilder query.Query
 var testSchemaBuilder schema.Schema
 
-func makeModelTest(v interface{}, flow ...interface{}) *model.Model {
+func modelTestMaker(v interface{}, flow ...interface{}) *model.Model {
 	defer unit.Catch()
 	unit.SetLogger()
 	if testQueryBuilder != nil && testSchemaBuilder != nil {
@@ -27,30 +28,36 @@ func makeModelTest(v interface{}, flow ...interface{}) *model.Model {
 
 func TestMakeBySchema(t *testing.T) {
 	defer unit.Catch()
-	member := makeModelTest(
+	member := model.MakeUsing(modelTestMaker,
 		models.SchemaFileContents["models/member.json"],
 		models.SchemaFileContents["models/member.flow.json"],
 	)
-	member.Search()
-	member.Find()
+	assert.Equal(t, "*model.Model", reflect.TypeOf(member).String(), "The return type of member should be *model.Model")
 }
 
 func TestMakeBySchemaRegistered(t *testing.T) {
 	defer unit.Catch()
-	member := makeModelTest(
+	member := model.MakeUsing(modelTestMaker,
 		models.SchemaFileContents["models/member.json"],
 		models.SchemaFileContents["models/member.flow.json"],
 	)
-	member.Search()
-	member.Find()
+	assert.Equal(t, "*model.Model", reflect.TypeOf(member).String(), "The return type of member should be *model.Model")
 }
 
 func TestMakeByStruct(t *testing.T) {
 	defer unit.Catch()
 	user := models.User{}
-	makeModelTest(&user)
+	modelTestMaker(&user)
+	model.MakeUsing(modelTestMaker, &user)
 	user.SetAddress("hello new address")
-	u := user.Find()
-	utils.Println(u)
-	user.Search()
+	assert.Equal(t, "models.User", reflect.TypeOf(user).String(), "The return type of member should be models.User")
+	assert.Equal(t, "hello new address", user.Address, "The user address should be hello new address")
+}
+
+func TestMakeByStructStyle2(t *testing.T) {
+	defer unit.Catch()
+	user := models.MakeUser(modelTestMaker)
+	user.SetAddress("hello new address style2")
+	assert.Equal(t, "models.User", reflect.TypeOf(user).String(), "The return type of member should be models.User")
+	assert.Equal(t, "hello new address style2", user.Address, "The user address should be hello new address")
 }

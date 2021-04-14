@@ -3,9 +3,6 @@ package model
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/yaoapp/xun/dbal/query"
-	"github.com/yaoapp/xun/dbal/schema"
 )
 
 // modelsRegistered the models have been registered
@@ -39,47 +36,17 @@ func Register(v interface{}, args ...interface{}) {
 	panic(fmt.Errorf("The type kind (%s) can't be register", reflectValue.Kind().String()))
 }
 
-// Make make a new xun model instance
-func Make(query query.Query, schema schema.Schema, v interface{}, flow ...interface{}) *Model {
-	if reflect.TypeOf(v).Kind() == reflect.Ptr {
-		makeByStruct(query, schema, v)
-		return nil
-	}
-	return makeBySchema(query, schema, v, flow...)
-}
-
-func makeByStruct(query query.Query, schema schema.Schema, v interface{}) {
-	name := getTypeName(v)
+// Class get the factory by model name
+func Class(name interface{}) *Factory {
 	factory, has := modelsRegistered[name]
 	if !has {
 		panic(fmt.Errorf("The model (%s) doesn't register", name))
 	}
-	factory.Clone(v)
+	return factory
 }
 
-func makeBySchema(query query.Query, schema schema.Schema, v interface{}, flow ...interface{}) *Model {
-	name := fmt.Sprintf("%s%s", v, flow)
-	factory, has := modelsRegistered[name]
-	if !has {
-		args := []interface{}{}
-		args = append(args, v)
-		args = append(args, flow...)
-		Register(name, args...)
-
-		factory, has = modelsRegistered[name]
-		if !has {
-			panic(fmt.Errorf("the model register failure"))
-		}
-	}
-	return factory.Clone()
-}
-
-func getTypeName(v interface{}) string {
-	return reflect.TypeOf(v).String()
-}
-
-// Clone build a model instance quickly
-func (factory *Factory) Clone(v ...interface{}) *Model {
+// New build a model instance quickly
+func (factory *Factory) New(v ...interface{}) *Model {
 
 	if len(v) > 0 {
 		ptr := reflect.ValueOf(v[0])
@@ -92,4 +59,12 @@ func (factory *Factory) Clone(v ...interface{}) *Model {
 
 	clone := *(factory.Model.(*Model))
 	return &clone
+}
+
+// Migrate running a database migration automate
+func (factory *Factory) Migrate(model string, args ...bool) {
+}
+
+// GetMethods get the model methods for auto-generate the APIs
+func (factory *Factory) GetMethods(model string, args ...bool) {
 }

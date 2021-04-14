@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/yaoapp/xun/capsule"
 	"github.com/yaoapp/xun/dbal/model"
 )
 
@@ -20,6 +21,16 @@ func init() {
 		SchemaFileContents["models/user.json"],
 		SchemaFileContents["models/user.flow.json"],
 	)
+}
+
+// MakeUser create a new user instance
+func MakeUser(maker ...model.MakerFunc) User {
+	user := User{}
+	if len(maker) == 0 {
+		maker[0] = capsule.Make
+	}
+	model.MakeUsing(maker[0], &user)
+	return user
 }
 
 // SetAddress extend method SetAddress

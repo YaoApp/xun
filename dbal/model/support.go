@@ -40,3 +40,7 @@ func prepareRegisterArgs(args ...interface{}) (*Schema, *Flow) {
 
 	return schema, flow
 }
+
+func getTypeName(v interface{}) string {
+	return reflect.TypeOf(v).String()
+}
