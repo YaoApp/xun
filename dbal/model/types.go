@@ -1,6 +1,8 @@
 package model
 
 import (
+	"reflect"
+
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -28,7 +30,7 @@ type Factory struct {
 type Schema struct {
 	Name          string         `json:"name"`
 	Table         Table          `json:"table,omitempty"`
-	Columns       []Field        `json:"columns,omitempty"`
+	Columns       []Column       `json:"columns,omitempty"`
 	Indexes       []Index        `json:"indexes,omitempty"`
 	Relationships []Relationship `json:"relationships,omitempty"`
 	Option        SchemaOption   `json:"option,omitempty"`
@@ -57,17 +59,18 @@ type SchemaOption struct {
 	Timestamps  bool `json:"timestamps"`
 }
 
-// Field the field description struct
-type Field struct {
+// Column the field description struct
+type Column struct {
 	Name          string       `json:"name"`
 	Type          string       `json:"type,omitempty"`
 	Title         string       `json:"title,omitempty"`
 	Description   string       `json:"description,omitempty"`
 	Comment       string       `json:"comment,omitempty"`
-	Length        *int         `json:"length,omitempty"`
-	Precision     *int         `json:"precision,omitempty"`
-	Scale         *int         `json:"scale,omitempty"`
-	Nullable      *bool        `json:"nullable,omitempty"`
+	Length        int          `json:"length,omitempty"`
+	Precision     int          `json:"precision,omitempty"`
+	Scale         int          `json:"scale,omitempty"`
+	Nullable      bool         `json:"nullable,omitempty"`
+	Unsigned      bool         `json:"unsigned,omitempty"`
 	Option        []string     `json:"option,omitempty"`
 	Default       interface{}  `json:"default,omitempty"`
 	DefaultRaw    string       `json:"default_raw,omitempty"`
@@ -133,7 +136,7 @@ type Relationship struct {
 // Attribute the model attribute
 type Attribute struct {
 	Name         string
-	Field        *Field
+	Column       *Column
 	Value        interface{}
 	Relationship *Relationship
 }
@@ -152,7 +155,7 @@ type Method struct {
 type Parameter struct {
 	Name     string      `json:"name"`
 	Type     string      `json:"type,omitempty"`
-	Field    string      `json:"field,omitempty"`
+	Column   string      `json:"field,omitempty"`
 	Mapping  string      `json:"mapping,omitempty"`
 	Required bool        `json:"required,omitempty"`
 	Default  interface{} `json:"default,omitempty"`
@@ -160,3 +163,22 @@ type Parameter struct {
 
 // MakerFunc the function for create a model
 type MakerFunc func(v interface{}, flow ...interface{}) *Model
+
+// StructMapping golang struct mapping to json schema
+var StructMapping = map[reflect.Kind]Column{
+	reflect.Bool:    {Type: "boolean"},
+	reflect.Int8:    {Type: "integer"},
+	reflect.Int16:   {Type: "integer"},
+	reflect.Int32:   {Type: "integer"},
+	reflect.Int64:   {Type: "bigInteger"},
+	reflect.Int:     {Type: "bigInteger"},
+	reflect.Uint8:   {Type: "integer", Unsigned: true},
+	reflect.Uint16:  {Type: "integer", Unsigned: true},
+	reflect.Uint32:  {Type: "integer", Unsigned: true},
+	reflect.Uint64:  {Type: "bigInteger", Unsigned: true},
+	reflect.Uint:    {Type: "bigInteger", Unsigned: true},
+	reflect.Float32: {Type: "float", Precision: 8, Scale: 2},
+	reflect.Float64: {Type: "float", Precision: 16, Scale: 4},
+	reflect.String:  {Type: "string", Length: 200},
+	reflect.Struct:  {Type: "json"},
+}

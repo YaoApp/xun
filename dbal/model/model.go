@@ -50,6 +50,24 @@ func (model *Model) GetNamespace() string {
 	return model.namespace
 }
 
+// GetAttributes get all of attribute
+func (model *Model) GetAttributes() []Attribute {
+	attrs := []Attribute{}
+	for _, attr := range model.attributes {
+		attrs = append(attrs, attr)
+	}
+	return attrs
+}
+
+// GetAttributeNames get all of the attribute name
+func (model *Model) GetAttributeNames() []string {
+	names := []string{}
+	for name := range model.attributes {
+		names = append(names, name)
+	}
+	return names
+}
+
 // GetAttr get the Attribute by name
 func (model *Model) GetAttr(name string) Attribute {
 	attr, ok := model.attributes[name]

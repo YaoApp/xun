@@ -65,6 +65,12 @@ func TestMakeByStructStyle2(t *testing.T) {
 	assert.Equal(t, "models", user.GetNamespace(), "The return namespace of model should be models.member")
 	assert.Equal(t, "user", user.GetName(), "The return name of model should be member")
 	assert.Equal(t, "models.user", user.GetFullname(), "The return fullname of model should be models.member")
+	assert.Equal(t, 10, len(user.GetAttributeNames()), "The return attribute names count of model should be 10")
+	assert.Equal(t, 10, len(user.GetAttributes()), "The return attribute names count of model should be 10")
+
+	status := user.GetAttr("status")
+	assert.Equal(t, 3, len(status.Column.Option), "The status column option count should be 3")
+	assert.Equal(t, "WAITING", status.Column.Default, "The status column default value should be WAITING")
 }
 
 func TestFactoryRegisterError(t *testing.T) {
@@ -76,10 +82,17 @@ func TestFactoryRegisterError(t *testing.T) {
 func TestFactoryRegister(t *testing.T) {
 	car := model.MakeUsing(modelTestMaker, "models/car", models.SchemaFileContents["models/car.json"])
 	assert.Equal(t, "models.car", car.GetFullname(), "The return fullname of model should be models.car")
+	assert.Equal(t, 5, len(car.GetAttributeNames()), "The return attribute names count of model should be 5")
+	assert.Equal(t, 5, len(car.GetAttributes()), "The return attribute names count of model should be 5")
 
 	manu := model.MakeUsing(modelTestMaker, "models/manu", models.SchemaFileContents["models/manu.json"])
 	assert.Equal(t, "models.manu", manu.GetFullname(), "The return fullname of model should be models.car")
+	assert.Equal(t, 4, len(manu.GetAttributeNames()), "The return attribute names count of model should be 4")
+	assert.Equal(t, 4, len(manu.GetAttributes()), "The return attribute names count of model should be 4")
 
 	userCar := model.MakeUsing(modelTestMaker, "models/user_car", models.SchemaFileContents["models/user_car.json"])
 	assert.Equal(t, "models.user_car", userCar.GetFullname(), "The return fullname of model should be models.user_car")
+	assert.Equal(t, 3, len(userCar.GetAttributeNames()), "The return attribute names count of model should be 3")
+	assert.Equal(t, 3, len(userCar.GetAttributes()), "The return attribute names count of model should be 3")
+
 }
