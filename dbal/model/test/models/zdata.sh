@@ -5,9 +5,7 @@ codeBegin=$codeBegin'''package models
 var SchemaFileContents = map[string][]byte{
 '''
 
-codeEnd='''
-}
-'''
+codeEnd='''}'''
 dirs=$(ls .)
 filename="zdata.go"
 function content(){

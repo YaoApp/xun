@@ -1,4 +1,4 @@
-// Package models  Wed Apr 14 16:40:15 CST 2021
+// Package models  Wed Apr 14 16:45:18 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -222,6 +222,4 @@ var SchemaFileContents = map[string][]byte{
   "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
 }
 `),
-
 }
-
