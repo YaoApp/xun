@@ -34,8 +34,8 @@ func (model *Model) Create(attributes interface{}) {
 func (model *Model) Save() {
 }
 
-// Destory deleting an dxisting model by its Primary Key
-func (model *Model) Destory(id interface{}) {
+// Destroy deleting an dxisting model by its Primary Key
+func (model *Model) Destroy(id interface{}) {
 }
 
 // Restore To restore a soft deleted model,
