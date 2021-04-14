@@ -1,0 +1,31 @@
+{
+  "name": "User",
+  "table": {
+    "name": "user",
+    "comment": "User",
+    "engine": "InnoDB"
+  },
+  "columns": [
+    { "name": "id" },
+    { "name": "nickname", "comment": "The user nick name", "index": "index" },
+    { "name": "bio", "type": "text", "comment": "The user bio" },
+    { "name": "gender", "type": "tinyInteger", "default": 3, "index": "index" },
+    { "name": "address", "length": 300, "comment": "The address" },
+    { "name": "score", "precision": 5, "scale": 2, "index": "index" },
+    { "name": "status", "default": "WAITING", "index": "index" }
+  ],
+  "relationships": [
+    {
+      "name": "member",
+      "type": "hasOne",
+      "models": ["Member"],
+      "links": ["id", "user_id"]
+    },
+    {
+      "name": "cars",
+      "type": "hasManyThrough",
+      "models": ["UserCar", "Car"],
+      "links": ["id", "user_id", "car_id", "id"]
+    }
+  ]
+}

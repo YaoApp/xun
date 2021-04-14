@@ -1,0 +1,28 @@
+{
+  "name": "Car",
+  "table": {
+    "name": "car",
+    "comment": "The cars",
+    "engine": "InnoDB"
+  },
+  "columns": [
+    { "name": "id", "type": "ID", "comment": "Car ID" },
+    { "name": "name", "type": "string", "length": 200, "comment": "Car Name" },
+    { "name": "manu_id", "type": "bigInteger", "comment": "Manufacturer id" }
+  ],
+  "relationships": [
+    {
+      "name": "manu",
+      "type": "hasOne",
+      "models": ["Manu"],
+      "links": ["manu_id", "id"]
+    },
+    {
+      "name": "users",
+      "type": "hasManyThrough",
+      "models": ["UserCar", "User"],
+      "links": ["id", "car_id", "user_id", "id"]
+    }
+  ],
+  "indexes": [{ "name": "manu_id", "columns": ["manu_id"] }]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "login",
+  "method": {
+    "name": "login",
+    "in": [
+      { "name": "email", "field": "email", "required": true },
+      { "name": "password", "type": "string", "required": true }
+    ],
+    "out": [
+      { "name": "name", "field": "name" },
+      { "name": "mobile", "field": "mobile" }
+    ]
+  }
+}

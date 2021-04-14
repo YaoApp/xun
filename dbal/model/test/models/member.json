@@ -1,0 +1,77 @@
+{
+  "name": "Member",
+  "table": {
+    "name": "member",
+    "comment": "Member",
+    "engine": "InnoDB"
+  },
+  "columns": [
+    {
+      "name": "id",
+      "comment": "Member ID",
+      "type": "ID",
+      "title": "Member ID",
+      "description": "The member ID",
+      "validation": {
+        "pattern": "^[0-9]{1,16}$",
+        "description": "Member ID must be the integer"
+      },
+      "example": 10001
+    },
+    {
+      "name": "user_id",
+      "comment": "User ID, 1v1",
+      "type": "bigInteger",
+      "nullable": false,
+      "index": "unique",
+      "example": 20001
+    },
+    {
+      "name": "name",
+      "comment": "Real Name",
+      "type": "string",
+      "length": 80,
+      "example": "John"
+    },
+    {
+      "name": "score",
+      "comment": "The member score",
+      "type": "float",
+      "nullable": false,
+      "default": 0.0,
+      "precision": 5,
+      "scale": 2,
+      "example": 3.28
+    },
+    {
+      "name": "level",
+      "comment": "The member level",
+      "type": "enum",
+      "option": ["silver", "gold"],
+      "default": "silver",
+      "example": "gold"
+    },
+    {
+      "name": "expired_at",
+      "comment": "The member expired at",
+      "type": "timestamp",
+      "nullable": false,
+      "default_raw": "NOW()",
+      "example": "2021-04-13 22:19:62"
+    }
+  ],
+  "relationships": [
+    {
+      "name": "user",
+      "type": "hasOne",
+      "models": ["User"],
+      "links": ["user_id", "id"]
+    },
+    {
+      "name": "cars",
+      "type": "hasManyThrough",
+      "models": ["UserCar", "Car"],
+      "links": ["user_id", "user_id", "car_id", "id"]
+    }
+  ]
+}

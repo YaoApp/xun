@@ -1,0 +1,14 @@
+{
+  "name": "UserCar",
+  "table": {
+    "name": "user_car",
+    "comment": "User cars",
+    "engine": "InnoDB"
+  },
+  "columns": [
+    { "name": "id", "type": "ID", "comment": "Use Car ID" },
+    { "name": "car_id", "type": "bigInteger", "index": "index" },
+    { "name": "user_id", "type": "bigInteger", "index": "index" }
+  ],
+  "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
+}

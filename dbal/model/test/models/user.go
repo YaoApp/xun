@@ -7,12 +7,12 @@ import (
 
 // User the struct model for unit test
 type User struct {
-	ID      int `json:"id" x-title:"UserID" x-comment:"The user id" x-validation-pattern:"^[0-9]{1,16}$"`
-	Name    string
-	Address string
-	Vote    int
-	Score   float64
-	Status  string `x-type:"enum" x-option:"PENDING,DONE,WAITING"`
+	ID       int `json:"id" x-title:"UserID" x-comment:"The user id" x-validation-pattern:"^[0-9]{1,16}$"`
+	Nickname string
+	Address  string
+	Vote     int
+	Score    float64
+	Status   string `x-type:"enum" x-option:"PENDING,DONE,WAITING"`
 	model.Model
 }
 

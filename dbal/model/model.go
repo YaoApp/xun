@@ -22,6 +22,14 @@ func MakeUsing(maker MakerFunc, v interface{}, flow ...interface{}) *Model {
 	return maker(v, flow...)
 }
 
+// Columns get the columns of model  struct
+func (model *Model) Columns() {
+}
+
+// Indexes get the indexes of model  struct
+func (model *Index) Indexes() {
+}
+
 // Fill to fill attributes into model
 func (model *Model) Fill(attributes interface{}) {
 }

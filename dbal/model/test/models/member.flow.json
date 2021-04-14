@@ -1,0 +1,8 @@
+{
+  "name": "vip",
+  "method": {
+    "name": "getVip",
+    "in": [{ "name": "id", "required": true }],
+    "out": [{ "name": "field", "mapping": "field::name" }]
+  }
+}
