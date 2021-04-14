@@ -9,17 +9,67 @@ import (
 )
 
 // Make make a new xun model instance
-func Make(query query.Query, schema schema.Schema, v interface{}, flow ...interface{}) *Model {
+func Make(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 	if reflect.TypeOf(v).Kind() == reflect.Ptr {
 		makeByStruct(query, schema, v)
 		return nil
 	}
-	return makeBySchema(query, schema, v, flow...)
+	return makeBySchema(query, schema, v, args...)
 }
 
 // MakeUsing create model using makeer
-func MakeUsing(maker MakerFunc, v interface{}, flow ...interface{}) *Model {
-	return maker(v, flow...)
+func MakeUsing(maker MakerFunc, v interface{}, args ...interface{}) *Model {
+	return maker(v, args...)
+}
+
+// GetFullname get the fullname of model
+func (model *Model) GetFullname() string {
+	if model.namespace == "" {
+		return model.name
+	}
+	return fmt.Sprintf("%s.%s", model.namespace, model.name)
+}
+
+// GetQuery get the query interface
+func (model *Model) GetQuery() query.Query {
+	return model.query
+}
+
+// GetSchema get the query interface
+func (model *Model) GetSchema() schema.Schema {
+	return model.schema
+}
+
+// GetName get the name of model
+func (model *Model) GetName() string {
+	return model.name
+}
+
+// GetNamespace get the name of model
+func (model *Model) GetNamespace() string {
+	return model.namespace
+}
+
+// GetAttr get the Attribute by name
+func (model *Model) GetAttr(name string) Attribute {
+	attr, ok := model.attributes[name]
+	if !ok {
+		panic(fmt.Errorf("The %s attribute does not exists", name))
+	}
+	return attr
+}
+
+// Get get the Attribute value
+func (model *Model) Get(name string) interface{} {
+	return model.GetAttr(name).Value
+}
+
+// Set set the Attribute value
+func (model *Model) Set(name string, value interface{}) *Model {
+	attr := model.GetAttr(name)
+	attr.Value = value
+	model.attributes[name] = attr
+	return model
 }
 
 // Columns get the columns of model  struct
@@ -122,25 +172,33 @@ func (model *Model) FlowRaw(flow []byte) interface{} {
 }
 
 // makeBySchema make a new xun model instance
-func makeBySchema(query query.Query, schema schema.Schema, v interface{}, flow ...interface{}) *Model {
-	name := fmt.Sprintf("%s%s", v, flow)
+func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
+
+	name, ok := v.(string)
+	if !ok {
+		panic(fmt.Errorf("the model name is not string"))
+	}
+
 	class, has := modelsRegistered[name]
 	if !has {
-		args := []interface{}{}
-		args = append(args, v)
-		args = append(args, flow...)
 		Register(name, args...)
-
 		class, has = modelsRegistered[name]
 		if !has {
 			panic(fmt.Errorf("the model register failure"))
 		}
 	}
-	return class.New()
+	model := class.New()
+	model.schema = schema
+	model.query = query
+	return model
 }
 
 // makeByStruct make a new xun model instance
 func makeByStruct(query query.Query, schema schema.Schema, v interface{}) {
 	name := getTypeName(v)
 	Class(name).New(v)
+	SetModel(v, func(model *Model) {
+		model.query = query
+		model.schema = schema
+	})
 }

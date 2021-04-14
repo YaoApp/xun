@@ -7,17 +7,21 @@ import (
 
 // Model the xun model
 type Model struct {
-	Query      query.Query
-	Schema     schema.Schema
-	Attributes []Attribute
+	namespace  string
+	name       string
+	attributes map[string]Attribute
+	query      query.Query
+	schema     schema.Schema
 }
 
 // Factory xun model factory
 type Factory struct {
-	Schema  *Schema
-	Flow    *Flow
-	Methods []Method
-	Model   interface{}
+	Schema    *Schema
+	Flow      *Flow
+	Methods   []Method
+	Namespace string
+	Name      string
+	Model     interface{}
 }
 
 // Schema the Xun model schema description struct
@@ -130,6 +134,7 @@ type Relationship struct {
 type Attribute struct {
 	Name         string
 	Field        *Field
+	Value        interface{}
 	Relationship *Relationship
 }
 

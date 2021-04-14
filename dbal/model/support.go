@@ -4,7 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 )
+
+// prepareRegisterNames parse name and return the namesapce, name
+func prepareRegisterNames(name string) (string, string, string) {
+	sep := "."
+	if strings.Contains(name, "/") {
+		sep = "/"
+	}
+	name = strings.ToLower(strings.TrimPrefix(name, "*"))
+	namer := strings.Split(name, sep)
+	length := len(namer)
+	if length <= 1 {
+		return name, "", name
+	}
+	fullname := strings.Join(namer, ".")
+	namespace := strings.Join(namer[0:length-1], ".")
+	name = namer[length-1]
+	return fullname, namespace, name
+}
 
 // prepareRegisterArgs parse the params for Register()
 func prepareRegisterArgs(args ...interface{}) (*Schema, *Flow) {
