@@ -21,7 +21,7 @@ type Model struct {
 type Factory struct {
 	Schema    *Schema
 	Flow      *Flow
-	Methods   []Method
+	methods   []Method
 	Namespace string
 	Name      string
 	Model     interface{}
@@ -144,22 +144,12 @@ type Attribute struct {
 
 // Method the method can be exported
 type Method struct {
-	Name    string      `json:"name"`
-	Path    string      `json:"path,omitempty"`
-	Process string      `json:"process,omitempty"`
-	In      []Parameter `json:"in,omitempty"`
-	Out     []Parameter `json:"out,omitempty"`
-	Export  bool        `json:"export,omitempty"`
-}
-
-// Parameter the intpu Parameter
-type Parameter struct {
-	Name     string      `json:"name"`
-	Type     string      `json:"type,omitempty"`
-	Column   string      `json:"field,omitempty"`
-	Mapping  string      `json:"mapping,omitempty"`
-	Required bool        `json:"required,omitempty"`
-	Default  interface{} `json:"default,omitempty"`
+	Name    string   `json:"name"`
+	Path    string   `json:"path,omitempty"`
+	Process string   `json:"process,omitempty"`
+	In      []string `json:"in,omitempty"`
+	Out     []string `json:"out,omitempty"`
+	Export  bool     `json:"export,omitempty"`
 }
 
 // MakerFunc the function for create a model

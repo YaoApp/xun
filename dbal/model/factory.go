@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -93,8 +92,40 @@ func (factory *Factory) New(v ...interface{}) *Model {
 	return &clone
 }
 
-// GetMethods get the model methods for auto-generate the APIs
-func (factory *Factory) GetMethods(model string, args ...bool) {
+// Methods get the model methods for auto-generate the APIs
+func (factory *Factory) Methods(args ...bool) []Method {
+
+	if factory.methods != nil {
+		return factory.methods
+	}
+
+	methods := []Method{}
+	reflectModelType := reflect.TypeOf(factory.Model)
+	for i := 0; i < reflectModelType.NumMethod(); i++ {
+		method := reflectModelType.Method(i)
+		name := method.Name
+		path := strings.ToLower(name)
+
+		in := []string{}
+		for j := 1; j < method.Type.NumIn(); j++ {
+			in = append(in, method.Type.In(j).Kind().String())
+		}
+
+		out := []string{}
+		for j := 0; j < method.Type.NumOut(); j++ {
+			out = append(out, method.Type.Out(j).Kind().String())
+		}
+
+		methods = append(methods, Method{
+			Name:   name,
+			Path:   path,
+			In:     in,
+			Out:    out,
+			Export: true,
+		})
+	}
+	factory.methods = methods
+	return methods
 }
 
 // Migrate running a database migration automate
@@ -131,87 +162,6 @@ func (factory *Factory) Migrate(schema schema.Schema, query query.Query, args ..
 	// @todo
 	factory.diffSchema(schema, force)
 	return nil
-}
-
-func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
-	return sch.CreateTable(tableName, func(table schema.Blueprint) {
-		// Columns
-		for _, column := range factory.Schema.Columns {
-			factory.setColumn(table, column)
-		}
-
-		// Indexes
-		for _, index := range factory.Schema.Indexes {
-			factory.createIndex(table, index)
-		}
-	})
-}
-
-func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
-
-	reflectTable := reflect.ValueOf(table)
-	methodName := xun.UpperFirst(column.Type)
-	method := reflectTable.MethodByName(methodName)
-	if method.Kind() == reflect.Func && column.Name != "" {
-		in := prepareBlueprintArgs(methodName, &column)
-		out := method.Call(in)
-		if len(out) != 1 {
-			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
-		}
-		col, ok := out[0].Interface().(*schema.Column)
-		if !ok {
-			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
-		}
-		if column.Comment != "" {
-			col.SetComment(column.Comment)
-		}
-
-		if column.Primary {
-			col.Primary()
-		}
-
-		if column.Index {
-			col.Index()
-		}
-
-		if column.Unique {
-			col.Unique()
-		}
-
-		if column.DefaultRaw != "" {
-			col.SetDefaultRaw(column.DefaultRaw)
-		} else if column.Default != nil {
-			col.SetDefault(column.Default)
-		}
-
-		if !column.Nullable {
-			col.NotNull()
-		}
-	}
-}
-
-func (factory *Factory) createIndex(table schema.Blueprint, index Index) {
-
-	if len(index.Columns) == 0 {
-		return
-	}
-
-	name := index.Name
-	if name == "" {
-		name = strings.Join(index.Columns, "_")
-	}
-
-	// primary,unique,index,match
-	if index.Type == "index" || index.Type == "" {
-		table.AddIndex(name, index.Columns...)
-	} else if index.Type == "unique" {
-		table.AddUnique(name, index.Columns...)
-	} else if index.Type == "primary" {
-		table.AddPrimary(index.Columns...)
-	} else if index.Type == "fulltext" {
-		table.AddFulltext(name, index.Columns...)
-	}
-
 }
 
 func (factory *Factory) diffSchema(schema schema.Schema, force bool) {

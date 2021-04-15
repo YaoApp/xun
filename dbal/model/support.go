@@ -292,6 +292,87 @@ func setupAttributes(model *Model, schema *Schema) {
 	}
 }
 
+func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
+	return sch.CreateTable(tableName, func(table schema.Blueprint) {
+		// Columns
+		for _, column := range factory.Schema.Columns {
+			factory.setColumn(table, column)
+		}
+
+		// Indexes
+		for _, index := range factory.Schema.Indexes {
+			factory.createIndex(table, index)
+		}
+	})
+}
+
+func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
+
+	reflectTable := reflect.ValueOf(table)
+	methodName := xun.UpperFirst(column.Type)
+	method := reflectTable.MethodByName(methodName)
+	if method.Kind() == reflect.Func && column.Name != "" {
+		in := prepareBlueprintArgs(methodName, &column)
+		out := method.Call(in)
+		if len(out) != 1 {
+			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+		}
+		col, ok := out[0].Interface().(*schema.Column)
+		if !ok {
+			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+		}
+		if column.Comment != "" {
+			col.SetComment(column.Comment)
+		}
+
+		if column.Primary {
+			col.Primary()
+		}
+
+		if column.Index {
+			col.Index()
+		}
+
+		if column.Unique {
+			col.Unique()
+		}
+
+		if column.DefaultRaw != "" {
+			col.SetDefaultRaw(column.DefaultRaw)
+		} else if column.Default != nil {
+			col.SetDefault(column.Default)
+		}
+
+		if !column.Nullable {
+			col.NotNull()
+		}
+	}
+}
+
+func (factory *Factory) createIndex(table schema.Blueprint, index Index) {
+
+	if len(index.Columns) == 0 {
+		return
+	}
+
+	name := index.Name
+	if name == "" {
+		name = strings.Join(index.Columns, "_")
+	}
+
+	// primary,unique,index,match
+	if index.Type == "index" || index.Type == "" {
+		table.AddIndex(name, index.Columns...)
+	} else if index.Type == "unique" {
+		table.AddUnique(name, index.Columns...)
+	} else if index.Type == "primary" {
+		table.AddPrimary(index.Columns...)
+	} else if index.Type == "fulltext" {
+		table.AddFulltext(name, index.Columns...)
+	}
+
+}
+
 // makeBySchema make a new xun model instance
 func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 

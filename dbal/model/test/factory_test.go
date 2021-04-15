@@ -177,6 +177,24 @@ func TestFactoryMigrateError(t *testing.T) {
 	})
 }
 
+func TestFactoryMethods(t *testing.T) {
+	registerModelsForTest()
+	methods := model.Class("models.user").Methods()
+	assert.Greater(t, len(methods), 1, "The return attribute names count of model should be greater 1")
+
+	methods = model.Class("models.member").Methods()
+	assert.Greater(t, len(methods), 1, "The return attribute names count of model should be greater 1")
+}
+
+func TestFactoryMethodsCached(t *testing.T) {
+	registerModelsForTest()
+	methods := model.Class("models.user").Methods()
+	assert.Greater(t, len(methods), 1, "The return attribute names count of model should be greater 1")
+
+	methods = model.Class("models.member").Methods()
+	assert.Greater(t, len(methods), 1, "The return attribute names count of model should be greater 1")
+}
+
 // Utils ...
 
 func registerModelsForTest() {
