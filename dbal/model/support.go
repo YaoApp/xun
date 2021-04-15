@@ -177,6 +177,7 @@ func registerStruct(reflectPtr reflect.Value, reflectValue reflect.Value, v inte
 
 func setupAttributesStruct(model *Model, schema *Schema, reflectValue reflect.Value) {
 
+	names := []string{}
 	columns := []Column{}
 	for i := 0; i < reflectValue.NumField(); i++ {
 		column := fieldToColumn(reflectValue.Type().Field(i))
@@ -194,12 +195,13 @@ func setupAttributesStruct(model *Model, schema *Schema, reflectValue reflect.Va
 			columnsMap[column.Name] = *col.merge(column)
 		} else {
 			columnsMap[column.Name] = column
+			names = append(names, column.Name)
 		}
 	}
 
 	schema.Columns = []Column{}
-	for _, column := range columnsMap {
-		schema.Columns = append(schema.Columns, column)
+	for _, name := range names {
+		schema.Columns = append(schema.Columns, columnsMap[name])
 	}
 
 	setupAttributes(model, schema)
