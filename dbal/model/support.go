@@ -264,6 +264,18 @@ func parseFieldTag(tag string) *Column {
 	return &column
 }
 
+func extendKeys(column Column, primaryKeys *[]string, uniqueKeys *[]string) {
+
+	if column.Primary || column.Type == "ID" {
+		*primaryKeys = append(*primaryKeys, column.Name)
+	}
+
+	if column.Unique {
+		*uniqueKeys = append(*uniqueKeys, column.Name)
+	}
+
+}
+
 func setupAttributes(model *Model, schema *Schema) {
 
 	// init
@@ -291,14 +303,7 @@ func setupAttributes(model *Model, schema *Schema) {
 			searchable[column.Name] = true
 		}
 
-		if column.Primary || column.Type == "ID" {
-			model.primaryKeys = append(model.primaryKeys, column.Name)
-		}
-
-		if column.Unique {
-			model.uniqueKeys = append(model.uniqueKeys, column.Name)
-		}
-
+		extendKeys(column, &model.primaryKeys, &model.uniqueKeys)
 	}
 
 	// set Relationships
