@@ -35,6 +35,15 @@ func getSchema() schema.Schema {
 	return testSchemaBuilder
 }
 
+func getQuery() query.Query {
+	unit.SetLogger()
+	if testQueryBuilder != nil {
+		return testQueryBuilder
+	}
+	testQueryBuilder = query.New(unit.Driver(), unit.DSN())
+	return testQueryBuilder
+}
+
 func TestMakeBySchema(t *testing.T) {
 	member := model.MakeUsing(modelTestMaker, "models/member",
 		models.SchemaFileContents["models/member.json"],
@@ -150,10 +159,11 @@ func TestFactoryNewError(t *testing.T) {
 func TestFactoryMigrate(t *testing.T) {
 	registerModelsForTest()
 	sch := getSchema()
+	qb := getQuery()
 	models := []string{"user", "member", "manu", "car", "user_car", "null"}
 	for _, name := range models {
 		name = fmt.Sprintf("models.%s", name)
-		err := model.Class(name).Migrate(sch, true)
+		err := model.Class(name).Migrate(sch, qb, true)
 		assert.Nil(t, err, "create %s the return value should be nil", name)
 	}
 }
@@ -162,7 +172,8 @@ func TestFactoryMigrateError(t *testing.T) {
 	registerModelsForTest()
 	assert.PanicsWithError(t, `This feature does not support it yet. It working when the first parameter refresh is true.(model.Class("user").Migrate(schema, true))`, func() {
 		sch := getSchema()
-		model.Class("models.user").Migrate(sch)
+		qb := getQuery()
+		model.Class("models.user").Migrate(sch, qb)
 	})
 }
 

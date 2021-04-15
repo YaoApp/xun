@@ -1,4 +1,4 @@
-// Package models  Thu Apr 15 10:07:43 CST 2021
+// Package models  Thu Apr 15 12:00:17 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -205,6 +205,17 @@ var SchemaFileContents = map[string][]byte{
       "type": "hasManyThrough",
       "models": ["UserCar", "Car"],
       "links": ["id", "user_id", "car_id", "id"]
+    }
+  ],
+  "values": [
+    {
+      "nickname": "admin",
+      "bio": "the default adminstor",
+      "gender": 1,
+      "vote": 0,
+      "score": 1.25,
+      "address": "default path",
+      "status": "DONE"
     }
   ]
 }

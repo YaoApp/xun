@@ -217,8 +217,7 @@ func fieldToColumn(field reflect.StructField) *Column {
 
 	ctag := parseFieldTag(string(field.Tag))
 	if ctag != nil {
-		column = *ctag.merge(column)
-
+		column = *column.merge(*ctag)
 	}
 
 	if column.Name == "" {

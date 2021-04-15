@@ -27,5 +27,16 @@
       "models": ["UserCar", "Car"],
       "links": ["id", "user_id", "car_id", "id"]
     }
+  ],
+  "values": [
+    {
+      "nickname": "admin",
+      "bio": "the default adminstor",
+      "gender": 1,
+      "vote": 0,
+      "score": 1.25,
+      "address": "default path",
+      "status": "DONE"
+    }
   ]
 }

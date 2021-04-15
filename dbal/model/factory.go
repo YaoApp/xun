@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
 
@@ -92,8 +93,12 @@ func (factory *Factory) New(v ...interface{}) *Model {
 	return &clone
 }
 
+// GetMethods get the model methods for auto-generate the APIs
+func (factory *Factory) GetMethods(model string, args ...bool) {
+}
+
 // Migrate running a database migration automate
-func (factory *Factory) Migrate(schema schema.Schema, args ...bool) error {
+func (factory *Factory) Migrate(schema schema.Schema, query query.Query, args ...bool) error {
 
 	if factory.Schema.Table.Name == "" {
 		return nil
@@ -111,6 +116,15 @@ func (factory *Factory) Migrate(schema schema.Schema, args ...bool) error {
 			return err
 		}
 
+		// Insert values
+		if factory.Schema.Values == nil {
+			return nil
+		}
+
+		err = query.Table(table).Insert(factory.Schema.Values)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -121,80 +135,85 @@ func (factory *Factory) Migrate(schema schema.Schema, args ...bool) error {
 
 func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
 	return sch.CreateTable(tableName, func(table schema.Blueprint) {
-		reflectTable := reflect.ValueOf(table)
-
 		// Columns
 		for _, column := range factory.Schema.Columns {
-			methodName := xun.UpperFirst(column.Type)
-			method := reflectTable.MethodByName(methodName)
-			if method.Kind() == reflect.Func && column.Name != "" {
-				in := prepareBlueprintArgs(methodName, &column)
-				out := method.Call(in)
-				if len(out) != 1 {
-					panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
-				}
-				col, ok := out[0].Interface().(*schema.Column)
-				if !ok {
-					panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
-				}
-
-				if column.Comment != "" {
-					col.SetComment(column.Comment)
-				}
-
-				if column.Primary {
-					col.Primary()
-				}
-
-				if column.Index {
-					col.Index()
-				}
-
-				if column.Unique {
-					col.Unique()
-				}
-
-				if column.DefaultRaw != "" {
-					col.SetDefaultRaw(column.DefaultRaw)
-				} else if column.Default != nil {
-					col.SetDefault(column.Default)
-				}
-
-				if !column.Nullable {
-					col.NotNull()
-				}
-			}
+			factory.setColumn(table, column)
 		}
 
 		// Indexes
 		for _, index := range factory.Schema.Indexes {
-			if len(index.Columns) == 0 {
-				continue
-			}
-			name := index.Name
-			if name == "" {
-				name = strings.Join(index.Columns, "_")
-			}
+			factory.createIndex(table, index)
+		}
+	})
+}
 
-			// primary,unique,index,match
-			if index.Type == "index" || index.Type == "" {
-				table.AddIndex(name, index.Columns...)
-			} else if index.Type == "unique" {
-				table.AddUnique(name, index.Columns...)
-			} else if index.Type == "primary" {
-				table.AddPrimary(index.Columns...)
-			} else if index.Type == "fulltext" {
-				table.AddFulltext(name, index.Columns...)
-			}
+func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
+
+	reflectTable := reflect.ValueOf(table)
+	methodName := xun.UpperFirst(column.Type)
+	method := reflectTable.MethodByName(methodName)
+	if method.Kind() == reflect.Func && column.Name != "" {
+		in := prepareBlueprintArgs(methodName, &column)
+		out := method.Call(in)
+		if len(out) != 1 {
+			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+		}
+		col, ok := out[0].Interface().(*schema.Column)
+		if !ok {
+			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+		}
+		if column.Comment != "" {
+			col.SetComment(column.Comment)
 		}
 
-	})
+		if column.Primary {
+			col.Primary()
+		}
+
+		if column.Index {
+			col.Index()
+		}
+
+		if column.Unique {
+			col.Unique()
+		}
+
+		if column.DefaultRaw != "" {
+			col.SetDefaultRaw(column.DefaultRaw)
+		} else if column.Default != nil {
+			col.SetDefault(column.Default)
+		}
+
+		if !column.Nullable {
+			col.NotNull()
+		}
+	}
+}
+
+func (factory *Factory) createIndex(table schema.Blueprint, index Index) {
+
+	if len(index.Columns) == 0 {
+		return
+	}
+
+	name := index.Name
+	if name == "" {
+		name = strings.Join(index.Columns, "_")
+	}
+
+	// primary,unique,index,match
+	if index.Type == "index" || index.Type == "" {
+		table.AddIndex(name, index.Columns...)
+	} else if index.Type == "unique" {
+		table.AddUnique(name, index.Columns...)
+	} else if index.Type == "primary" {
+		table.AddPrimary(index.Columns...)
+	} else if index.Type == "fulltext" {
+		table.AddFulltext(name, index.Columns...)
+	}
+
 }
 
 func (factory *Factory) diffSchema(schema schema.Schema, force bool) {
 	panic(fmt.Errorf(`This feature does not support it yet. It working when the first parameter refresh is true.(model.Class("user").Migrate(schema, true))`))
-}
-
-// GetMethods get the model methods for auto-generate the APIs
-func (factory *Factory) GetMethods(model string, args ...bool) {
 }

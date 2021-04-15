@@ -19,17 +19,7 @@ func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 	unsigned := utils.GetIF(column.IsUnsigned, "UNSIGNED", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
 
-	defaultValue, ok := column.Default.(string)
-	if ok {
-		defaultValue = grammarSQL.VAL(defaultValue)
-	} else {
-		defaultValue = fmt.Sprintf("%v", column.Default)
-	}
-	if column.DefaultRaw != "" {
-		defaultValue = column.DefaultRaw
-	}
-
-	defaultValue = utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %s", defaultValue), "").(string)
+	defaultValue := grammarSQL.GetDefaultValue(column)
 	comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment)), "").(string)
 	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := utils.GetIF(utils.StringVal(column.Extra) != "", "AUTO_INCREMENT", "")
@@ -94,6 +84,20 @@ func (grammarSQL SQL) getType(column *dbal.Column) string {
 	}
 
 	return typ
+}
+
+// GetDefaultValue get the default value
+func (grammarSQL SQL) GetDefaultValue(column *dbal.Column) string {
+	defaultValue, ok := column.Default.(string)
+	if ok {
+		defaultValue = grammarSQL.VAL(defaultValue)
+	} else {
+		defaultValue = fmt.Sprintf("%v", column.Default)
+	}
+	if column.DefaultRaw != "" {
+		defaultValue = column.DefaultRaw
+	}
+	return utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %s", defaultValue), "").(string)
 }
 
 // SQLAddIndex  return the add index sql for table create

@@ -3,6 +3,7 @@ package model
 import (
 	"reflect"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -34,6 +35,7 @@ type Schema struct {
 	Indexes       []Index        `json:"indexes,omitempty"`
 	Relationships []Relationship `json:"relationships,omitempty"`
 	Option        SchemaOption   `json:"option,omitempty"`
+	Values        []xun.R        `json:"values,omitempty"`
 }
 
 // Flow the Xun model flow description struct
