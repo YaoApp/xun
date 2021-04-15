@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/yaoapp/xun"
+	"github.com/yaoapp/xun/dbal/schema"
 )
 
 // modelsRegistered the models have been registered
@@ -27,177 +28,6 @@ func Register(v interface{}, args ...interface{}) {
 	}
 
 	panic(fmt.Errorf("The type kind (%s) can't be register, have %d arguments", reflectPtr.Type().String(), len(args)))
-}
-
-// determine if the interface{} is json schema
-func isSchema(reflectValue reflect.Value, args ...interface{}) bool {
-	return reflectValue.Kind() == reflect.String && len(args) > 0
-}
-
-// determine if the interface{} is golang struct
-func isStruct(reflectPtr reflect.Value, reflectValue reflect.Value) bool {
-	return reflectPtr.Kind() == reflect.Ptr && reflectValue.Kind() == reflect.Struct && reflectValue.FieldByName("Model").Type() == typeOfModel
-}
-
-// register the model by given json schema
-func registerSchema(v interface{}, args ...interface{}) {
-	origin := v.(string)
-	fullname, namespace, name := prepareRegisterNames(origin)
-	schema, flow := prepareRegisterArgs(args...)
-	model := Model{}
-	model.namespace = namespace
-	model.name = name
-	setupAttributes(&model, schema)
-
-	factory := &Factory{
-		Namespace: namespace,
-		Name:      name,
-		Model:     &model,
-		Schema:    schema,
-		Flow:      flow,
-	}
-	modelsRegistered[origin] = factory
-	modelsAlias[origin] = modelsRegistered[origin]
-	modelsAlias[fullname] = modelsRegistered[origin]
-}
-
-// register the model by given golang struct pointer
-func registerStruct(reflectPtr reflect.Value, reflectValue reflect.Value, v interface{}, args ...interface{}) {
-	origin := reflectPtr.Type().String()
-	fullname, namespace, name := prepareRegisterNames(origin)
-	schema, flow := prepareRegisterArgs(args...)
-	SetModel(v, func(model *Model) {
-		model.namespace = namespace
-		model.name = name
-		setupAttributesStruct(model, schema, reflectValue)
-	})
-
-	factory := &Factory{
-		Namespace: namespace,
-		Name:      name,
-		Model:     v,
-		Schema:    schema,
-		Flow:      flow,
-	}
-	modelsRegistered[origin] = factory
-	modelsAlias[origin] = modelsRegistered[origin]
-	modelsAlias[fullname] = modelsRegistered[origin]
-}
-
-func setupAttributesStruct(model *Model, schema *Schema, reflectValue reflect.Value) {
-
-	columns := []Column{}
-	for i := 0; i < reflectValue.NumField(); i++ {
-		column := fieldToColumn(reflectValue.Type().Field(i))
-		if column != nil {
-			columns = append(columns, *column)
-		}
-	}
-
-	columns = append(columns, schema.Columns...)
-
-	// merge schema
-	columnsMap := map[string]Column{}
-	for _, column := range columns {
-		if col, has := columnsMap[column.Name]; has {
-			columnsMap[column.Name] = *col.merge(column)
-		} else {
-			columnsMap[column.Name] = column
-		}
-	}
-
-	schema.Columns = []Column{}
-	for _, column := range columnsMap {
-		schema.Columns = append(schema.Columns, column)
-	}
-
-	setupAttributes(model, schema)
-}
-
-func fieldToColumn(field reflect.StructField) *Column {
-	if field.Type == typeOfModel {
-		return nil
-	}
-
-	column, has := StructMapping[field.Type.Kind()]
-	if !has {
-		return nil
-	}
-
-	ctag := parseFieldTag(string(field.Tag))
-	if ctag != nil {
-		column = *ctag.merge(column)
-
-	}
-
-	if column.Name == "" {
-		column.Name = xun.ToSnakeCase(field.Name)
-	}
-	return &column
-}
-
-func parseFieldTag(tag string) *Column {
-	if !strings.Contains(tag, "x-") {
-		return nil
-	}
-
-	params := map[string]string{}
-	tagarr := strings.Split(tag, "x-")
-
-	for _, tagstr := range tagarr {
-		tagr := strings.Split(tagstr, ":")
-		if len(tagr) == 2 {
-			key := strings.Trim(tagr[0], " ")
-			value := strings.Trim(strings.Trim(tagr[1], " "), "\"")
-			key = strings.TrimPrefix(key, "x-")
-			key = strings.ReplaceAll(key, "-", ".")
-			if key == "json" {
-				key = "name"
-			}
-			params[key] = value
-		}
-	}
-
-	if len(params) == 0 {
-		return nil
-	}
-
-	column := Column{}
-	for name, value := range params {
-		column.set(name, value)
-	}
-
-	return &column
-}
-
-func setupAttributes(model *Model, schema *Schema) {
-
-	// init
-	model.attributes = map[string]Attribute{}
-
-	// set Columns
-	for i, column := range schema.Columns {
-		name := column.Name
-		attr := Attribute{
-			Name:         column.Name,
-			Column:       &schema.Columns[i],
-			Value:        nil,
-			Relationship: nil,
-		}
-		model.attributes[name] = attr
-	}
-
-	// set Relationships
-	for i, relation := range schema.Relationships {
-		name := relation.Name
-		attr := Attribute{
-			Name:         relation.Name,
-			Relationship: &schema.Relationships[i],
-			Column:       nil,
-			Value:        nil,
-		}
-		model.attributes[name] = attr
-	}
 }
 
 // Class get the factory by model name
@@ -263,7 +93,103 @@ func (factory *Factory) New(v ...interface{}) *Model {
 }
 
 // Migrate running a database migration automate
-func (factory *Factory) Migrate(model string, args ...bool) {
+func (factory *Factory) Migrate(schema schema.Schema, args ...bool) error {
+
+	if factory.Schema.Table.Name == "" {
+		return nil
+	}
+
+	table := factory.Schema.Table.Name
+	refresh, force := prepareMigrateArgs(args...)
+	if refresh {
+		err := schema.DropTableIfExists(table)
+		if err != nil {
+			return err
+		}
+		err = factory.createTable(table, schema)
+		if err != nil {
+			return err
+		}
+	}
+
+	// next
+	factory.diffSchema(schema, force)
+	return nil
+}
+
+func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
+	return sch.CreateTable(tableName, func(table schema.Blueprint) {
+		reflectTable := reflect.ValueOf(table)
+
+		// Columns
+		for _, column := range factory.Schema.Columns {
+			methodName := xun.UpperFirst(column.Type)
+			method := reflectTable.MethodByName(methodName)
+			if method.Kind() == reflect.Func && column.Name != "" {
+				in := prepareBlueprintArgs(methodName, &column)
+				out := method.Call(in)
+				if len(out) != 1 {
+					panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+				}
+				col, ok := out[0].Interface().(*schema.Column)
+				if !ok {
+					panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
+				}
+
+				if column.Comment != "" {
+					col.SetComment(column.Comment)
+				}
+
+				if column.Primary {
+					col.Primary()
+				}
+
+				if column.Index {
+					col.Index()
+				}
+
+				if column.Unique {
+					col.Unique()
+				}
+
+				if column.DefaultRaw != "" {
+					col.SetDefaultRaw(column.DefaultRaw)
+				} else if column.Default != nil {
+					col.SetDefault(column.Default)
+				}
+
+				if !column.Nullable {
+					col.NotNull()
+				}
+			}
+		}
+
+		// Indexes
+		for _, index := range factory.Schema.Indexes {
+			if len(index.Columns) == 0 {
+				continue
+			}
+			name := index.Name
+			if name == "" {
+				name = strings.Join(index.Columns, "_")
+			}
+
+			// primary,unique,index,match
+			if index.Type == "index" || index.Type == "" {
+				table.AddIndex(name, index.Columns...)
+			} else if index.Type == "unique" {
+				table.AddUnique(name, index.Columns...)
+			} else if index.Type == "primary" {
+				table.AddPrimary(index.Columns...)
+			} else if index.Type == "fulltext" {
+				table.AddFulltext(name, index.Columns...)
+			}
+		}
+
+	})
+}
+
+func (factory *Factory) diffSchema(schema schema.Schema, force bool) {
 }
 
 // GetMethods get the model methods for auto-generate the APIs

@@ -188,35 +188,3 @@ func (model *Model) Flow(name string) interface{} {
 func (model *Model) FlowRaw(flow []byte) interface{} {
 	return nil
 }
-
-// makeBySchema make a new xun model instance
-func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
-
-	name, ok := v.(string)
-	if !ok {
-		panic(fmt.Errorf("the model name is not string"))
-	}
-
-	class, has := modelsRegistered[name]
-	if !has {
-		Register(name, args...)
-		class, has = modelsRegistered[name]
-		if !has {
-			panic(fmt.Errorf("the model register failure"))
-		}
-	}
-	model := class.New()
-	model.schema = schema
-	model.query = query
-	return model
-}
-
-// makeByStruct make a new xun model instance
-func makeByStruct(query query.Query, schema schema.Schema, v interface{}) {
-	name := getTypeName(v)
-	Class(name).New(v)
-	SetModel(v, func(model *Model) {
-		model.query = query
-		model.schema = schema
-	})
-}

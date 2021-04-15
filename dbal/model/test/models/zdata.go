@@ -1,4 +1,4 @@
-// Package models  Wed Apr 14 16:45:18 CST 2021
+// Package models  Thu Apr 15 10:07:43 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -104,7 +104,7 @@ var SchemaFileContents = map[string][]byte{
       "comment": "User ID, 1v1",
       "type": "bigInteger",
       "nullable": false,
-      "index": "unique",
+      "unique": true,
       "example": 20001
     },
     {
@@ -157,6 +157,9 @@ var SchemaFileContents = map[string][]byte{
   ]
 }
 `),
+	"models/null.json": []byte(`
+{}
+`),
 	"models/user.flow.json": []byte(`
 {
   "name": "login",
@@ -183,12 +186,12 @@ var SchemaFileContents = map[string][]byte{
   },
   "columns": [
     { "name": "id" },
-    { "name": "nickname", "comment": "The user nick name", "index": "index" },
+    { "name": "nickname", "comment": "The user nick name", "index": true },
     { "name": "bio", "type": "text", "comment": "The user bio" },
-    { "name": "gender", "type": "tinyInteger", "default": 3, "index": "index" },
+    { "name": "gender", "type": "tinyInteger", "default": 3, "index": true },
     { "name": "address", "length": 300, "comment": "The address" },
-    { "name": "score", "precision": 5, "scale": 2, "index": "index" },
-    { "name": "status", "default": "WAITING", "index": "index" }
+    { "name": "score", "precision": 5, "scale": 2, "index": true },
+    { "name": "status", "default": "WAITING", "index": true }
   ],
   "relationships": [
     {
@@ -216,8 +219,8 @@ var SchemaFileContents = map[string][]byte{
   },
   "columns": [
     { "name": "id", "type": "ID", "comment": "Use Car ID" },
-    { "name": "car_id", "type": "bigInteger", "index": "index" },
-    { "name": "user_id", "type": "bigInteger", "index": "index" }
+    { "name": "car_id", "type": "bigInteger", "index": true },
+    { "name": "user_id", "type": "bigInteger", "index": true }
   ],
   "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
 }

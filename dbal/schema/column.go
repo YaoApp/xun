@@ -184,6 +184,12 @@ func (column *Column) SetDefault(v interface{}) *Column {
 	return column
 }
 
+// SetDefaultRaw set the column default raw attribute to the given type name
+func (column *Column) SetDefaultRaw(v string) *Column {
+	column.DefaultRaw = v
+	return column
+}
+
 // SetDateTimePrecision set the column precision to the given value
 func (column *Column) SetDateTimePrecision(precision int) *Column {
 	if column.MaxDateTimePrecision == 0 {

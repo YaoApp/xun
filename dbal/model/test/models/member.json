@@ -23,7 +23,7 @@
       "comment": "User ID, 1v1",
       "type": "bigInteger",
       "nullable": false,
-      "index": "unique",
+      "unique": true,
       "example": 20001
     },
     {

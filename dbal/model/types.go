@@ -61,27 +61,26 @@ type SchemaOption struct {
 
 // Column the field description struct
 type Column struct {
-	Name          string       `json:"name"`
-	Type          string       `json:"type,omitempty"`
-	Title         string       `json:"title,omitempty"`
-	Description   string       `json:"description,omitempty"`
-	Comment       string       `json:"comment,omitempty"`
-	Length        int          `json:"length,omitempty"`
-	Precision     int          `json:"precision,omitempty"`
-	Scale         int          `json:"scale,omitempty"`
-	Nullable      bool         `json:"nullable,omitempty"`
-	Unsigned      bool         `json:"unsigned,omitempty"`
-	Option        []string     `json:"option,omitempty"`
-	Default       interface{}  `json:"default,omitempty"`
-	DefaultRaw    string       `json:"default_raw,omitempty"`
-	Example       interface{}  `json:"example,omitempty"`
-	Generate      string       `json:"generate,omitempty"` // Increment, UUID,...
-	Encoder       string       `json:"encoder,omitempty"`  // AES-256, AES-128, PASSWORD-HASH, ...
-	Decoder       string       `json:"decoder,omitempty"`  // AES-256, AES-128, ...
-	Validations   []Validation `json:"validations,omitempty"`
-	Index         string       `json:"index,omitempty"`
-	Primary       *bool        `json:"primary,omitempty"`
-	AutoIncrement *bool        `json:"auto_increment,omitempty"`
+	Name        string       `json:"name"`
+	Type        string       `json:"type,omitempty"`
+	Title       string       `json:"title,omitempty"`
+	Description string       `json:"description,omitempty"`
+	Comment     string       `json:"comment,omitempty"`
+	Length      int          `json:"length,omitempty"`
+	Precision   int          `json:"precision,omitempty"`
+	Scale       int          `json:"scale,omitempty"`
+	Nullable    bool         `json:"nullable,omitempty"`
+	Option      []string     `json:"option,omitempty"`
+	Default     interface{}  `json:"default,omitempty"`
+	DefaultRaw  string       `json:"default_raw,omitempty"`
+	Example     interface{}  `json:"example,omitempty"`
+	Generate    string       `json:"generate,omitempty"` // Increment, UUID,...
+	Encoder     string       `json:"encoder,omitempty"`  // AES-256, AES-128, PASSWORD-HASH, ...
+	Decoder     string       `json:"decoder,omitempty"`  // AES-256, AES-128, ...
+	Validations []Validation `json:"validations,omitempty"`
+	Index       bool         `json:"index,omitempty"`
+	Unique      bool         `json:"unique,omitempty"`
+	Primary     bool         `json:"primary,omitempty"`
 }
 
 // Validation the field validation struct
@@ -172,11 +171,11 @@ var StructMapping = map[reflect.Kind]Column{
 	reflect.Int32:   {Type: "integer"},
 	reflect.Int64:   {Type: "bigInteger"},
 	reflect.Int:     {Type: "bigInteger"},
-	reflect.Uint8:   {Type: "integer", Unsigned: true},
-	reflect.Uint16:  {Type: "integer", Unsigned: true},
-	reflect.Uint32:  {Type: "integer", Unsigned: true},
-	reflect.Uint64:  {Type: "bigInteger", Unsigned: true},
-	reflect.Uint:    {Type: "bigInteger", Unsigned: true},
+	reflect.Uint8:   {Type: "unsignedInteger"},
+	reflect.Uint16:  {Type: "unsignedInteger"},
+	reflect.Uint32:  {Type: "unsignedInteger"},
+	reflect.Uint64:  {Type: "unsignedBigInteger"},
+	reflect.Uint:    {Type: "unsignedBigInteger"},
 	reflect.Float32: {Type: "float", Precision: 8, Scale: 2},
 	reflect.Float64: {Type: "float", Precision: 16, Scale: 4},
 	reflect.String:  {Type: "string", Length: 200},

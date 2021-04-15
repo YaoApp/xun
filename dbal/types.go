@@ -67,6 +67,7 @@ type Column struct {
 	Name                     string      `db:"name"`
 	Position                 int         `db:"position"`
 	Default                  interface{} `db:"default"`
+	DefaultRaw               string      `db:"default_raw"`
 	Nullable                 bool        `db:"nullable"`
 	IsUnsigned               bool        `db:"unsigned"`
 	Type                     string      `db:"type"`

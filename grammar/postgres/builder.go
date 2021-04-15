@@ -36,7 +36,18 @@ func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
 
 	unsigned := ""
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
-	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default)), "").(string)
+
+	defaultValue, ok := column.Default.(string)
+	if ok {
+		defaultValue = grammarSQL.VAL(defaultValue)
+	} else {
+		defaultValue = fmt.Sprintf("%v", column.Default)
+	}
+	if column.DefaultRaw != "" {
+		defaultValue = column.DefaultRaw
+	}
+
+	defaultValue = utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", defaultValue), "").(string)
 	// comment := utils.GetIF(utils.StringVal(column.Comment) != "", fmt.Sprintf("COMMENT %s", quoter.VAL(column.Comment)), "").(string)
 	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := ""

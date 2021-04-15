@@ -7,8 +7,8 @@
   },
   "columns": [
     { "name": "id", "type": "ID", "comment": "Use Car ID" },
-    { "name": "car_id", "type": "bigInteger", "index": "index" },
-    { "name": "user_id", "type": "bigInteger", "index": "index" }
+    { "name": "car_id", "type": "bigInteger", "index": true },
+    { "name": "user_id", "type": "bigInteger", "index": true }
   ],
   "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
 }

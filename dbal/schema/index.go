@@ -36,6 +36,11 @@ func (table *Table) AddIndex(key string, columnNames ...string) *Table {
 	return table
 }
 
+// AddFulltext Indicate that the given fulltext index should be created.(donthing here)
+func (table *Table) AddFulltext(key string, columnNames ...string) *Table {
+	return table
+}
+
 // AddUnique Indicate that the given unique index should be created.
 func (table *Table) AddUnique(key string, columnNames ...string) *Table {
 	columns := []*Column{}

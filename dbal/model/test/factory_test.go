@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -23,6 +24,15 @@ func modelTestMaker(v interface{}, flow ...interface{}) *model.Model {
 	testQueryBuilder = query.New(unit.Driver(), unit.DSN())
 	testSchemaBuilder = schema.New(unit.Driver(), unit.DSN())
 	return model.Make(testQueryBuilder, testSchemaBuilder, v, flow...)
+}
+
+func getSchema() schema.Schema {
+	unit.SetLogger()
+	if testSchemaBuilder != nil {
+		return testSchemaBuilder
+	}
+	testSchemaBuilder = schema.New(unit.Driver(), unit.DSN())
+	return testSchemaBuilder
 }
 
 func TestMakeBySchema(t *testing.T) {
@@ -94,5 +104,34 @@ func TestFactoryRegister(t *testing.T) {
 	assert.Equal(t, "models.user_car", userCar.GetFullname(), "The return fullname of model should be models.user_car")
 	assert.Equal(t, 3, len(userCar.GetAttributeNames()), "The return attribute names count of model should be 3")
 	assert.Equal(t, 3, len(userCar.GetAttributes()), "The return attribute names count of model should be 3")
+}
 
+func TestFactoryMigrate(t *testing.T) {
+	registerModelsForTest()
+	sch := getSchema()
+	models := []string{"user", "member", "manu", "car", "user_car", "null"}
+	for _, name := range models {
+		name = fmt.Sprintf("models.%s", name)
+		err := model.Class(name).Migrate(sch, true)
+		assert.Nil(t, err, "create %s the return value should be nil", name)
+	}
+}
+
+// Utils ...
+
+func registerModelsForTest() {
+	modelNames := []string{"member", "manu", "car", "user_car", "null"}
+	for _, name := range modelNames {
+		args := []interface{}{}
+		if schema, has := models.SchemaFileContents[fmt.Sprintf("models/%s.json", name)]; has {
+			args = append(args, schema)
+		}
+		if flow, has := models.SchemaFileContents[fmt.Sprintf("models/%s.flow.json", name)]; has {
+			args = append(args, flow)
+		}
+		if len(args) < 1 {
+			continue
+		}
+		model.MakeUsing(modelTestMaker, fmt.Sprintf("models/%s", name), args...)
+	}
 }

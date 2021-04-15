@@ -42,7 +42,17 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 	// `id` bigint(20) unsigned NOT NULL,
 	typ := grammarSQL.getType(column)
 
-	defaultValue := utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", quoter.VAL(column.Default)), "").(string)
+	defaultValue, ok := column.Default.(string)
+	if ok {
+		defaultValue = grammarSQL.VAL(defaultValue)
+	} else {
+		defaultValue = fmt.Sprintf("%v", column.Default)
+	}
+	if column.DefaultRaw != "" {
+		defaultValue = column.DefaultRaw
+	}
+
+	defaultValue = utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %v", defaultValue), "").(string)
 	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)

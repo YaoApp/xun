@@ -67,6 +67,7 @@ type Blueprint interface {
 	HasIndex(name ...string) bool
 	AddIndex(name string, columnNames ...string) *Table
 	AddUnique(name string, columnNames ...string) *Table
+	AddFulltext(name string, columnNames ...string) *Table
 	RenameIndex(old string, new string) *Index
 	DropIndex(name ...string)
 

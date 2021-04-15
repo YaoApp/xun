@@ -7,12 +7,12 @@
   },
   "columns": [
     { "name": "id" },
-    { "name": "nickname", "comment": "The user nick name", "index": "index" },
+    { "name": "nickname", "comment": "The user nick name", "index": true },
     { "name": "bio", "type": "text", "comment": "The user bio" },
-    { "name": "gender", "type": "tinyInteger", "default": 3, "index": "index" },
+    { "name": "gender", "type": "tinyInteger", "default": 3, "index": true },
     { "name": "address", "length": 300, "comment": "The address" },
-    { "name": "score", "precision": 5, "scale": 2, "index": "index" },
-    { "name": "status", "default": "WAITING", "index": "index" }
+    { "name": "score", "precision": 5, "scale": 2, "index": true },
+    { "name": "status", "default": "WAITING", "index": true }
   ],
   "relationships": [
     {
