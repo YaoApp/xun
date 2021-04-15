@@ -93,21 +93,17 @@ func (model *Model) Get(name string) interface{} {
 }
 
 // Set set the Attribute value
-func Set(model Setter, name string, value interface{}) {
+func (model *Model) Set(name string, value interface{}, v ...interface{}) *Model {
 	attr := model.GetAttr(name)
 	if attr == nil {
-		return
+		return model
 	}
 	attr.Value = value
 	model.SetAttr(name, *attr)
-	if attr.Column.Field != "" {
-		setFieldValue(model, attr.Column.Field, value)
-	}
-}
 
-// Set set the Attribute value
-func (model *Model) Set(name string, value interface{}) *Model {
-	Set(model, name, value)
+	if attr.Column.Field != "" && len(v) > 0 {
+		setFieldValue(v[0], attr.Column.Field, value)
+	}
 	return model
 }
 
@@ -132,16 +128,11 @@ func (model *Model) Primary() string {
 }
 
 // Fill to fill attributes into model
-func Fill(model Setter, attributes interface{}) {
+func (model *Model) Fill(attributes interface{}, v ...interface{}) *Model {
 	row := xun.MakeRow(attributes)
 	for name, value := range row {
-		Set(model, name, value)
+		model.Set(name, value, v...)
 	}
-}
-
-// Fill to fill attributes into model
-func (model *Model) Fill(attributes interface{}) *Model {
-	Fill(model, attributes)
 	return model
 }
 

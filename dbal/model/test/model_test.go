@@ -96,7 +96,8 @@ func TestModelFillStructXunR(t *testing.T) {
 		"address":   "Cecilia Chapman 711-2880 Nulla St. Mankato Mississippi 96522 (257) 563-7401",
 		"status":    "DONE",
 		"not_found": "something",
-	})
+	}, &user)
+
 	assert.Equal(t, "Ava", user.Get("nickname"), "The nickname should be Ava")
 	assert.Equal(t, "Ava", user.Nickname, "The nickname should be Ava")
 	assert.Equal(t, "Yao Framework CEO", user.Get("bio"), "The nickname should be Yao Framework CEO")
@@ -114,7 +115,7 @@ func TestModelFillStructUser(t *testing.T) {
 		Status:   "DONE",
 	}
 	user := models.MakeUser(modelTestMaker)
-	user.Fill(row)
+	user.Fill(row, &user)
 	assert.Equal(t, "Ava", user.Get("nickname"), "The nickname should be Ava")
 	assert.Equal(t, "Ava", user.Nickname, "The nickname should be Ava")
 	assert.Equal(t, 99.26, user.Get("score"), "The score should be 99.26")
