@@ -37,12 +37,21 @@ func (column *Column) merge(columns ...Column) *Column {
 		column.setString(&column.Description, new.Description)
 		column.setInterface(&column.Default, new.Default)
 		column.setStringSlice(&column.Option, new.Option)
+		column.setBool(&column.Index, new.Index)
+		column.setBool(&column.Unique, new.Unique)
+		column.setBool(&column.Primary, new.Primary)
 	}
 	return column
 }
 
 func (column *Column) setString(v *string, value string) {
 	if value != "" {
+		*v = value
+	}
+}
+
+func (column *Column) setBool(v *bool, value bool) {
+	if value == true {
 		*v = value
 	}
 }

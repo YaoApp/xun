@@ -266,6 +266,10 @@ func setupAttributes(model *Model, schema *Schema) {
 
 	// init
 	model.attributes = map[string]Attribute{}
+	model.columns = []*Column{}
+	model.primary = ""
+	model.searchable = []string{}
+	searchable := map[string]bool{}
 
 	// set Columns
 	for i, column := range schema.Columns {
@@ -277,6 +281,17 @@ func setupAttributes(model *Model, schema *Schema) {
 			Relationship: nil,
 		}
 		model.attributes[name] = attr
+		model.columns = append(model.columns, &schema.Columns[i])
+
+		// set indexes
+		if column.Index || column.Unique || column.Primary || column.Type == "ID" {
+			searchable[column.Name] = true
+		}
+
+		if column.Primary || column.Type == "ID" {
+			model.primaryKeys = append(model.primaryKeys, column.Name)
+		}
+
 	}
 
 	// set Relationships
@@ -290,6 +305,24 @@ func setupAttributes(model *Model, schema *Schema) {
 		}
 		model.attributes[name] = attr
 	}
+
+	// set indexes
+	for _, index := range schema.Indexes {
+		for _, column := range index.Columns {
+			searchable[column] = true
+		}
+	}
+
+	// set searchable
+	for column := range searchable {
+		model.searchable = append(model.searchable, column)
+	}
+
+	// set primary
+	if len(model.primaryKeys) > 0 {
+		model.primary = model.primaryKeys[0]
+	}
+
 }
 
 func (factory *Factory) createTable(tableName string, sch schema.Schema) error {

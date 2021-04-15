@@ -90,12 +90,24 @@ func (model *Model) Set(name string, value interface{}) *Model {
 	return model
 }
 
-// Columns get the columns of model  struct
-func (model *Model) Columns() {
+// Columns get the columns of model struct
+func (model *Model) Columns() []*Column {
+	return model.columns
 }
 
-// Indexes get the indexes of model  struct
-func (model *Index) Indexes() {
+// Searchable get the the searchable columns
+func (model *Model) Searchable() []string {
+	return model.searchable
+}
+
+// PrimaryKeys get the primary key columns
+func (model *Model) PrimaryKeys() []string {
+	return model.primaryKeys
+}
+
+// Primary get the fisrt primary key columns
+func (model *Model) Primary() string {
+	return model.primary
 }
 
 // Fill to fill attributes into model

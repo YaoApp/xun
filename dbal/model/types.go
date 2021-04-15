@@ -10,11 +10,15 @@ import (
 
 // Model the xun model
 type Model struct {
-	namespace  string
-	name       string
-	attributes map[string]Attribute
-	query      query.Query
-	schema     schema.Schema
+	namespace   string
+	name        string
+	attributes  map[string]Attribute
+	columns     []*Column
+	searchable  []string
+	primary     string
+	primaryKeys []string
+	query       query.Query
+	schema      schema.Schema
 }
 
 // Factory xun model factory
