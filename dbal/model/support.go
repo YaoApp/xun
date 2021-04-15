@@ -225,6 +225,8 @@ func fieldToColumn(field reflect.StructField) *Column {
 	if column.Name == "" {
 		column.Name = xun.ToSnakeCase(field.Name)
 	}
+
+	column.Field = field.Name
 	return &column
 }
 
@@ -436,4 +438,27 @@ func makeByStruct(query query.Query, schema schema.Schema, v interface{}) {
 		model.query = query
 		model.schema = schema
 	})
+}
+
+func setFieldValue(v interface{}, field string, value interface{}) {
+	reflectPtr := reflect.ValueOf(v)
+	if reflectPtr.Kind() != reflect.Ptr {
+		panic(fmt.Errorf("v is %s, should be a struct pointer", reflectPtr.Type().String()))
+	}
+
+	reflectField := reflectPtr.Elem().FieldByName(field)
+	if reflectField.Kind() == reflect.Invalid {
+		return
+	}
+
+	if !reflectField.CanSet() {
+		return
+	}
+
+	reflectValue := reflect.ValueOf(value)
+	if reflectValue.Kind() != reflectField.Kind() {
+		panic(fmt.Errorf("field %s value type is %s, should be %s", field, reflectValue.Kind().String(), reflectField.Kind().String()))
+	}
+
+	reflectField.Set(reflect.ValueOf(value))
 }

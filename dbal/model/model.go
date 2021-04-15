@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -69,24 +70,44 @@ func (model *Model) GetAttributeNames() []string {
 }
 
 // GetAttr get the Attribute by name
-func (model *Model) GetAttr(name string) Attribute {
+func (model *Model) GetAttr(name string) *Attribute {
 	attr, ok := model.attributes[name]
 	if !ok {
-		panic(fmt.Errorf("The %s attribute does not exists", name))
+		return nil
 	}
-	return attr
+	return &attr
+}
+
+// SetAttr set the Attribute by name
+func (model *Model) SetAttr(name string, attr Attribute) {
+	model.attributes[name] = attr
 }
 
 // Get get the Attribute value
 func (model *Model) Get(name string) interface{} {
+	attr := model.GetAttr(name)
+	if attr == nil {
+		return nil
+	}
 	return model.GetAttr(name).Value
 }
 
 // Set set the Attribute value
-func (model *Model) Set(name string, value interface{}) *Model {
+func Set(model Setter, name string, value interface{}) {
 	attr := model.GetAttr(name)
+	if attr == nil {
+		return
+	}
 	attr.Value = value
-	model.attributes[name] = attr
+	model.SetAttr(name, *attr)
+	if attr.Column.Field != "" {
+		setFieldValue(model, attr.Column.Field, value)
+	}
+}
+
+// Set set the Attribute value
+func (model *Model) Set(name string, value interface{}) *Model {
+	Set(model, name, value)
 	return model
 }
 
@@ -111,7 +132,17 @@ func (model *Model) Primary() string {
 }
 
 // Fill to fill attributes into model
-func (model *Model) Fill(attributes interface{}) {
+func Fill(model Setter, attributes interface{}) {
+	row := xun.MakeRow(attributes)
+	for name, value := range row {
+		Set(model, name, value)
+	}
+}
+
+// Fill to fill attributes into model
+func (model *Model) Fill(attributes interface{}) *Model {
+	Fill(model, attributes)
+	return model
 }
 
 // Create to create one model

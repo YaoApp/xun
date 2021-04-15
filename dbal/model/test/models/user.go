@@ -23,6 +23,18 @@ func init() {
 	)
 }
 
+// Fill to fill attributes into model(overwrite)
+func (user *User) Fill(attributes interface{}) *User {
+	model.Fill(user, attributes)
+	return user
+}
+
+// Set set the Attribute value (overwrite)
+func (user *User) Set(name string, value interface{}) *User {
+	model.Set(user, name, value)
+	return user
+}
+
 // MakeUser create a new user instance
 func MakeUser(maker ...model.MakerFunc) User {
 	user := User{}

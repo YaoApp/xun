@@ -87,6 +87,7 @@ type Column struct {
 	Index       bool         `json:"index,omitempty"`
 	Unique      bool         `json:"unique,omitempty"`
 	Primary     bool         `json:"primary,omitempty"`
+	Field       string       // the field name
 }
 
 // Validation the field validation struct

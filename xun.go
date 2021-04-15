@@ -321,6 +321,9 @@ func structToR(value interface{}) R {
 	reflectType := reflectValue.Type()
 	if reflectValue.Kind() == reflect.Struct {
 		for i := 0; i < reflectValue.NumField(); i++ {
+			if !reflectValue.Field(i).CanInterface() {
+				continue
+			}
 			tag := GetTagName(reflectType.Field(i), "json")
 			field := reflectValue.Field(i).Interface()
 			if tag != "" && tag != "-" {
