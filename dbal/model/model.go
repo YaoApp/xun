@@ -33,7 +33,10 @@ func (model *Model) GetFullname() string {
 
 // GetQuery get the query interface
 func (model *Model) GetQuery() query.Query {
-	return model.query
+	if model.table.Name == "" {
+		return model.query
+	}
+	return model.query.Table(model.table.Name)
 }
 
 // GetSchema get the query interface
@@ -58,6 +61,19 @@ func (model *Model) GetAttributes() []Attribute {
 		attrs = append(attrs, attr)
 	}
 	return attrs
+}
+
+// GetValues get values
+func (model *Model) GetValues(with ...bool) xun.R {
+	row := xun.MakeRow()
+	for _, column := range model.columns {
+		if attr, has := model.attributes[column.Name]; has {
+			if attr.Value != nil {
+				row[column.Name] = attr.Value
+			}
+		}
+	}
+	return row
 }
 
 // GetAttributeNames get all of the attribute name
@@ -136,12 +152,32 @@ func (model *Model) Fill(attributes interface{}, v ...interface{}) *Model {
 	return model
 }
 
-// Create to create one model
-func (model *Model) Create(attributes interface{}) {
+// Save to create or update one model
+func (model *Model) Save() error {
+
+	if model.table.Name == "" {
+		return fmt.Errorf("table name is nil, binding table first")
+	}
+
+	row := model.GetValues()
+	qb := model.query.Table(model.table.Name)
+
+	if len(model.uniqueKeys) == 0 {
+		return qb.Insert(row)
+	}
+
+	var err error
+	if row.Has(model.primary) {
+		_, err = qb.Upsert(row, model.primary, row)
+	} else {
+		_, err = qb.Upsert(row, model.uniqueKeys, row)
+	}
+
+	return err
 }
 
-// Save to create or update one model
-func (model *Model) Save() {
+// Create to create one model
+func (model *Model) Create(attributes interface{}) {
 }
 
 // Destroy deleting an dxisting model by its Primary Key

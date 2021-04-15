@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -121,4 +122,39 @@ func TestModelFillStructUser(t *testing.T) {
 	assert.Equal(t, 99.26, user.Get("score"), "The score should be 99.26")
 	assert.Equal(t, 99.26, user.Score, "The score should be 99.26")
 	assert.Equal(t, nil, user.Get("not_found"), `The not_found should be nil")`)
+}
+
+func TestModelSave(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+
+	// Insert
+	err := user.Fill(xun.R{
+		"nickname":  "Ava",
+		"bio":       "Yao Framework CEO",
+		"user_id":   1,
+		"gender":    0,
+		"vote":      100,
+		"score":     99.26,
+		"address":   "Cecilia Chapman 711-2880 Nulla St. Mankato Mississippi 96522 (257) 563-7401",
+		"status":    "DONE",
+		"not_found": "something",
+	}, &user).Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+
+	// update
+	err = user.
+		Set("score", 99.98, &user).
+		Set("gender", 2, &user).
+		Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	row = user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
 }

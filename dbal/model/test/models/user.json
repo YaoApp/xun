@@ -7,7 +7,7 @@
   },
   "columns": [
     { "name": "id" },
-    { "name": "nickname", "comment": "The user nick name", "index": true },
+    { "name": "nickname", "comment": "The user nick name", "unique": true },
     { "name": "bio", "type": "text", "comment": "The user bio" },
     { "name": "gender", "type": "tinyInteger", "default": 3, "index": true },
     { "name": "address", "length": 300, "comment": "The address" },

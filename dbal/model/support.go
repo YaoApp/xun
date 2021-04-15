@@ -271,6 +271,7 @@ func setupAttributes(model *Model, schema *Schema) {
 	model.columns = []*Column{}
 	model.primary = ""
 	model.searchable = []string{}
+	model.uniqueKeys = []string{}
 	searchable := map[string]bool{}
 
 	// set Columns
@@ -294,6 +295,10 @@ func setupAttributes(model *Model, schema *Schema) {
 			model.primaryKeys = append(model.primaryKeys, column.Name)
 		}
 
+		if column.Unique {
+			model.uniqueKeys = append(model.uniqueKeys, column.Name)
+		}
+
 	}
 
 	// set Relationships
@@ -312,7 +317,14 @@ func setupAttributes(model *Model, schema *Schema) {
 	for _, index := range schema.Indexes {
 		for _, column := range index.Columns {
 			searchable[column] = true
+			if index.Type == "primary" {
+				model.primaryKeys = append(model.primaryKeys, column)
+			}
+			if index.Type == "unique" {
+				model.uniqueKeys = append(model.uniqueKeys, column)
+			}
 		}
+
 	}
 
 	// set searchable
@@ -324,6 +336,9 @@ func setupAttributes(model *Model, schema *Schema) {
 	if len(model.primaryKeys) > 0 {
 		model.primary = model.primaryKeys[0]
 	}
+
+	// set table
+	model.table = &schema.Table
 
 }
 

@@ -1,4 +1,4 @@
-// Package models  Thu Apr 15 12:00:17 CST 2021
+// Package models  Thu Apr 15 20:22:39 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -186,7 +186,7 @@ var SchemaFileContents = map[string][]byte{
   },
   "columns": [
     { "name": "id" },
-    { "name": "nickname", "comment": "The user nick name", "index": true },
+    { "name": "nickname", "comment": "The user nick name", "unique": true },
     { "name": "bio", "type": "text", "comment": "The user bio" },
     { "name": "gender", "type": "tinyInteger", "default": 3, "index": true },
     { "name": "address", "length": 300, "comment": "The address" },

@@ -224,6 +224,12 @@ func (row R) Get(key interface{}) interface{} {
 	return nil
 }
 
+// Has detemind if has the given key
+func (row R) Has(key string) bool {
+	_, has := row[key]
+	return has
+}
+
 // ToMap cast to map[string]interface{}
 func (row R) ToMap() map[string]interface{} {
 	res := map[string]interface{}{}

@@ -13,10 +13,12 @@ type Model struct {
 	namespace   string
 	name        string
 	attributes  map[string]Attribute
+	table       *Table
 	columns     []*Column
 	searchable  []string
 	primary     string
 	primaryKeys []string
+	uniqueKeys  []string
 	query       query.Query
 	schema      schema.Schema
 }
