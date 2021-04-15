@@ -192,7 +192,7 @@ func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
 }
 
 func (factory *Factory) diffSchema(schema schema.Schema, force bool) {
-	panic(fmt.Errorf(`This feature not support yet. you can run Migrate set refresh is true. model.Class("user").Migrate(sch, true) `))
+	panic(fmt.Errorf(`This feature does not support it yet. It working when the first parameter refresh is true.(model.Class("user").Migrate(schema, true))`))
 }
 
 // GetMethods get the model methods for auto-generate the APIs

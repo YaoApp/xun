@@ -158,6 +158,14 @@ func TestFactoryMigrate(t *testing.T) {
 	}
 }
 
+func TestFactoryMigrateError(t *testing.T) {
+	registerModelsForTest()
+	assert.PanicsWithError(t, `This feature does not support it yet. It working when the first parameter refresh is true.(model.Class("user").Migrate(schema, true))`, func() {
+		sch := getSchema()
+		model.Class("models.user").Migrate(sch)
+	})
+}
+
 // Utils ...
 
 func registerModelsForTest() {
