@@ -106,6 +106,47 @@ func TestFactoryRegister(t *testing.T) {
 	assert.Equal(t, 3, len(userCar.GetAttributes()), "The return attribute names count of model should be 3")
 }
 
+func TestFactoryClass(t *testing.T) {
+	registerModelsForTest()
+	models := []string{"user", "member", "manu", "car", "user_car", "null"}
+	for _, name := range models {
+		name = fmt.Sprintf("models.%s", name)
+		factory := model.Class(name)
+		model := model.GetModel(factory.Model)
+		assert.True(t, name == model.GetFullname(), "the  model.GetFullname() shoud be %s ", name)
+	}
+}
+
+func TestFactoryClassError(t *testing.T) {
+	registerModelsForTest()
+	assert.PanicsWithError(t, "The model (notfound) doesn't register", func() {
+		model.Class("notfound")
+	})
+}
+
+func TestFactoryGetModelError(t *testing.T) {
+	registerModelsForTest()
+	assert.PanicsWithError(t, "v is (*string) not a model", func() {
+		v := "notfound"
+		model.GetModel(&v)
+	})
+}
+
+func TestFactorySetModelError(t *testing.T) {
+	new := model.Model{}
+	assert.PanicsWithError(t, "v is (*string) not a model", func() {
+		v := "notfound"
+		model.SetModel(&v, new)
+	})
+}
+
+func TestFactoryNewError(t *testing.T) {
+	assert.PanicsWithError(t, "The model type (string) must be a pointer", func() {
+		v := "notfound"
+		model.Class("models.user").New(v)
+	})
+}
+
 func TestFactoryMigrate(t *testing.T) {
 	registerModelsForTest()
 	sch := getSchema()

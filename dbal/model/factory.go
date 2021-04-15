@@ -51,7 +51,7 @@ func GetModel(v interface{}) Model {
 			return reflectValue.FieldByName("Model").Interface().(Model)
 		}
 	}
-	panic(fmt.Errorf("The type  (%s) can't be register", reflect.TypeOf(v).String()))
+	panic(fmt.Errorf("v is (%s) not a model", reflect.TypeOf(v).String()))
 }
 
 // SetModel set the model instance pointer
@@ -73,7 +73,7 @@ func SetModel(v interface{}, model interface{}) {
 		return
 	}
 
-	panic(fmt.Errorf("The type (%s) can't be set", reflect.TypeOf(v).String()))
+	panic(fmt.Errorf("v is (%s) not a model", reflect.TypeOf(v).String()))
 }
 
 // New build a model instance quickly
@@ -110,9 +110,11 @@ func (factory *Factory) Migrate(schema schema.Schema, args ...bool) error {
 		if err != nil {
 			return err
 		}
+
+		return nil
 	}
 
-	// next
+	// @todo
 	factory.diffSchema(schema, force)
 	return nil
 }
@@ -190,6 +192,7 @@ func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
 }
 
 func (factory *Factory) diffSchema(schema schema.Schema, force bool) {
+	panic(fmt.Errorf(`This feature not support yet. you can run Migrate set refresh is true. model.Class("user").Migrate(sch, true) `))
 }
 
 // GetMethods get the model methods for auto-generate the APIs
