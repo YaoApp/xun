@@ -108,6 +108,11 @@ func (model *Model) Clean(name string) *Model {
 	return model
 }
 
+// Has datermind if the model has the value
+func (model *Model) Has(name string) bool {
+	return model.values.Has(name)
+}
+
 // Get get the Attribute value
 func (model *Model) Get(name string) interface{} {
 	attr := model.GetAttr(name)
@@ -216,15 +221,18 @@ func (model *Model) Save(v ...interface{}) error {
 	return err
 }
 
+// MustFind find by primary key
+func (model *Model) MustFind(id interface{}, v ...interface{}) *Model {
+	_, err := model.Find(id, v...)
+	utils.PanicIF(err)
+	return model
+}
+
 // Find find by primary key
 func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 
-	if model.primary == "" {
-		return nil, fmt.Errorf("The primary key does not set")
-	}
-
-	if model.table.Name == "" {
-		return nil, fmt.Errorf("The table does not set")
+	if model.Invalid() != nil {
+		return nil, model.Invalid()
 	}
 
 	qb := model.query.Table(model.table.Name)
@@ -252,12 +260,47 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 	return row, err
 }
 
-// Create to create one model
-func (model *Model) Create(attributes interface{}) {
+// Destroy deleting an dxisting model by its Primary Key
+func (model *Model) Destroy(args ...interface{}) error {
+
+	if model.Invalid() != nil {
+		return model.Invalid()
+	}
+
+	ids := prepareDestroyArgs(args...)
+	if len(ids) == 0 && !model.Has(model.primary) {
+		return fmt.Errorf("the primary key does not set")
+	}
+
+	if len(ids) == 0 {
+		ids = append(ids, model.Get(model.primary))
+	}
+
+	qb := model.query.Table(model.table.Name).WhereIn(model.primary, ids)
+	if model.softDeletes {
+		_, err := qb.Update(xun.R{"deleted_at": time.Now().Format("2006-01-02 15:04:05.000000")})
+		return err
+	}
+	_, err := qb.Delete()
+
+	return err
 }
 
-// Destroy deleting an dxisting model by its Primary Key
-func (model *Model) Destroy(id interface{}) {
+// Invalid determine if the model is invalid
+func (model *Model) Invalid() error {
+	if model.primary == "" {
+		return fmt.Errorf("The primary key does not set")
+	}
+
+	if model.table.Name == "" {
+		return fmt.Errorf("The table does not set")
+	}
+
+	return nil
+}
+
+// Create to create one model
+func (model *Model) Create(attributes interface{}) {
 }
 
 // Restore To restore a soft deleted model,

@@ -121,6 +121,21 @@ func prepareBlueprintArgs(method string, column *Column) []reflect.Value {
 	return in
 }
 
+func prepareDestroyArgs(args ...interface{}) []interface{} {
+	if len(args) == 1 {
+		reflectValue := reflect.ValueOf(args[0])
+		if reflectValue.Kind() == reflect.Slice {
+			ids := []interface{}{}
+			for i := 0; i < reflectValue.Len(); i++ {
+				ids = append(ids, reflectValue.Index(i).Interface())
+			}
+			return ids
+		}
+		return args
+	}
+	return args
+}
+
 func getTypeName(v interface{}) string {
 	return reflect.TypeOf(v).String()
 }

@@ -332,9 +332,83 @@ func TestModelSaveBindStruct(t *testing.T) {
 		Set("bio", "Yao Framework CEO").
 		Save(&row)
 
-	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.Equal(t, nil, err, `The return value should be nil`)
 	assert.Equal(t, 1, row.ID, `The id should be 1")`)
 	assert.Equal(t, "Yao Framework CEO", row.Bio, `The bio should be Yao Framework CEO")`)
 	assert.Equal(t, "Cecilia Chapman 711-2880 Nulla St.", row.Address, `The address should be Cecilia Chapman 711-2880 Nulla St.")`)
 	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Score), `The score  should be 99.98")`)
+}
+
+func TestModelDestory(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	assert.False(t, user.MustFind(1).IsEmpty(), `The user table should have 1 row`)
+
+	err := user.MustFind(1).Destroy()
+	assert.Equal(t, nil, err, `The return value should be nil"`)
+	assert.True(t, user.MustFind(1).IsEmpty(), `The return value should be true"`)
+}
+
+func TestModelDestoryByID(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	assert.False(t, user.MustFind(1).IsEmpty(), `The user table should have 1 row`)
+
+	err := user.Destroy(1)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, user.MustFind(1).IsEmpty(), `The return value should be true"`)
+}
+
+func TestModelDestoryByIDs(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	err := user.Fill(xun.R{
+		"nickname": "Ava",
+		"vote":     100,
+		"score":    29.99,
+		"bio":      "Yao Framework CEO",
+		"address":  "Cecilia Chapman 711-2880 Nulla St.",
+	}).Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.False(t, user.MustFind(1).IsEmpty(), `The user table id = 1 should not empty `)
+	assert.False(t, user.MustFind(2).IsEmpty(), `The user table id = 2 should not empty`)
+
+	err = user.Destroy([]int{1, 2})
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, user.MustFind(1).IsEmpty(), `The return value should be true"`)
+	assert.True(t, user.MustFind(2).IsEmpty(), `The return value should be true"`)
+}
+
+func TestModelDestoryByIDsStyle2(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	err := user.Fill(xun.R{
+		"nickname": "Ava",
+		"vote":     100,
+		"score":    29.99,
+		"bio":      "Yao Framework CEO",
+		"address":  "Cecilia Chapman 711-2880 Nulla St.",
+	}).Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.False(t, user.MustFind(1).IsEmpty(), `The user table id = 1 should not empty `)
+	assert.False(t, user.MustFind(2).IsEmpty(), `The user table id = 2 should not empty`)
+
+	err = user.Destroy(1, 2)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, user.MustFind(1).IsEmpty(), `The return value should be true"`)
+	assert.True(t, user.MustFind(2).IsEmpty(), `The return value should be true"`)
+}
+
+func TestModelDestorySoftDeletes(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	assert.False(t, car.MustFind(1).IsEmpty(), `The car table should have 1 row`)
+
+	err := car.MustFind(1).Destroy()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
+
+	row := car.GetQuery().Select("*").Where("id", 1).MustFirst()
+	assert.Equal(t, int64(1), row.Get("id"), `The return value should be 1")`)
+	assert.NotNil(t, row.Get("deleted_at"), `The return value should be datetime")`)
 }
