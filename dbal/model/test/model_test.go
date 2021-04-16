@@ -193,6 +193,22 @@ func TestModelFindBind(t *testing.T) {
 	assert.Equal(t, "admin", user.Nickname, `The return nickname should be admin")`)
 }
 
+func TestModelFindBindStruct(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	row := struct {
+		ID       int
+		Nickname string
+	}{}
+	_, err := user.Find(1, &row)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1")`)
+	assert.Equal(t, 1, row.ID, `The return id should be 1")`)
+	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
+	assert.Equal(t, "admin", row.Nickname, `The return nickname should be admin")`)
+}
+
 func TestModelFindBindEmpty(t *testing.T) {
 	registerModelsForTest()
 	TestFactoryMigrate(t)
