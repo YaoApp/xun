@@ -43,6 +43,14 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 	typ := grammarSQL.getType(column)
 
 	defaultValue := grammarSQL.GetDefaultValue(column)
+
+	// default now() -> default (datetime('now','localtime'))
+	if column.Type == "timestamp" && defaultValue != "" {
+		if strings.Contains(strings.ToLower(defaultValue), "now()") {
+			defaultValue = "DEFAULT (datetime('now','localtime'))"
+		}
+	}
+
 	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)

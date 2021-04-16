@@ -217,3 +217,12 @@ func TestModelFindBindEmpty(t *testing.T) {
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.True(t, user.IsEmpty(), `The return model should be empty")`)
 }
+
+func TestModelFindSoftDeletes(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	row, err := car.Find(2)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.True(t, row.IsEmpty(), `The return model should be empty")`)
+}

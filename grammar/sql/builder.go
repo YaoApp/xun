@@ -88,16 +88,19 @@ func (grammarSQL SQL) getType(column *dbal.Column) string {
 
 // GetDefaultValue get the default value
 func (grammarSQL SQL) GetDefaultValue(column *dbal.Column) string {
-	defaultValue, ok := column.Default.(string)
-	if ok {
-		defaultValue = grammarSQL.VAL(defaultValue)
-	} else {
-		defaultValue = fmt.Sprintf("%v", column.Default)
+	defaultValue := ""
+	if column.Default != nil {
+		if value, ok := column.Default.(string); ok {
+			defaultValue = grammarSQL.VAL(value)
+		} else {
+			defaultValue = fmt.Sprintf("%v", column.Default)
+		}
 	}
+
 	if column.DefaultRaw != "" {
 		defaultValue = column.DefaultRaw
 	}
-	return utils.GetIF(column.Default != nil, fmt.Sprintf("DEFAULT %s", defaultValue), "").(string)
+	return utils.GetIF(defaultValue != "", fmt.Sprintf("DEFAULT %s", defaultValue), "").(string)
 }
 
 // SQLAddIndex  return the add index sql for table create

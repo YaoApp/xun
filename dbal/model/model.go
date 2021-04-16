@@ -34,13 +34,6 @@ func (model *Model) GetFullname() string {
 
 // IsEmpty determine if the model is null
 func (model *Model) IsEmpty() bool {
-	// isEmpty := true
-	// for name, attr := range model.attributes {
-	// 	if attr.Value != nil {
-	// 		fmt.Printf("%s: %v(not nil)\n", name, attr.Value)
-	// 		return false
-	// 	}
-	// }
 	return model.values.IsEmpty()
 }
 
@@ -84,14 +77,6 @@ func (model *Model) CleanValues() *Model {
 
 // GetValues get values
 func (model *Model) GetValues(with ...bool) xun.R {
-	// row := xun.MakeRow()
-	// for _, column := range model.columns {
-	// 	if attr, has := model.attributes[column.Name]; has {
-	// 		if attr.Value != nil {
-	// 			row[column.Name] = attr.Value
-	// 		}
-	// 	}
-	// }
 	return model.values
 }
 
@@ -216,6 +201,10 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 		qb.Select(columns)
 	}
 
+	if model.softDeletes {
+		qb.WhereNull("deleted_at")
+	}
+
 	row, err := qb.Find(id, args...)
 	if err != nil {
 		return nil, err
@@ -227,22 +216,6 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 		Fill(row, v...)
 
 	return row, err
-}
-
-func (model *Model) explodeColumns(v interface{}) []string {
-	tags := getFieldTags(v)
-	columns := model.fliterColumns(tags)
-	return columns
-}
-
-func (model *Model) fliterColumns(input []string) []string {
-	result := []string{}
-	for _, v := range input {
-		if utils.StringHave(model.columnNames, v) {
-			result = append(result, v)
-		}
-	}
-	return result
 }
 
 // Create to create one model
@@ -318,4 +291,20 @@ func (model *Model) Flow(name string) interface{} {
 // FlowRaw process a flow by the given json description file and return the result
 func (model *Model) FlowRaw(flow []byte) interface{} {
 	return nil
+}
+
+func (model *Model) explodeColumns(v interface{}) []string {
+	tags := getFieldTags(v)
+	columns := model.fliterColumns(tags)
+	return columns
+}
+
+func (model *Model) fliterColumns(input []string) []string {
+	result := []string{}
+	for _, v := range input {
+		if utils.StringHave(model.columnNames, v) {
+			result = append(result, v)
+		}
+	}
+	return result
 }

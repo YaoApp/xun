@@ -21,6 +21,7 @@ type Model struct {
 	primaryKeys []string
 	uniqueKeys  []string
 	columnNames []string
+	softDeletes bool
 	query       query.Query
 	schema      schema.Schema
 }

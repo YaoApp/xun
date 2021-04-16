@@ -104,14 +104,19 @@ func prepareBlueprintArgs(method string, column *Column) []reflect.Value {
 			}
 		}
 		break
-	case "DateTime", "DateTimeTz", "Time", "TimeTz", "Timestamp", "TimestampTz", "Timestamps", "TimestampsTz", "SoftDeletes", "SoftDeletesTz":
+	case "DateTime", "DateTimeTz", "Time", "TimeTz", "Timestamp", "TimestampTz":
 		if column.Precision > 0 {
-			in = append(in, reflect.ValueOf(column.Length))
+			in = append(in, reflect.ValueOf(column.Precision))
 		}
 		break
 	case "Enum":
 		in = append(in, reflect.ValueOf(column.Option))
 		break
+	case "Timestamps", "TimestampsTz", "SoftDeletes", "SoftDeletesTz":
+		if column.Precision > 0 {
+			return []reflect.Value{reflect.ValueOf(column.Precision)}
+		}
+		return nil
 	}
 	return in
 }
@@ -264,18 +269,6 @@ func parseFieldTag(tag string) *Column {
 	return &column
 }
 
-func extendKeys(column Column, primaryKeys *[]string, uniqueKeys *[]string) {
-
-	if column.Primary || column.Type == "ID" {
-		*primaryKeys = append(*primaryKeys, column.Name)
-	}
-
-	if column.Unique {
-		*uniqueKeys = append(*uniqueKeys, column.Name)
-	}
-
-}
-
 func setupAttributes(model *Model, schema *Schema) {
 
 	// init
@@ -286,51 +279,32 @@ func setupAttributes(model *Model, schema *Schema) {
 	model.searchable = []string{}
 	model.uniqueKeys = []string{}
 	searchable := map[string]bool{}
+	model.softDeletes = false
 	model.primary = ""
 
-	// set Columns
-	for i, column := range schema.Columns {
-		name := column.Name
-		attr := Attribute{
-			Name:         column.Name,
-			Column:       &schema.Columns[i],
-			Relationship: nil,
-		}
-		model.attributes[name] = attr
-		model.columns = append(model.columns, &schema.Columns[i])
-		model.columnNames = append(model.columnNames, column.Name)
+	// setup option
+	setupOption(schema, &model.softDeletes)
 
-		// set indexes
-		if column.Index || column.Unique || column.Primary || column.Type == "ID" {
-			searchable[column.Name] = true
-		}
-
-		extendKeys(column, &model.primaryKeys, &model.uniqueKeys)
+	// setup Columns
+	for i := range schema.Columns {
+		setupColumn(&schema.Columns[i],
+			model.attributes,
+			&model.columns,
+			&model.columnNames,
+			&model.primaryKeys,
+			&model.uniqueKeys,
+			searchable,
+		)
 	}
 
-	// set Relationships
-	for i, relation := range schema.Relationships {
-		name := relation.Name
-		attr := Attribute{
-			Name:         relation.Name,
-			Relationship: &schema.Relationships[i],
-			Column:       nil,
-		}
-		model.attributes[name] = attr
+	// setup Relationships
+	for i := range schema.Relationships {
+		setupRelationship(&schema.Relationships[i], model.attributes)
 	}
 
 	// set indexes
-	for _, index := range schema.Indexes {
-		for _, column := range index.Columns {
-			searchable[column] = true
-			if index.Type == "primary" {
-				model.primaryKeys = append(model.primaryKeys, column)
-			}
-			if index.Type == "unique" {
-				model.uniqueKeys = append(model.uniqueKeys, column)
-			}
-		}
-
+	for i := range schema.Indexes {
+		setupIndex(&schema.Indexes[i], &model.primaryKeys, &model.uniqueKeys, searchable)
 	}
 
 	// set searchable
@@ -348,8 +322,89 @@ func setupAttributes(model *Model, schema *Schema) {
 
 }
 
+func setupIndex(index *Index, primaryKeys *[]string, uniqueKeys *[]string, searchable map[string]bool) {
+	for _, column := range index.Columns {
+		searchable[column] = true
+		if index.Type == "primary" {
+			*primaryKeys = append(*primaryKeys, column)
+		}
+		if index.Type == "unique" {
+			*uniqueKeys = append(*uniqueKeys, column)
+		}
+	}
+
+}
+func setupOption(schema *Schema, softDeletes *bool) {
+	if schema.Option.Timestamps {
+		schema.Columns = append(schema.Columns,
+			Column{
+				Name:       "created_at",
+				Type:       "timestamp",
+				DefaultRaw: "NOW()",
+				Nullable:   true,
+				Index:      true,
+			},
+			Column{
+				Name:     "updated_at",
+				Type:     "timestamp",
+				Nullable: true,
+				Index:    true,
+			},
+		)
+	}
+
+	*softDeletes = false
+	if schema.Option.SoftDeletes {
+		schema.Columns = append(schema.Columns,
+			Column{
+				Name:     "deleted_at",
+				Type:     "timestamp",
+				Nullable: true,
+				Index:    true,
+			},
+		)
+		*softDeletes = true
+	}
+}
+
+func setupColumn(column *Column, attributes map[string]Attribute, columns *[]*Column, columnNames *[]string, primaryKeys *[]string, uniqueKeys *[]string, searchable map[string]bool) {
+	name := column.Name
+	attr := Attribute{
+		Name:         column.Name,
+		Column:       column,
+		Relationship: nil,
+	}
+	attributes[name] = attr
+	*columns = append(*columns, column)
+	*columnNames = append(*columnNames, column.Name)
+
+	// set indexes
+	if column.Index || column.Unique || column.Primary || column.Type == "ID" {
+		searchable[column.Name] = true
+	}
+
+	if column.Primary || column.Type == "ID" {
+		*primaryKeys = append(*primaryKeys, column.Name)
+	}
+
+	if column.Unique {
+		*uniqueKeys = append(*uniqueKeys, column.Name)
+	}
+}
+
+func setupRelationship(relationship *Relationship, attributes map[string]Attribute) {
+	name := relationship.Name
+	attr := Attribute{
+		Name:         relationship.Name,
+		Relationship: relationship,
+		Column:       nil,
+	}
+	attributes[name] = attr
+}
+
 func (factory *Factory) createTable(tableName string, sch schema.Schema) error {
 	return sch.CreateTable(tableName, func(table schema.Blueprint) {
+
 		// Columns
 		for _, column := range factory.Schema.Columns {
 			factory.setColumn(table, column)
@@ -367,7 +422,7 @@ func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
 	reflectTable := reflect.ValueOf(table)
 	methodName := xun.UpperFirst(column.Type)
 	method := reflectTable.MethodByName(methodName)
-	if method.Kind() == reflect.Func && column.Name != "" {
+	if method.Kind() == reflect.Func {
 		in := prepareBlueprintArgs(methodName, &column)
 		out := method.Call(in)
 		if len(out) != 1 {
@@ -375,6 +430,9 @@ func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
 		}
 		col, ok := out[0].Interface().(*schema.Column)
 		if !ok {
+			if _, ok := out[0].Interface().(map[string]*schema.Column); ok {
+				return
+			}
 			panic(fmt.Errorf("call %s(%s), return value is error", methodName, column.Name))
 		}
 		if column.Comment != "" {
@@ -399,7 +457,9 @@ func (factory *Factory) setColumn(table schema.Blueprint, column Column) {
 			col.SetDefault(column.Default)
 		}
 
-		if !column.Nullable {
+		if column.Nullable {
+			col.Null()
+		} else {
 			col.NotNull()
 		}
 	}

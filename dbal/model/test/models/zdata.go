@@ -1,4 +1,4 @@
-// Package models  Thu Apr 15 20:22:39 CST 2021
+// Package models  Fri Apr 16 15:33:19 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -32,7 +32,19 @@ var SchemaFileContents = map[string][]byte{
       "links": ["id", "car_id", "user_id", "id"]
     }
   ],
-  "indexes": [{ "name": "manu_id", "columns": ["manu_id"] }]
+  "indexes": [{ "name": "manu_id", "columns": ["manu_id"] }],
+  "option": {
+    "soft_deletes": true,
+    "timestamps": true
+  },
+  "values": [
+    { "name": "Tesla Model 3", "manu_id": 1, "deleted_at": null },
+    {
+      "name": "Tesla Cybertruck",
+      "manu_id": 1,
+      "deleted_at": "2020-03-04 22:24:39"
+    }
+  ]
 }
 `),
 	"models/manu.json": []byte(`

@@ -101,8 +101,8 @@ func TestFactoryRegisterError(t *testing.T) {
 func TestFactoryRegister(t *testing.T) {
 	car := model.MakeUsing(modelTestMaker, "models/car", models.SchemaFileContents["models/car.json"])
 	assert.Equal(t, "models.car", car.GetFullname(), "The return fullname of model should be models.car")
-	assert.Equal(t, 5, len(car.GetAttributeNames()), "The return attribute names count of model should be 5")
-	assert.Equal(t, 5, len(car.GetAttributes()), "The return attribute names count of model should be 5")
+	assert.Equal(t, 8, len(car.GetAttributeNames()), "The return attribute names count of model should be 8")
+	assert.Equal(t, 8, len(car.GetAttributes()), "The return attribute names count of model should be 8")
 
 	manu := model.MakeUsing(modelTestMaker, "models/manu", models.SchemaFileContents["models/manu.json"])
 	assert.Equal(t, "models.manu", manu.GetFullname(), "The return fullname of model should be models.car")

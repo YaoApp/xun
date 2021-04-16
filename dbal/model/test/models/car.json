@@ -24,5 +24,17 @@
       "links": ["id", "car_id", "user_id", "id"]
     }
   ],
-  "indexes": [{ "name": "manu_id", "columns": ["manu_id"] }]
+  "indexes": [{ "name": "manu_id", "columns": ["manu_id"] }],
+  "option": {
+    "soft_deletes": true,
+    "timestamps": true
+  },
+  "values": [
+    { "name": "Tesla Model 3", "manu_id": 1, "deleted_at": null },
+    {
+      "name": "Tesla Cybertruck",
+      "manu_id": 1,
+      "deleted_at": "2020-03-04 22:24:39"
+    }
+  ]
 }
