@@ -125,41 +125,6 @@ func TestModelFillStructUser(t *testing.T) {
 
 }
 
-func TestModelSave(t *testing.T) {
-	registerModelsForTest()
-	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
-
-	// Insert
-	err := user.Fill(xun.R{
-		"nickname":  "Ava",
-		"bio":       "Yao Framework CEO",
-		"user_id":   1,
-		"gender":    0,
-		"vote":      100,
-		"score":     99.26,
-		"address":   "Cecilia Chapman 711-2880 Nulla St. Mankato Mississippi 96522 (257) 563-7401",
-		"status":    "DONE",
-		"not_found": "something",
-	}, &user).Save()
-	assert.Equal(t, nil, err, `The return value should be nil")`)
-
-	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
-	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
-	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
-
-	// update
-	err = user.
-		Set("score", 99.98, &user).
-		Set("gender", 2, &user).
-		Save()
-	assert.Equal(t, nil, err, `The return value should be nil")`)
-
-	row = user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
-	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
-	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
-}
-
 func TestModelFind(t *testing.T) {
 	registerModelsForTest()
 	TestFactoryMigrate(t)
@@ -200,13 +165,15 @@ func TestModelFindBindStruct(t *testing.T) {
 	row := struct {
 		ID       int
 		Nickname string
+		Bio      string
 	}{}
 	_, err := user.Find(1, &row)
-	assert.Equal(t, nil, err, `The return error should be nil")`)
-	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1")`)
-	assert.Equal(t, 1, row.ID, `The return id should be 1")`)
-	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
-	assert.Equal(t, "admin", row.Nickname, `The return nickname should be admin")`)
+	assert.Equal(t, nil, err, `The return error should be nil`)
+	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1`)
+	assert.Equal(t, 1, row.ID, `The return id should be 1`)
+	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin`)
+	assert.Equal(t, "admin", row.Nickname, `The return nickname should be admin`)
+	assert.Equal(t, "the default adminstor", row.Bio, `The return bio should be the default adminstor"`)
 }
 
 func TestModelFindBindEmpty(t *testing.T) {
@@ -225,4 +192,106 @@ func TestModelFindSoftDeletes(t *testing.T) {
 	row, err := car.Find(2)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.True(t, row.IsEmpty(), `The return model should be empty")`)
+}
+
+func TestModelSave(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+
+	// Insert
+	err := user.Fill(xun.R{
+		"nickname":  "Ava",
+		"bio":       "Yao Framework CEO",
+		"user_id":   1,
+		"gender":    0,
+		"vote":      100,
+		"score":     99.26,
+		"address":   "Cecilia Chapman 711-2880 Nulla St. Mankato Mississippi 96522 (257) 563-7401",
+		"status":    "DONE",
+		"not_found": "something",
+	}, &user).Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+
+	// update
+	err = user.
+		Set("score", 99.98, &user).
+		Set("gender", 2, &user).
+		Save()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	row = user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+}
+
+func TestModelSavePrimary(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	_, err := user.Find(1, &user)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	err = user.
+		Set("address", "Cecilia Chapman 711-2880 Nulla St.").
+		Set("score", 99.98).
+		Set("bio", "Yao Framework CEO").
+		Save()
+
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	_, err = user.Find(1, &user)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.Equal(t, 1, user.ID, `The id should be 1")`)
+	assert.Equal(t, "Cecilia Chapman 711-2880 Nulla St.", user.Address, `The address should be Cecilia Chapman 711-2880 Nulla St.")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", user.Score), `The score  should be 99.98")`)
+}
+
+func TestModelSaveBind(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	_, err := user.Find(1, &user)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+
+	err = user.
+		Set("address", "Cecilia Chapman 711-2880 Nulla St.").
+		Set("score", 99.98).
+		Set("bio", "Yao Framework CEO").
+		Save(&user)
+
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.Equal(t, 1, user.ID, `The id should be 1")`)
+	assert.Equal(t, "Cecilia Chapman 711-2880 Nulla St.", user.Address, `The address should be Cecilia Chapman 711-2880 Nulla St.")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", user.Score), `The score  should be 99.98")`)
+}
+
+func TestModelSaveBindStruct(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	_, err := user.Find(1, &user)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	row := struct {
+		ID      int
+		Score   float64
+		Address string
+		Bio     string
+	}{}
+
+	err = user.
+		Set("address", "Cecilia Chapman 711-2880 Nulla St.").
+		Set("score", 99.98).
+		Set("bio", "Yao Framework CEO").
+		Save(&row)
+
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.Equal(t, 1, row.ID, `The id should be 1")`)
+	assert.Equal(t, "Yao Framework CEO", row.Bio, `The bio should be Yao Framework CEO")`)
+	assert.Equal(t, "Cecilia Chapman 711-2880 Nulla St.", row.Address, `The address should be Cecilia Chapman 711-2880 Nulla St.")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Score), `The score  should be 99.98")`)
 }

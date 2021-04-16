@@ -129,6 +129,19 @@ func (model *Model) Set(name string, value interface{}, v ...interface{}) *Model
 	return model
 }
 
+// SetBind set the Attribute value
+func (model *Model) SetBind(v interface{}, name string, value interface{}, fieldNames map[string]string) *Model {
+	attr := model.GetAttr(name)
+	if attr == nil {
+		return model
+	}
+	model.values[attr.Name] = value
+	if field, has := fieldNames[attr.Name]; has {
+		setFieldValue(v, field, value)
+	}
+	return model
+}
+
 // Columns get the columns of model struct
 func (model *Model) Columns() []*Column {
 	return model.columns
@@ -151,15 +164,28 @@ func (model *Model) Primary() string {
 
 // Fill to fill attributes into model
 func (model *Model) Fill(attributes interface{}, v ...interface{}) *Model {
+	if len(v) > 0 {
+		return model.FillBind(v[0], attributes)
+	}
 	row := xun.MakeRow(attributes)
 	for name, value := range row {
-		model.Set(name, value, v...)
+		model.Set(name, value)
+	}
+	return model
+}
+
+// FillBind to fill attributes into model and the give var
+func (model *Model) FillBind(v interface{}, attributes interface{}) *Model {
+	row := xun.MakeRow(attributes)
+	fieldNames := getFieldMaps(v)
+	for name, value := range row {
+		model.SetBind(v, name, value, fieldNames)
 	}
 	return model
 }
 
 // Save to create or update one model
-func (model *Model) Save() error {
+func (model *Model) Save(v ...interface{}) error {
 
 	if model.table.Name == "" {
 		return fmt.Errorf("table name is nil, binding table first")
@@ -179,6 +205,9 @@ func (model *Model) Save() error {
 		_, err = qb.Upsert(row, model.uniqueKeys, row)
 	}
 
+	if len(v) > 0 {
+		model.FillBind(v[0], row)
+	}
 	return err
 }
 

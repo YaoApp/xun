@@ -560,3 +560,20 @@ func getFieldTags(v interface{}) []string {
 	}
 	return tags
 }
+
+func getFieldMaps(v interface{}) map[string]string {
+	reflectPtr := reflect.ValueOf(v)
+	structValue := reflectPtr.Elem()
+	structType := reflect.TypeOf(structValue.Interface())
+	fieldMap := map[string]string{}
+	for i := 0; i < structType.NumField(); i++ {
+		if !structValue.Field(i).CanInterface() {
+			continue
+		}
+		tag := xun.GetTagName(structType.Field(i), "json")
+		if tag != "" && tag != "-" {
+			fieldMap[tag] = structType.Field(i).Name
+		}
+	}
+	return fieldMap
+}
