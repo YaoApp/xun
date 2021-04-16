@@ -13,12 +13,14 @@ type Model struct {
 	namespace   string
 	name        string
 	attributes  map[string]Attribute
+	values      xun.R
 	table       *Table
 	columns     []*Column
 	searchable  []string
 	primary     string
 	primaryKeys []string
 	uniqueKeys  []string
+	columnNames []string
 	query       query.Query
 	schema      schema.Schema
 }
@@ -145,7 +147,6 @@ type Relationship struct {
 type Attribute struct {
 	Name         string
 	Column       *Column
-	Value        interface{}
 	Relationship *Relationship
 }
 

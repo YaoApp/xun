@@ -280,11 +280,13 @@ func setupAttributes(model *Model, schema *Schema) {
 
 	// init
 	model.attributes = map[string]Attribute{}
+	model.values = xun.MakeRow()
 	model.columns = []*Column{}
-	model.primary = ""
+	model.columnNames = []string{}
 	model.searchable = []string{}
 	model.uniqueKeys = []string{}
 	searchable := map[string]bool{}
+	model.primary = ""
 
 	// set Columns
 	for i, column := range schema.Columns {
@@ -292,11 +294,11 @@ func setupAttributes(model *Model, schema *Schema) {
 		attr := Attribute{
 			Name:         column.Name,
 			Column:       &schema.Columns[i],
-			Value:        nil,
 			Relationship: nil,
 		}
 		model.attributes[name] = attr
 		model.columns = append(model.columns, &schema.Columns[i])
+		model.columnNames = append(model.columnNames, column.Name)
 
 		// set indexes
 		if column.Index || column.Unique || column.Primary || column.Type == "ID" {
@@ -313,7 +315,6 @@ func setupAttributes(model *Model, schema *Schema) {
 			Name:         relation.Name,
 			Relationship: &schema.Relationships[i],
 			Column:       nil,
-			Value:        nil,
 		}
 		model.attributes[name] = attr
 	}
@@ -476,9 +477,26 @@ func setFieldValue(v interface{}, field string, value interface{}) {
 	}
 
 	reflectValue := reflect.ValueOf(value)
-	if reflectValue.Kind() != reflectField.Kind() {
+	if !xun.CastType(&reflectValue, reflectValue.Kind(), reflectField.Kind()) {
 		panic(fmt.Errorf("field %s value type is %s, should be %s", field, reflectValue.Kind().String(), reflectField.Kind().String()))
 	}
 
-	reflectField.Set(reflect.ValueOf(value))
+	reflectField.Set(reflectValue)
+}
+
+func getFieldTags(v interface{}) []string {
+	reflectPtr := reflect.ValueOf(v)
+	structValue := reflectPtr.Elem()
+	structType := reflect.TypeOf(structValue.Interface())
+	tags := []string{}
+	for i := 0; i < structType.NumField(); i++ {
+		if !structValue.Field(i).CanInterface() {
+			continue
+		}
+		tag := xun.GetTagName(structType.Field(i), "json")
+		if tag != "" && tag != "-" {
+			tags = append(tags, tag)
+		}
+	}
+	return tags
 }

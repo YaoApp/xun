@@ -84,7 +84,8 @@ func (factory *Factory) New(v ...interface{}) *Model {
 		if ptr.Kind() != reflect.Ptr {
 			panic(fmt.Errorf("The model type (%s) must be a pointer", ptr.Kind().String()))
 		}
-		ptr.Elem().Set(reflect.ValueOf(factory.Model).Elem())
+		new := reflect.ValueOf(factory.Model).Elem()
+		ptr.Elem().Set(new)
 		return nil
 	}
 

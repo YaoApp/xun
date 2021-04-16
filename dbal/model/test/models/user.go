@@ -38,8 +38,3 @@ func (user *User) SetAddress(address string) bool {
 	user.Address = address
 	return false
 }
-
-// Find user fild
-func (user *User) Find() *User {
-	return user.Model.Find(user).(*User)
-}

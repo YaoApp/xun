@@ -122,6 +122,7 @@ func TestModelFillStructUser(t *testing.T) {
 	assert.Equal(t, 99.26, user.Get("score"), "The score should be 99.26")
 	assert.Equal(t, 99.26, user.Score, "The score should be 99.26")
 	assert.Equal(t, nil, user.Get("not_found"), `The not_found should be nil")`)
+
 }
 
 func TestModelSave(t *testing.T) {
@@ -157,4 +158,46 @@ func TestModelSave(t *testing.T) {
 	row = user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
 	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
 	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+}
+
+func TestModelFind(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	row, err := user.Find(1)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.Equal(t, int64(1), row.Get("id"), `The return id should be 1")`)
+	assert.Equal(t, 0, user.ID, `The return id should be nil")`)
+	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
+	assert.Equal(t, "", user.Nickname, `The return nickname should be nil")`)
+}
+
+func TestModelFindEmpty(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	row, err := user.Find(2)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.True(t, row.IsEmpty(), `The return row should be empty")`)
+}
+
+func TestModelFindBind(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	_, err := user.Find(1, &user)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1")`)
+	assert.Equal(t, 1, user.ID, `The return id should be 1")`)
+	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
+	assert.Equal(t, "admin", user.Nickname, `The return nickname should be admin")`)
+}
+
+func TestModelFindBindEmpty(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	_, err := user.Find(2, &user)
+	assert.Equal(t, nil, err, `The return error should be nil")`)
+	assert.True(t, user.IsEmpty(), `The return model should be empty")`)
 }

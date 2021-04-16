@@ -230,6 +230,11 @@ func (row R) Has(key string) bool {
 	return has
 }
 
+// Del delete value with given key
+func (row R) Del(key string) {
+	delete(row, key)
+}
+
 // ToMap cast to map[string]interface{}
 func (row R) ToMap() map[string]interface{} {
 	res := map[string]interface{}{}
@@ -460,4 +465,22 @@ func (n N) MustInt() int {
 	value, err := n.Int()
 	utils.PanicIF(err)
 	return value
+}
+
+// CastType cast type
+func CastType(value *reflect.Value, from reflect.Kind, to reflect.Kind) bool {
+	if from == to {
+		return true
+	}
+
+	typ := fmt.Sprintf("%s->%s", from.String(), to.String())
+	switch typ {
+	case "int64->int":
+		*value = reflect.ValueOf(int(value.Interface().(int64)))
+		return true
+	case "float32->float64":
+		*value = reflect.ValueOf(float64(value.Interface().(float32)))
+		return true
+	}
+	return false
 }

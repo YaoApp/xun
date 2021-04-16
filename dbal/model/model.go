@@ -7,6 +7,7 @@ import (
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Make make a new xun model instance
@@ -29,6 +30,18 @@ func (model *Model) GetFullname() string {
 		return model.name
 	}
 	return fmt.Sprintf("%s.%s", model.namespace, model.name)
+}
+
+// IsEmpty determine if the model is null
+func (model *Model) IsEmpty() bool {
+	// isEmpty := true
+	// for name, attr := range model.attributes {
+	// 	if attr.Value != nil {
+	// 		fmt.Printf("%s: %v(not nil)\n", name, attr.Value)
+	// 		return false
+	// 	}
+	// }
+	return model.values.IsEmpty()
 }
 
 // GetQuery get the query interface
@@ -63,17 +76,23 @@ func (model *Model) GetAttributes() []Attribute {
 	return attrs
 }
 
+// CleanValues clean values of Attributes
+func (model *Model) CleanValues() *Model {
+	model.values = xun.MakeRow()
+	return model
+}
+
 // GetValues get values
 func (model *Model) GetValues(with ...bool) xun.R {
-	row := xun.MakeRow()
-	for _, column := range model.columns {
-		if attr, has := model.attributes[column.Name]; has {
-			if attr.Value != nil {
-				row[column.Name] = attr.Value
-			}
-		}
-	}
-	return row
+	// row := xun.MakeRow()
+	// for _, column := range model.columns {
+	// 	if attr, has := model.attributes[column.Name]; has {
+	// 		if attr.Value != nil {
+	// 			row[column.Name] = attr.Value
+	// 		}
+	// 	}
+	// }
+	return model.values
 }
 
 // GetAttributeNames get all of the attribute name
@@ -94,9 +113,13 @@ func (model *Model) GetAttr(name string) *Attribute {
 	return &attr
 }
 
-// SetAttr set the Attribute by name
-func (model *Model) SetAttr(name string, attr Attribute) {
-	model.attributes[name] = attr
+// Clean clean the Attribute by name
+func (model *Model) Clean(name string) *Model {
+	attr := model.GetAttr(name)
+	if attr != nil {
+		model.values.Del(attr.Name)
+	}
+	return model
 }
 
 // Get get the Attribute value
@@ -105,7 +128,7 @@ func (model *Model) Get(name string) interface{} {
 	if attr == nil {
 		return nil
 	}
-	return model.GetAttr(name).Value
+	return model.values.Get(name)
 }
 
 // Set set the Attribute value
@@ -114,9 +137,7 @@ func (model *Model) Set(name string, value interface{}, v ...interface{}) *Model
 	if attr == nil {
 		return model
 	}
-	attr.Value = value
-	model.SetAttr(name, *attr)
-
+	model.values[attr.Name] = value
 	if attr.Column.Field != "" && len(v) > 0 {
 		setFieldValue(v[0], attr.Column.Field, value)
 	}
@@ -176,6 +197,54 @@ func (model *Model) Save() error {
 	return err
 }
 
+// Find find by primary key
+func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
+
+	if model.primary == "" {
+		return nil, fmt.Errorf("The primary key does not set")
+	}
+
+	if model.table.Name == "" {
+		return nil, fmt.Errorf("The table does not set")
+	}
+
+	qb := model.query.Table(model.table.Name)
+	args := []interface{}{}
+	args = append(args, model.primary)
+	if len(v) == 1 {
+		columns := model.explodeColumns(v[0])
+		qb.Select(columns)
+	}
+
+	row, err := qb.Find(id, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// fill data
+	model.
+		CleanValues().
+		Fill(row, v...)
+
+	return row, err
+}
+
+func (model *Model) explodeColumns(v interface{}) []string {
+	tags := getFieldTags(v)
+	columns := model.fliterColumns(tags)
+	return columns
+}
+
+func (model *Model) fliterColumns(input []string) []string {
+	result := []string{}
+	for _, v := range input {
+		if utils.StringHave(model.columnNames, v) {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
 // Create to create one model
 func (model *Model) Create(attributes interface{}) {
 }
@@ -231,14 +300,6 @@ func (model *Model) Paginate() {
 // Search search by given params
 func (model *Model) Search() interface{} {
 	return nil
-}
-
-// Find find by primary key
-func (model *Model) Find(v ...interface{}) interface{} {
-	if len(v) > 0 {
-		return v[0]
-	}
-	return model
 }
 
 // Export export data
