@@ -212,10 +212,29 @@ func TestModelSave(t *testing.T) {
 		"not_found": "something",
 	}, &user).Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
-
 	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
 	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
 	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+}
+
+func TestModelSaveUpdate(t *testing.T) {
+	registerModelsForTest()
+	TestFactoryMigrate(t)
+
+	user := models.MakeUser(modelTestMaker)
+	// Insert
+	err := user.Fill(xun.R{
+		"nickname":  "Ava",
+		"bio":       "Yao Framework CEO",
+		"user_id":   1,
+		"gender":    0,
+		"vote":      100,
+		"score":     99.26,
+		"address":   "Cecilia Chapman 711-2880 Nulla St. Mankato Mississippi 96522 (257) 563-7401",
+		"status":    "DONE",
+		"not_found": "something",
+	}).Save(&user)
+	assert.Equal(t, nil, err, `The return value should be nil")`)
 
 	// update
 	err = user.
@@ -224,7 +243,7 @@ func TestModelSave(t *testing.T) {
 		Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 
-	row = user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
 	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
 	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
 }
