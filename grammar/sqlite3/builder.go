@@ -45,8 +45,8 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 	defaultValue := grammarSQL.GetDefaultValue(column)
 
 	// default now() -> default (datetime('now','localtime'))
-	if column.Type == "timestamp" && defaultValue != "" {
-		if strings.Contains(strings.ToLower(defaultValue), "now()") {
+	if strings.Contains(column.Type, "timestamp") && (defaultValue != "" || (defaultValue == "" && column.Nullable == false)) {
+		if strings.Contains(strings.ToLower(defaultValue), "now()") || defaultValue == "" {
 			defaultValue = "DEFAULT (datetime('now','localtime'))"
 		}
 	}

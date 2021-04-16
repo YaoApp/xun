@@ -24,11 +24,14 @@ func (grammarSQL SQL) SQLAddColumn(column *dbal.Column) string {
 	collation := utils.GetIF(utils.StringVal(column.Collation) != "", fmt.Sprintf("COLLATE %s", utils.StringVal(column.Collation)), "").(string)
 	extra := utils.GetIF(utils.StringVal(column.Extra) != "", "AUTO_INCREMENT", "")
 
-	if nullable == "NOT NULL" && strings.Contains(typ, "TIMESTAMP") && defaultValue == "" {
-		if column.DateTimePrecision != nil {
-			defaultValue = fmt.Sprintf("DEFAULT CURRENT_TIMESTAMP(%d)", *column.DateTimePrecision)
-		} else {
-			defaultValue = "DEFAULT CURRENT_TIMESTAMP"
+	// default now() -> DEFAULT CURRENT_TIMESTAMP(%d) / DEFAULT CURRENT_TIMESTAMP
+	if strings.Contains(column.Type, "timestamp") && (defaultValue != "" || (defaultValue == "" && column.Nullable == false)) {
+		if strings.Contains(strings.ToLower(defaultValue), "now()") || defaultValue == "" {
+			if column.DateTimePrecision != nil {
+				defaultValue = fmt.Sprintf("DEFAULT CURRENT_TIMESTAMP(%d)", *column.DateTimePrecision)
+			} else {
+				defaultValue = "DEFAULT CURRENT_TIMESTAMP"
+			}
 		}
 	}
 
