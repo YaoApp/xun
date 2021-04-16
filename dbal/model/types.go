@@ -21,6 +21,8 @@ type Model struct {
 	primaryKeys []string
 	uniqueKeys  []string
 	columnNames []string
+	withDeletes bool
+	onlyDeletes bool
 	softDeletes bool
 	Timestamps  bool
 	query       query.Query

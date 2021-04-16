@@ -412,3 +412,26 @@ func TestModelDestorySoftDeletes(t *testing.T) {
 	assert.Equal(t, int64(1), row.Get("id"), `The return value should be 1")`)
 	assert.NotNil(t, row.Get("deleted_at"), `The return value should be datetime")`)
 }
+
+func TestModelWithTrashed(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	assert.False(t, car.MustFind(1).IsEmpty(), `The car table should have 1 row`)
+
+	err := car.MustFind(1).Destroy()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
+	assert.False(t, car.WithTrashed().MustFind(1).IsEmpty(), `The return value should be false"`)
+}
+
+func TestModelOnlyTrashed(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	assert.False(t, car.MustFind(1).IsEmpty(), `The car table should have 1 row`)
+	assert.True(t, car.OnlyTrashed().MustFind(1).IsEmpty(), `The return value should be false"`)
+
+	err := car.MustFind(1).Destroy()
+	assert.Equal(t, nil, err, `The return value should be nil")`)
+	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
+	assert.False(t, car.OnlyTrashed().MustFind(1).IsEmpty(), `The return value should be false"`)
+}

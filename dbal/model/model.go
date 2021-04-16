@@ -243,11 +243,15 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 		qb.Select(columns)
 	}
 
-	if model.softDeletes {
+	if model.softDeletes && model.onlyDeletes {
+		qb.WhereNotNull("deleted_at")
+	} else if model.softDeletes && !model.withDeletes {
 		qb.WhereNull("deleted_at")
 	}
 
 	row, err := qb.Find(id, args...)
+	model.resetTrashed()
+
 	if err != nil {
 		return nil, err
 	}
@@ -284,6 +288,25 @@ func (model *Model) Destroy(args ...interface{}) error {
 	_, err := qb.Delete()
 
 	return err
+}
+
+// WithTrashed Including Soft Deleted Models
+func (model *Model) WithTrashed() *Model {
+	model.withDeletes = true
+	return model
+}
+
+// OnlyTrashed Retrieving Only Soft Deleted Models
+func (model *Model) OnlyTrashed() *Model {
+	model.onlyDeletes = true
+	return model
+}
+
+// resetTrashed
+func (model *Model) resetTrashed() *Model {
+	model.withDeletes = false
+	model.onlyDeletes = false
+	return model
 }
 
 // Invalid determine if the model is invalid
