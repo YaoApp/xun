@@ -257,6 +257,24 @@ func TestModelSaveInsert(t *testing.T) {
 	assert.Equal(t, int64(2), car.GetQuery().Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
 }
 
+func TestModelSaveUniqueKeys(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	err := user.Fill(xun.R{
+		"nickname": "admin",
+		"vote":     100,
+		"score":    29.99,
+		"bio":      "Yao Framework CEO",
+		"address":  "Cecilia Chapman 711-2880 Nulla St.",
+	}).Save()
+
+	assert.Nil(t, err, `The return value should be nil")`)
+	_, err = user.Find(1, &user)
+	assert.Nil(t, err, `The return value should be nil")`)
+	assert.Equal(t, 1, user.ID, `The return value should1`)
+	assert.Equal(t, "Cecilia Chapman 711-2880 Nulla St.", user.Address, `The return value should be Cecilia Chapman 711-2880 Nulla St.`)
+}
+
 func TestModelSavePrimary(t *testing.T) {
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)

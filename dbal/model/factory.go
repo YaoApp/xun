@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -84,12 +85,16 @@ func (factory *Factory) New(v ...interface{}) *Model {
 		if ptr.Kind() != reflect.Ptr {
 			panic(fmt.Errorf("The model type (%s) must be a pointer", ptr.Kind().String()))
 		}
+		SetModel(factory.Model, func(model *Model) {
+			model.values = xun.MakeRow()
+		})
 		new := reflect.ValueOf(factory.Model).Elem()
 		ptr.Elem().Set(new)
 		return nil
 	}
 
 	clone := *(factory.Model.(*Model))
+	clone.values = xun.MakeRow()
 	return &clone
 }
 

@@ -201,7 +201,9 @@ func (model *Model) Save(v ...interface{}) error {
 
 	var err error
 	if row.Has(model.primary) {
-		_, err = qb.Upsert(row, model.primary, row)
+		where := xun.MakeR()
+		where[model.primary] = row.Get(model.primary)
+		_, err = qb.UpdateOrInsert(where, row)
 	} else if len(model.uniqueKeys) > 0 {
 		_, err = qb.Upsert(row, model.uniqueKeys, row)
 	} else {
