@@ -126,7 +126,6 @@ func TestModelFillStructUser(t *testing.T) {
 }
 
 func TestModelFind(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	row, err := user.Find(1)
@@ -138,7 +137,6 @@ func TestModelFind(t *testing.T) {
 }
 
 func TestModelFindEmpty(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	row, err := user.Find(2)
@@ -147,7 +145,6 @@ func TestModelFindEmpty(t *testing.T) {
 }
 
 func TestModelFindBind(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
@@ -159,7 +156,6 @@ func TestModelFindBind(t *testing.T) {
 }
 
 func TestModelFindBindStruct(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	row := struct {
@@ -177,7 +173,6 @@ func TestModelFindBindStruct(t *testing.T) {
 }
 
 func TestModelFindBindEmpty(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(2, &user)
@@ -186,7 +181,6 @@ func TestModelFindBindEmpty(t *testing.T) {
 }
 
 func TestModelFindSoftDeletes(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
 	row, err := car.Find(2)
@@ -195,7 +189,6 @@ func TestModelFindSoftDeletes(t *testing.T) {
 }
 
 func TestModelSave(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 
@@ -218,9 +211,7 @@ func TestModelSave(t *testing.T) {
 }
 
 func TestModelSaveUpdate(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
-
 	user := models.MakeUser(modelTestMaker)
 	// Insert
 	err := user.Fill(xun.R{
@@ -248,8 +239,25 @@ func TestModelSaveUpdate(t *testing.T) {
 	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
 }
 
+func TestModelSaveInsert(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	err := car.Fill(xun.R{
+		"name":    "Tesla Model Y",
+		"manu_id": 1,
+	}).Save()
+	assert.Nil(t, err, `The return value should be nil")`)
+
+	err = car.Fill(xun.R{
+		"name":    "Tesla Model Y",
+		"manu_id": 1,
+	}).Save()
+
+	assert.Nil(t, err, `The return value should be nil")`)
+	assert.Equal(t, int64(2), car.GetQuery().Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
+}
+
 func TestModelSavePrimary(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
@@ -271,7 +279,6 @@ func TestModelSavePrimary(t *testing.T) {
 }
 
 func TestModelSaveBind(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
@@ -290,7 +297,6 @@ func TestModelSaveBind(t *testing.T) {
 }
 
 func TestModelSaveBindStruct(t *testing.T) {
-	registerModelsForTest()
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(1, &user)

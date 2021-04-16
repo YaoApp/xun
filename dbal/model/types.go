@@ -22,6 +22,7 @@ type Model struct {
 	uniqueKeys  []string
 	columnNames []string
 	softDeletes bool
+	Timestamps  bool
 	query       query.Query
 	schema      schema.Schema
 }

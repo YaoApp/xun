@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
@@ -191,18 +192,20 @@ func (model *Model) Save(v ...interface{}) error {
 		return fmt.Errorf("table name is nil, binding table first")
 	}
 
+	if model.Timestamps {
+		model.Set("updated_at", time.Now().Format("2006-01-02 15:04:05.000000"))
+	}
+
 	row := model.GetValues()
 	qb := model.query.Table(model.table.Name)
-
-	if len(model.uniqueKeys) == 0 {
-		return qb.Insert(row)
-	}
 
 	var err error
 	if row.Has(model.primary) {
 		_, err = qb.Upsert(row, model.primary, row)
-	} else {
+	} else if len(model.uniqueKeys) > 0 {
 		_, err = qb.Upsert(row, model.uniqueKeys, row)
+	} else {
+		err = qb.Insert(row)
 	}
 
 	if len(v) > 0 {

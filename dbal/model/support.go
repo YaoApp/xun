@@ -280,10 +280,11 @@ func setupAttributes(model *Model, schema *Schema) {
 	model.uniqueKeys = []string{}
 	searchable := map[string]bool{}
 	model.softDeletes = false
+	model.Timestamps = false
 	model.primary = ""
 
 	// setup option
-	setupOption(schema, &model.softDeletes)
+	setupOption(schema, &model.softDeletes, &model.Timestamps)
 
 	// setup Columns
 	for i := range schema.Columns {
@@ -334,7 +335,8 @@ func setupIndex(index *Index, primaryKeys *[]string, uniqueKeys *[]string, searc
 	}
 
 }
-func setupOption(schema *Schema, softDeletes *bool) {
+func setupOption(schema *Schema, softDeletes *bool, timestamps *bool) {
+	*timestamps = false
 	if schema.Option.Timestamps {
 		schema.Columns = append(schema.Columns,
 			Column{
@@ -351,6 +353,7 @@ func setupOption(schema *Schema, softDeletes *bool) {
 				Index:    true,
 			},
 		)
+		*timestamps = true
 	}
 
 	*softDeletes = false
