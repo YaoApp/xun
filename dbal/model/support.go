@@ -136,6 +136,47 @@ func prepareDestroyArgs(args ...interface{}) []interface{} {
 	return args
 }
 
+func prepareWithArgs(args ...interface{}) (string, func(query.Query)) {
+
+	if len(args) == 0 {
+		invalidArguments()
+	}
+
+	var name = ""
+	var closure func(query.Query) = nil
+
+	if value, ok := args[0].(string); ok {
+		name = value
+	}
+
+	// register a relationship at runtime, supported in the next version.
+	if _, ok := args[0].(func()); ok {
+		panic(fmt.Errorf("This feature will be supported, in the next version"))
+	}
+	if name == "" {
+		invalidArguments()
+	}
+
+	if len(args) > 1 {
+		if value, ok := args[1].(func(query.Query)); ok {
+
+			closure = value
+		}
+	}
+
+	return name, closure
+}
+
+func invalidArguments() {
+	panic(fmt.Errorf("Invalid Arguments"))
+}
+func invalidRelationship(message ...string) {
+	if len(message) > 0 {
+		panic(fmt.Errorf("Invalid Relationship %s", message[0]))
+	}
+	panic(fmt.Errorf("Invalid Relationship"))
+}
+
 func getTypeName(v interface{}) string {
 	return reflect.TypeOf(v).String()
 }
@@ -288,6 +329,7 @@ func setupAttributes(model *Model, schema *Schema) {
 
 	// init
 	model.attributes = map[string]Attribute{}
+	model.withs = []string{}
 	model.values = xun.MakeRow()
 	model.columns = []*Column{}
 	model.columnNames = []string{}
@@ -515,10 +557,10 @@ func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args .
 		panic(fmt.Errorf("the model name is not string"))
 	}
 
-	class, has := modelsRegistered[name]
+	class, has := modelsAlias[name]
 	if !has {
 		Register(name, args...)
-		class, has = modelsRegistered[name]
+		class, has = modelsAlias[name]
 		if !has {
 			panic(fmt.Errorf("the model register failure"))
 		}

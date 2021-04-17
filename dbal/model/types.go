@@ -12,6 +12,7 @@ import (
 type Model struct {
 	namespace   string
 	name        string
+	withs       []string
 	attributes  map[string]Attribute
 	values      xun.R
 	table       *Table
@@ -141,10 +142,12 @@ const (
 
 // Relationship xun model relationships
 type Relationship struct {
-	Name   string   `json:"name"`
-	Type   string   `json:"type"`
-	Models []string `json:"models"`
-	Links  []string `json:"links,omitempty"` //  M1.Local, (->) M2.Foreign, M2.Local, (->) M3.Foreign ...
+	Name    string   `json:"name"`
+	Type    string   `json:"type"`
+	Models  []string `json:"models"`
+	Links   []string `json:"links,omitempty"` //  M1.Local, (->) M2.Foreign, M2.Local, (->) M3.Foreign ...
+	Columns []string `json:"columns,omitempty"`
+	Wheres  []string `json:"wheres,omitempty"`
 }
 
 // Attribute the model attribute

@@ -476,7 +476,7 @@ func TestModelQuerySoftdeletesWithTrashed(t *testing.T) {
 	}
 }
 
-func TestModelQueryySoftdeletesOnlyTrashed(t *testing.T) {
+func TestModelQuerySoftdeletesOnlyTrashed(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
 	qb := car.OnlyTrashed().Query()
@@ -485,4 +485,28 @@ func TestModelQueryySoftdeletesOnlyTrashed(t *testing.T) {
 	if len(rows) == 1 {
 		assert.NotNil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
 	}
+}
+
+func TestModelWithHasOne(t *testing.T) {
+	// TestFactoryMigrate(t)
+	// car := model.MakeUsing(modelTestMaker, "models/car")
+
+	// qb := car.With("manu").Query()
+	// rows := qb.MustGet()
+	// utils.Println(rows)
+
+	// qb = car.With("manu", func(qb query.Query) {
+	// 	qb.Select("name", "type")
+	// }).Query()
+	// rows = qb.MustGet()
+	// utils.Println(rows)
+}
+
+func TestModelWithHasMany(t *testing.T) {
+}
+
+func TestModelWithHasOneThrough(t *testing.T) {
+}
+
+func TestModelWithHasManyThrough(t *testing.T) {
 }

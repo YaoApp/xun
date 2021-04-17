@@ -25,17 +25,17 @@ func Use(conn *Connection) Query {
 
 // Clone create a new builder instance with current builder
 func (builder *Builder) Clone() Query {
-	new := *builder
-	query := *builder.Query
-	new.Query = &query
-	return &new
+	return builder.clone()
 }
 
 // New create a new builder instance with current builder
 func (builder *Builder) New() Query {
-	new := *builder
-	new.Query = dbal.NewQuery()
-	return &new
+	return builder.new()
+}
+
+// GetColumns get the query Columns
+func (builder *Builder) GetColumns() []interface{} {
+	return builder.Query.Columns
 }
 
 // clone create a new builder instance with current builder

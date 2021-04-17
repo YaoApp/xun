@@ -1,4 +1,4 @@
-// Package models  Fri Apr 16 15:33:19 CST 2021
+// Package models  Sat Apr 17 16:58:45 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -22,13 +22,14 @@ var SchemaFileContents = map[string][]byte{
     {
       "name": "manu",
       "type": "hasOne",
-      "models": ["Manu"],
-      "links": ["manu_id", "id"]
+      "models": ["manu"],
+      "links": ["manu_id", "id"],
+      "columns": ["name", "type", "intro"]
     },
     {
       "name": "users",
       "type": "hasManyThrough",
-      "models": ["UserCar", "User"],
+      "models": ["user_car", "user"],
       "links": ["id", "car_id", "user_id", "id"]
     }
   ],
@@ -51,8 +52,8 @@ var SchemaFileContents = map[string][]byte{
 {
   "name": "Manu",
   "table": {
-    "name": "car",
-    "comment": "The cars",
+    "name": "manu",
+    "comment": "The Manufacturer",
     "engine": "InnoDB"
   },
   "columns": [
@@ -62,20 +63,49 @@ var SchemaFileContents = map[string][]byte{
       "type": "string",
       "length": 200,
       "comment": "Manufacturer Name"
+    },
+    {
+      "name": "intro",
+      "type": "text",
+      "comment": "Manufacturer introduction"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "option": ["electric", "gas", "mix"],
+      "comment": "Energy type",
+      "index": true
     }
   ],
   "relationships": [
     {
       "name": "cars",
       "type": "hasMany",
-      "models": ["Car"],
+      "models": ["car"],
       "links": ["id", "manu_id"]
     },
     {
       "name": "users",
       "type": "hasManyThrough",
-      "models": ["Car", "UserCar", "User"],
+      "models": ["car", "user_car", "user"],
       "links": ["id", "manu_id", "car_id", "car_id", "user_id", "id"]
+    }
+  ],
+  "values": [
+    {
+      "name": "Tesla",
+      "type": "electric",
+      "intro": "Tesla is accelerating the world's transition to sustainable energy with electric cars, solar and integrated renewable energy solutions for homes and businesses."
+    },
+    {
+      "name": "Toyota",
+      "type": "gas",
+      "intro": "The Toyota Motor Corporation is a Japanese multinational automotive manufacturer headquartered in Toyota, Aichi, Japan. "
+    },
+    {
+      "name": "Nissan",
+      "type": "mix",
+      "intro": "The Nissan Motor Company, Ltd. is a Japanese multinational automobile manufacturer headquartered in Nishi-ku, Yokohama, Japan."
     }
   ]
 }

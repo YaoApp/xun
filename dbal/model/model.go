@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -23,6 +24,11 @@ func Make(query query.Query, schema schema.Schema, v interface{}, args ...interf
 // MakeUsing create model using makeer
 func MakeUsing(maker MakerFunc, v interface{}, args ...interface{}) *Model {
 	return maker(v, args...)
+}
+
+// New create a new xun model instance
+func (model *Model) New(v interface{}, args ...interface{}) *Model {
+	return Make(model.query, model.schema, v, args...)
 }
 
 // GetFullname get the fullname of model
@@ -295,7 +301,69 @@ func (model *Model) OnlyTrashed() *Model {
 }
 
 // With where the array key is a relationship name and the array value is a closure that adds additional constraints to the eager loading query
-func (model *Model) With() {
+func (model *Model) With(args ...interface{}) *Model {
+	name, closure := prepareWithArgs(args...)
+	var rel *Relationship = nil
+	if attr, has := model.attributes[name]; has {
+		rel = attr.Relationship
+	}
+
+	if rel == nil {
+		invalidArguments()
+	}
+
+	if rel.Type == "hasOne" {
+		model.withHasOne(rel, name, closure)
+	}
+
+	return model
+}
+
+// withHasOne
+func (model *Model) withHasOne(rel *Relationship, name string, closure func(query.Query)) {
+
+	if len(rel.Models) < 1 || rel.Type != "hasOne" {
+		invalidRelationship()
+	}
+
+	relModelName := rel.Models[0]
+	relFullname := relModelName
+	if !strings.Contains(relFullname, ".") {
+		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
+	}
+
+	relModel := model.New(relFullname)
+	qb := relModel.Query()
+	if closure != nil {
+		closure(qb)
+	} else if rel.Columns != nil {
+		qb.Select(rel.Columns)
+	}
+
+	// Get Cloums
+	columns := qb.GetColumns()
+	for i := range columns {
+		if column, ok := columns[i].(string); ok && !strings.Contains(column, ".") {
+			columns[i] = fmt.Sprintf("%s.%s", name, column)
+		}
+	}
+
+	// bind local
+	local := fmt.Sprintf("%s.%s_id", model.name, strings.ToLower(relModelName))
+	foreign := fmt.Sprintf("%s.id", name)
+	if len(rel.Links) == 2 {
+		local = fmt.Sprintf("%s.%s", model.name, rel.Links[0])
+		foreign = fmt.Sprintf("%s.%s", name, rel.Links[1])
+	}
+
+	table := fmt.Sprintf("%s as %s", model.table.Name, model.table.Name)
+	tableWith := fmt.Sprintf("%s as %s", relModel.table.Name, name)
+	model.query.
+		Table(table).
+		LeftJoin(tableWith, local, "=", foreign)
+
+	fmt.Println("setup withHasOne: ", name, " SQL:", model.query.ToSQL(), " Link:", local, "<->", foreign)
+
 }
 
 // Query return the query builder

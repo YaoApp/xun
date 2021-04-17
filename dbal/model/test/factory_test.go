@@ -106,8 +106,8 @@ func TestFactoryRegister(t *testing.T) {
 
 	manu := model.MakeUsing(modelTestMaker, "models/manu", models.SchemaFileContents["models/manu.json"])
 	assert.Equal(t, "models.manu", manu.GetFullname(), "The return fullname of model should be models.car")
-	assert.Equal(t, 4, len(manu.GetAttributeNames()), "The return attribute names count of model should be 4")
-	assert.Equal(t, 4, len(manu.GetAttributes()), "The return attribute names count of model should be 4")
+	assert.Equal(t, 6, len(manu.GetAttributeNames()), "The return attribute names count of model should be 6")
+	assert.Equal(t, 6, len(manu.GetAttributes()), "The return attribute names count of model should be 6")
 
 	userCar := model.MakeUsing(modelTestMaker, "models/user_car", models.SchemaFileContents["models/user_car.json"])
 	assert.Equal(t, "models.user_car", userCar.GetFullname(), "The return fullname of model should be models.user_car")

@@ -14,13 +14,14 @@
     {
       "name": "manu",
       "type": "hasOne",
-      "models": ["Manu"],
-      "links": ["manu_id", "id"]
+      "models": ["manu"],
+      "links": ["manu_id", "id"],
+      "columns": ["name", "type", "intro"]
     },
     {
       "name": "users",
       "type": "hasManyThrough",
-      "models": ["UserCar", "User"],
+      "models": ["user_car", "user"],
       "links": ["id", "car_id", "user_id", "id"]
     }
   ],
