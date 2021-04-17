@@ -11,6 +11,7 @@ type Query interface {
 	// defined in the builder.go file
 	New() Query
 	Clone() Query
+	Reset() Query
 
 	// defined in the query.go file
 	Table(name string) Query

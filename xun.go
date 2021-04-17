@@ -206,6 +206,11 @@ func MakeP(total int, pageSize int, currentPage int, items ...interface{}) P {
 
 }
 
+// Value get the value of the given key ( alias Get)
+func (row R) Value(key interface{}) interface{} {
+	return row.Get(key)
+}
+
 // Get get the value of the given key
 func (row R) Get(key interface{}) interface{} {
 	keys := strings.Split(fmt.Sprintf("%v", key), ".")

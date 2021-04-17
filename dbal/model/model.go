@@ -110,8 +110,8 @@ func (model *Model) Has(name string) bool {
 	return model.values.Has(name)
 }
 
-// Get get the Attribute value
-func (model *Model) Get(name string) interface{} {
+// Value get the Attribute value
+func (model *Model) Value(name string) interface{} {
 	attr := model.GetAttr(name)
 	if attr == nil {
 		return nil
@@ -218,6 +218,34 @@ func (model *Model) Save(v ...interface{}) error {
 	return err
 }
 
+// Get over load Get
+func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
+	model.querySetting()
+	row, err := model.Builder.Get(v...)
+	return row, err
+}
+
+// MustGet over load MustGet
+func (model *Model) MustGet(v ...interface{}) []xun.R {
+	res, err := model.Get(v...)
+	utils.PanicIF(err)
+	return res
+}
+
+// First Execute the query and get the first result.
+func (model *Model) First(v ...interface{}) (xun.R, error) {
+	model.querySetting()
+	row, err := model.Builder.First(v...)
+	return row, err
+}
+
+// MustFirst Execute the query and get the first result.
+func (model *Model) MustFirst(v ...interface{}) xun.R {
+	res, err := model.First(v...)
+	utils.PanicIF(err)
+	return res
+}
+
 // MustFind find by primary key
 func (model *Model) MustFind(id interface{}, v ...interface{}) *Model {
 	_, err := model.Find(id, v...)
@@ -274,7 +302,7 @@ func (model *Model) Destroy(args ...interface{}) error {
 	}
 
 	if len(ids) == 0 {
-		ids = append(ids, model.Get(model.primary))
+		ids = append(ids, model.Value(model.primary))
 	}
 
 	qb := model.Builder.Table(model.table.Name).WhereIn(model.primary, ids)
@@ -285,6 +313,18 @@ func (model *Model) Destroy(args ...interface{}) error {
 	_, err := qb.Delete()
 
 	return err
+}
+
+// Where Add a basic where clause to the query.
+func (model *Model) Where(column interface{}, args ...interface{}) *Model {
+	model.Builder.Where(column, args...)
+	return model
+}
+
+// Select same as the Query Select
+func (model *Model) Select(columns ...interface{}) *Model {
+	model.Builder.Select(columns...)
+	return model
 }
 
 // WithTrashed Including Soft Deleted Models
@@ -364,8 +404,8 @@ func (model *Model) withHasOne(rel *Relationship, name string, closure func(quer
 
 }
 
-// Query return the query builder
-func (model *Model) Query() query.Query {
+// GetQuery return the query builder
+func (model *Model) GetQuery() query.Query {
 
 	qb := model.Builder.New()
 
@@ -380,6 +420,25 @@ func (model *Model) Query() query.Query {
 	}
 
 	return qb
+}
+
+// Reset reset query
+func (model *Model) Reset() *Model {
+	model.Builder.Reset()
+	return model
+}
+
+func (model *Model) querySetting() {
+
+	if model.table.Name != "" && model.Builder.Query.From.IsEmpty() {
+		model.From(model.table.Name)
+	}
+
+	if model.softDeletes && model.onlyDeletes {
+		model.WhereNotNull("deleted_at")
+	} else if model.softDeletes && !model.withDeletes {
+		model.WhereNull("deleted_at")
+	}
 }
 
 // Invalid determine if the model is invalid

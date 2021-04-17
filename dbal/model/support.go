@@ -567,7 +567,7 @@ func makeBySchema(buidler *query.Builder, schema schema.Schema, v interface{}, a
 	}
 	model := class.New()
 	model.schema = schema
-	model.Builder = buidler
+	model.Builder = buidler.NewBuilder()
 	return model
 }
 
@@ -576,7 +576,7 @@ func makeByStruct(buidler *query.Builder, schema schema.Schema, v interface{}) {
 	name := getTypeName(v)
 	Class(name).New(v)
 	SetModel(v, func(model *Model) {
-		model.Builder = buidler
+		model.Builder = buidler.NewBuilder()
 		model.schema = schema
 	})
 }

@@ -263,6 +263,11 @@ func (name Name) As() string {
 	return name.Alias
 }
 
+// IsEmpty determine if the from value is empty
+func (from From) IsEmpty() bool {
+	return from.Name == nil
+}
+
 // GetValue Get the value of the expression.
 func (expression Expression) GetValue() string {
 	return fmt.Sprintf("%v", expression.Value)

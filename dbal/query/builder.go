@@ -43,6 +43,17 @@ func (builder *Builder) New() Query {
 	return builder.new()
 }
 
+// Reset Reset query
+func (builder *Builder) Reset() Query {
+	builder.Query = dbal.NewQuery()
+	return builder
+}
+
+// NewBuilder create a new builder instance with current builder
+func (builder *Builder) NewBuilder() *Builder {
+	return builder.new()
+}
+
 // clone create a new builder instance with current builder
 func (builder *Builder) clone() *Builder {
 	new := *builder

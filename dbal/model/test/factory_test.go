@@ -35,7 +35,7 @@ func getSchema() schema.Schema {
 	return testSchemaBuilder
 }
 
-func getQuery() query.Query {
+func getQuery() *query.Builder {
 	unit.SetLogger()
 	if testQueryBuilder != nil {
 		return testQueryBuilder

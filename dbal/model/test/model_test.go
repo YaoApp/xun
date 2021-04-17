@@ -77,12 +77,12 @@ func TestModelFillSchemaXunR(t *testing.T) {
 		"expired_at": dbal.Raw("NOW()"),
 		"not_found":  "something",
 	})
-	assert.Equal(t, 1, member.Get("user_id"), "The user_id should be 1")
-	assert.Equal(t, "Emma", member.Get("name"), "The name should be Emma")
-	assert.Equal(t, 99.26, member.Get("score"), "The score should be 99.26")
-	assert.Equal(t, "gold", member.Get("level"), "The level should be gold")
-	assert.Equal(t, dbal.Raw("NOW()"), member.Get("expired_at"), `The expired_at should be dbal.Raw("NOW()")`)
-	assert.Equal(t, nil, member.Get("not_found"), `The not_found should be nil")`)
+	assert.Equal(t, 1, member.Value("user_id"), "The user_id should be 1")
+	assert.Equal(t, "Emma", member.Value("name"), "The name should be Emma")
+	assert.Equal(t, 99.26, member.Value("score"), "The score should be 99.26")
+	assert.Equal(t, "gold", member.Value("level"), "The level should be gold")
+	assert.Equal(t, dbal.Raw("NOW()"), member.Value("expired_at"), `The expired_at should be dbal.Raw("NOW()")`)
+	assert.Equal(t, nil, member.Value("not_found"), `The not_found should be nil")`)
 }
 
 func TestModelFillStructXunR(t *testing.T) {
@@ -99,12 +99,12 @@ func TestModelFillStructXunR(t *testing.T) {
 		"not_found": "something",
 	}, &user)
 
-	assert.Equal(t, "Ava", user.Get("nickname"), "The nickname should be Ava")
+	assert.Equal(t, "Ava", user.Value("nickname"), "The nickname should be Ava")
 	assert.Equal(t, "Ava", user.Nickname, "The nickname should be Ava")
-	assert.Equal(t, "Yao Framework CEO", user.Get("bio"), "The nickname should be Yao Framework CEO")
-	assert.Equal(t, 99.26, user.Get("score"), "The score should be 99.26")
+	assert.Equal(t, "Yao Framework CEO", user.Value("bio"), "The nickname should be Yao Framework CEO")
+	assert.Equal(t, 99.26, user.Value("score"), "The score should be 99.26")
 	assert.Equal(t, 99.26, user.Score, "The score should be 99.26")
-	assert.Equal(t, nil, user.Get("not_found"), `The not_found should be nil")`)
+	assert.Equal(t, nil, user.Value("not_found"), `The not_found should be nil")`)
 }
 
 func TestModelFillStructUser(t *testing.T) {
@@ -117,11 +117,11 @@ func TestModelFillStructUser(t *testing.T) {
 	}
 	user := models.MakeUser(modelTestMaker)
 	user.Fill(row, &user)
-	assert.Equal(t, "Ava", user.Get("nickname"), "The nickname should be Ava")
+	assert.Equal(t, "Ava", user.Value("nickname"), "The nickname should be Ava")
 	assert.Equal(t, "Ava", user.Nickname, "The nickname should be Ava")
-	assert.Equal(t, 99.26, user.Get("score"), "The score should be 99.26")
+	assert.Equal(t, 99.26, user.Value("score"), "The score should be 99.26")
 	assert.Equal(t, 99.26, user.Score, "The score should be 99.26")
-	assert.Equal(t, nil, user.Get("not_found"), `The not_found should be nil")`)
+	assert.Equal(t, nil, user.Value("not_found"), `The not_found should be nil")`)
 
 }
 
@@ -130,9 +130,9 @@ func TestModelFind(t *testing.T) {
 	user := models.MakeUser(modelTestMaker)
 	row, err := user.Find(1)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
-	assert.Equal(t, int64(1), row.Get("id"), `The return id should be 1")`)
+	assert.Equal(t, int64(1), row.Value("id"), `The return id should be 1")`)
 	assert.Equal(t, 0, user.ID, `The return id should be nil")`)
-	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
+	assert.Equal(t, "admin", user.Value("nickname"), `The return nickname should be admin")`)
 	assert.Equal(t, "", user.Nickname, `The return nickname should be nil")`)
 }
 
@@ -149,9 +149,9 @@ func TestModelFindBind(t *testing.T) {
 	user := models.MakeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
-	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1")`)
+	assert.Equal(t, int64(1), user.Value("id"), `The return id should be 1")`)
 	assert.Equal(t, 1, user.ID, `The return id should be 1")`)
-	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin")`)
+	assert.Equal(t, "admin", user.Value("nickname"), `The return nickname should be admin")`)
 	assert.Equal(t, "admin", user.Nickname, `The return nickname should be admin")`)
 }
 
@@ -165,9 +165,9 @@ func TestModelFindBindStruct(t *testing.T) {
 	}{}
 	_, err := user.Find(1, &row)
 	assert.Equal(t, nil, err, `The return error should be nil`)
-	assert.Equal(t, int64(1), user.Get("id"), `The return id should be 1`)
+	assert.Equal(t, int64(1), user.Value("id"), `The return id should be 1`)
 	assert.Equal(t, 1, row.ID, `The return id should be 1`)
-	assert.Equal(t, "admin", user.Get("nickname"), `The return nickname should be admin`)
+	assert.Equal(t, "admin", user.Value("nickname"), `The return nickname should be admin`)
 	assert.Equal(t, "admin", row.Nickname, `The return nickname should be admin`)
 	assert.Equal(t, "the default adminstor", row.Bio, `The return bio should be the default adminstor"`)
 }
@@ -205,9 +205,9 @@ func TestModelSave(t *testing.T) {
 		"not_found": "something",
 	}, &user).Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
-	row := user.Query().Select("*").Where("nickname", "Ava").MustFirst()
-	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
-	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+	row := user.Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(0), row.Value("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Value("score")), `The return value should be nil")`)
 }
 
 func TestModelSaveUpdate(t *testing.T) {
@@ -234,9 +234,9 @@ func TestModelSaveUpdate(t *testing.T) {
 		Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 
-	row := user.Query().Select("*").Where("nickname", "Ava").MustFirst()
-	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
-	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
+	row := user.Select("*").Where("nickname", "Ava").MustFirst()
+	assert.Equal(t, int64(2), row.Value("gender"), `The return value should be nil")`)
+	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Value("score")), `The return value should be nil")`)
 }
 
 func TestModelSaveInsert(t *testing.T) {
@@ -254,7 +254,7 @@ func TestModelSaveInsert(t *testing.T) {
 	}).Save()
 
 	assert.Nil(t, err, `The return value should be nil")`)
-	assert.Equal(t, int64(2), car.Query().Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
+	assert.Equal(t, int64(2), car.Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
 }
 
 func TestModelSaveUniqueKeys(t *testing.T) {
@@ -408,9 +408,9 @@ func TestModelDestorySoftDeletes(t *testing.T) {
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
 
-	row := car.WithTrashed().Query().Select("*").Where("id", 1).MustFirst()
-	assert.Equal(t, int64(1), row.Get("id"), `The return value should be 1")`)
-	assert.NotNil(t, row.Get("deleted_at"), `The return value should be datetime")`)
+	row := car.Reset().WithTrashed().Select("*").Where("id", 1).MustFirst()
+	assert.Equal(t, int64(1), row.Value("id"), `The return value should be 1")`)
+	assert.NotNil(t, row.Value("deleted_at"), `The return value should be datetime")`)
 }
 
 func TestModelWithTrashed(t *testing.T) {
@@ -439,51 +439,48 @@ func TestModelOnlyTrashed(t *testing.T) {
 func TestModelQuery(t *testing.T) {
 	TestFactoryMigrate(t)
 	user := models.MakeUser(modelTestMaker)
-	rows := user.Query().MustGet()
+	rows := user.MustGet()
 	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
 	if len(rows) == 1 {
-		assert.Equal(t, int64(1), rows[0].Get("id"), `The return value should be 1")`)
+		assert.Equal(t, int64(1), rows[0].Value("id"), `The return value should be 1")`)
 	}
 }
 
 func TestModelQuerySoftdeletes(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
-	qb := car.Query()
-	rows := qb.MustGet()
+	rows := car.MustGet()
 	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
 	if len(rows) == 1 {
-		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be datetime")`)
 	}
 }
 
 func TestModelQuerySoftdeletesWithTrashed(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
-	qb := car.Query()
-	rows := qb.MustGet()
+	rows := car.MustGet()
 	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
 	if len(rows) == 1 {
-		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be datetime")`)
 	}
 
-	qb = car.WithTrashed().Query()
-	rows = qb.MustGet()
+	car.Reset()
+	rows = car.WithTrashed().MustGet()
 	assert.Equal(t, 2, len(rows), `The return value should be 2")`)
 	if len(rows) == 2 {
-		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be nil")`)
-		assert.NotNil(t, rows[1].Get("deleted_at"), `The return value should be datetime")`)
+		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be nil")`)
+		assert.NotNil(t, rows[1].Value("deleted_at"), `The return value should be datetime")`)
 	}
 }
 
 func TestModelQuerySoftdeletesOnlyTrashed(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
-	qb := car.OnlyTrashed().Query()
-	rows := qb.MustGet()
+	rows := car.OnlyTrashed().MustGet()
 	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
 	if len(rows) == 1 {
-		assert.NotNil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+		assert.NotNil(t, rows[0].Value("deleted_at"), `The return value should be datetime")`)
 	}
 }
 
