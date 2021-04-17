@@ -38,14 +38,6 @@ func (model *Model) IsEmpty() bool {
 	return model.values.IsEmpty()
 }
 
-// GetQuery get the query interface
-func (model *Model) GetQuery() query.Query {
-	if model.table.Name == "" {
-		return model.query
-	}
-	return model.query.Table(model.table.Name)
-}
-
 // GetSchema get the query interface
 func (model *Model) GetSchema() schema.Schema {
 	return model.schema
@@ -302,11 +294,26 @@ func (model *Model) OnlyTrashed() *Model {
 	return model
 }
 
-// resetTrashed
-func (model *Model) resetTrashed() *Model {
-	model.withDeletes = false
-	model.onlyDeletes = false
-	return model
+// With where the array key is a relationship name and the array value is a closure that adds additional constraints to the eager loading query
+func (model *Model) With() {
+}
+
+// Query return the query builder
+func (model *Model) Query() query.Query {
+
+	qb := model.query.New()
+
+	if model.table.Name != "" {
+		qb.Table(model.table.Name)
+	}
+
+	if model.softDeletes && model.onlyDeletes {
+		qb.WhereNotNull("deleted_at")
+	} else if model.softDeletes && !model.withDeletes {
+		qb.WhereNull("deleted_at")
+	}
+
+	return qb
 }
 
 // Invalid determine if the model is invalid
@@ -328,14 +335,6 @@ func (model *Model) Create(attributes interface{}) {
 
 // Restore To restore a soft deleted model,
 func (model *Model) Restore() {
-}
-
-// With where the array key is a relationship name and the array value is a closure that adds additional constraints to the eager loading query
-func (model *Model) With() {
-}
-
-// Where same as the query where, return the query builder
-func (model *Model) Where() {
 }
 
 // Insert same as the query insert
@@ -360,14 +359,6 @@ func (model *Model) Delete() {
 
 // Truncate same as the query Truncate
 func (model *Model) Truncate() {
-}
-
-// Chunk same as the query Chunk
-func (model *Model) Chunk() {
-}
-
-// Paginate same as the query Paginate
-func (model *Model) Paginate() {
 }
 
 // Search search by given params
@@ -407,4 +398,11 @@ func (model *Model) fliterColumns(input []string) []string {
 		}
 	}
 	return result
+}
+
+// resetTrashed
+func (model *Model) resetTrashed() *Model {
+	model.withDeletes = false
+	model.onlyDeletes = false
+	return model
 }

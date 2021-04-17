@@ -23,6 +23,21 @@ func Use(conn *Connection) Query {
 	return builder
 }
 
+// Clone create a new builder instance with current builder
+func (builder *Builder) Clone() Query {
+	new := *builder
+	query := *builder.Query
+	new.Query = &query
+	return &new
+}
+
+// New create a new builder instance with current builder
+func (builder *Builder) New() Query {
+	new := *builder
+	new.Query = dbal.NewQuery()
+	return &new
+}
+
 // clone create a new builder instance with current builder
 func (builder *Builder) clone() *Builder {
 	new := *builder

@@ -14,6 +14,7 @@ import (
 
 // Always run Always
 var Always bool = true
+var logOutput *os.File = nil
 
 // Is the DSN should be the name given
 func Is(name string) bool {
@@ -55,6 +56,9 @@ func Driver() string {
 
 // SetLogger set the unit file logger
 func SetLogger() {
+	if logOutput != nil {
+		return
+	}
 	logfile := os.Getenv("XUN_UNIT_LOG")
 	output := os.Stdout
 	if logfile != "" {
@@ -62,6 +66,7 @@ func SetLogger() {
 		if err == nil {
 			output = f
 		}
+		logOutput = output
 	}
 	logger.DefaultLogger.SetOutput(output)
 	logger.DefaultErrorLogger.SetOutput(output)

@@ -205,7 +205,7 @@ func TestModelSave(t *testing.T) {
 		"not_found": "something",
 	}, &user).Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
-	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	row := user.Query().Select("*").Where("nickname", "Ava").MustFirst()
 	assert.Equal(t, int64(0), row.Get("gender"), `The return value should be nil")`)
 	assert.Equal(t, "99.26", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
 }
@@ -234,7 +234,7 @@ func TestModelSaveUpdate(t *testing.T) {
 		Save()
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 
-	row := user.GetQuery().Select("*").Where("nickname", "Ava").MustFirst()
+	row := user.Query().Select("*").Where("nickname", "Ava").MustFirst()
 	assert.Equal(t, int64(2), row.Get("gender"), `The return value should be nil")`)
 	assert.Equal(t, "99.98", fmt.Sprintf("%.2f", row.Get("score")), `The return value should be nil")`)
 }
@@ -254,7 +254,7 @@ func TestModelSaveInsert(t *testing.T) {
 	}).Save()
 
 	assert.Nil(t, err, `The return value should be nil")`)
-	assert.Equal(t, int64(2), car.GetQuery().Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
+	assert.Equal(t, int64(2), car.Query().Where("name", "Tesla Model Y").MustCount(), `The return value should be 2")`)
 }
 
 func TestModelSaveUniqueKeys(t *testing.T) {
@@ -408,7 +408,7 @@ func TestModelDestorySoftDeletes(t *testing.T) {
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
 
-	row := car.GetQuery().Select("*").Where("id", 1).MustFirst()
+	row := car.WithTrashed().Query().Select("*").Where("id", 1).MustFirst()
 	assert.Equal(t, int64(1), row.Get("id"), `The return value should be 1")`)
 	assert.NotNil(t, row.Get("deleted_at"), `The return value should be datetime")`)
 }
@@ -434,4 +434,55 @@ func TestModelOnlyTrashed(t *testing.T) {
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 	assert.True(t, car.MustFind(1).IsEmpty(), `The return value should be true"`)
 	assert.False(t, car.OnlyTrashed().MustFind(1).IsEmpty(), `The return value should be false"`)
+}
+
+func TestModelQuery(t *testing.T) {
+	TestFactoryMigrate(t)
+	user := models.MakeUser(modelTestMaker)
+	rows := user.Query().MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0].Get("id"), `The return value should be 1")`)
+	}
+}
+
+func TestModelQuerySoftdeletes(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	qb := car.Query()
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+	}
+}
+
+func TestModelQuerySoftdeletesWithTrashed(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	qb := car.Query()
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+	}
+
+	qb = car.WithTrashed().Query()
+	rows = qb.MustGet()
+	assert.Equal(t, 2, len(rows), `The return value should be 2")`)
+	if len(rows) == 2 {
+		assert.Nil(t, rows[0].Get("deleted_at"), `The return value should be nil")`)
+		assert.NotNil(t, rows[1].Get("deleted_at"), `The return value should be datetime")`)
+	}
+}
+
+func TestModelQueryySoftdeletesOnlyTrashed(t *testing.T) {
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
+	qb := car.OnlyTrashed().Query()
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.NotNil(t, rows[0].Get("deleted_at"), `The return value should be datetime")`)
+	}
 }
