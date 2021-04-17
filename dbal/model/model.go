@@ -220,7 +220,7 @@ func (model *Model) Save(v ...interface{}) error {
 
 // Get over load Get
 func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
-	model.querySetting()
+	model.basicQuery()
 	row, err := model.Builder.Get(v...)
 	return row, err
 }
@@ -234,7 +234,7 @@ func (model *Model) MustGet(v ...interface{}) []xun.R {
 
 // First Execute the query and get the first result.
 func (model *Model) First(v ...interface{}) (xun.R, error) {
-	model.querySetting()
+	model.basicQuery()
 	row, err := model.Builder.First(v...)
 	return row, err
 }
@@ -315,18 +315,6 @@ func (model *Model) Destroy(args ...interface{}) error {
 	return err
 }
 
-// Where Add a basic where clause to the query.
-func (model *Model) Where(column interface{}, args ...interface{}) *Model {
-	model.Builder.Where(column, args...)
-	return model
-}
-
-// Select same as the Query Select
-func (model *Model) Select(columns ...interface{}) *Model {
-	model.Builder.Select(columns...)
-	return model
-}
-
 // WithTrashed Including Soft Deleted Models
 func (model *Model) WithTrashed() *Model {
 	model.withDeletes = true
@@ -404,31 +392,7 @@ func (model *Model) withHasOne(rel *Relationship, name string, closure func(quer
 
 }
 
-// GetQuery return the query builder
-func (model *Model) GetQuery() query.Query {
-
-	qb := model.Builder.New()
-
-	if model.table.Name != "" {
-		qb.Table(model.table.Name)
-	}
-
-	if model.softDeletes && model.onlyDeletes {
-		qb.WhereNotNull("deleted_at")
-	} else if model.softDeletes && !model.withDeletes {
-		qb.WhereNull("deleted_at")
-	}
-
-	return qb
-}
-
-// Reset reset query
-func (model *Model) Reset() *Model {
-	model.Builder.Reset()
-	return model
-}
-
-func (model *Model) querySetting() {
+func (model *Model) basicQuery() {
 
 	if model.table.Name != "" && model.Builder.Query.From.IsEmpty() {
 		model.From(model.table.Name)
