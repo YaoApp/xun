@@ -26,8 +26,8 @@ type Model struct {
 	onlyDeletes bool
 	softDeletes bool
 	Timestamps  bool
-	query       query.Query
 	schema      schema.Schema
+	*query.Builder
 }
 
 // Factory xun model factory

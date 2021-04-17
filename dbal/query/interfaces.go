@@ -11,7 +11,6 @@ type Query interface {
 	// defined in the builder.go file
 	New() Query
 	Clone() Query
-	GetColumns() []interface{}
 
 	// defined in the query.go file
 	Table(name string) Query

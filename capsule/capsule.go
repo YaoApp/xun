@@ -151,8 +151,8 @@ func (manager *Manager) Schema() schema.Schema {
 	write := manager.GetPrimary()
 	return schema.Use(&schema.Connection{
 		Write:       &write.DB,
-		Option:      manager.Option,
 		WriteConfig: write.Config,
+		Option:      manager.Option,
 	})
 }
 
@@ -190,7 +190,19 @@ func Make(v interface{}, flow ...interface{}) *model.Model {
 
 // Make to build a new xun model instance
 func (manager *Manager) Make(v interface{}, flow ...interface{}) *model.Model {
-	query := manager.Query()
-	schema := manager.Schema()
+	write := manager.GetPrimary()
+	read := manager.GetRead()
+	query := query.UseBuilder(&query.Connection{
+		Write:       &write.DB,
+		WriteConfig: write.Config,
+		Read:        &read.DB,
+		ReadConfig:  read.Config,
+		Option:      manager.Option,
+	})
+	schema := schema.Use(&schema.Connection{
+		Write:       &write.DB,
+		WriteConfig: write.Config,
+		Option:      manager.Option,
+	})
 	return model.Make(query, schema, v, flow...)
 }

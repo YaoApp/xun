@@ -17,10 +17,20 @@ func New(driver string, dsn string) Query {
 	return builder
 }
 
+// NewBuilder create a new schema interface using the given driver and DSN
+func NewBuilder(driver string, dsn string) *Builder {
+	return newBuilder(driver, dsn)
+}
+
 // Use create a new schema interface using the given connection
 func Use(conn *Connection) Query {
 	builder := useBuilder(conn)
 	return builder
+}
+
+// UseBuilder create a new schema interface using the given connection
+func UseBuilder(conn *Connection) *Builder {
+	return useBuilder(conn)
 }
 
 // Clone create a new builder instance with current builder
@@ -31,11 +41,6 @@ func (builder *Builder) Clone() Query {
 // New create a new builder instance with current builder
 func (builder *Builder) New() Query {
 	return builder.new()
-}
-
-// GetColumns get the query Columns
-func (builder *Builder) GetColumns() []interface{} {
-	return builder.Query.Columns
 }
 
 // clone create a new builder instance with current builder

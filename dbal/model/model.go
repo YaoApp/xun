@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -13,12 +12,12 @@ import (
 )
 
 // Make make a new xun model instance
-func Make(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
+func Make(buidler *query.Builder, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 	if reflect.TypeOf(v).Kind() == reflect.Ptr {
-		makeByStruct(query, schema, v)
+		makeByStruct(buidler, schema, v)
 		return nil
 	}
-	return makeBySchema(query, schema, v, args...)
+	return makeBySchema(buidler, schema, v, args...)
 }
 
 // MakeUsing create model using makeer
@@ -28,7 +27,7 @@ func MakeUsing(maker MakerFunc, v interface{}, args ...interface{}) *Model {
 
 // New create a new xun model instance
 func (model *Model) New(v interface{}, args ...interface{}) *Model {
-	return Make(model.query, model.schema, v, args...)
+	return Make(model.Builder, model.schema, v, args...)
 }
 
 // GetFullname get the fullname of model
@@ -200,7 +199,7 @@ func (model *Model) Save(v ...interface{}) error {
 	}
 
 	row := model.GetValues()
-	qb := model.query.Table(model.table.Name)
+	qb := model.Builder.Table(model.table.Name)
 
 	var err error
 	if row.Has(model.primary) {
@@ -233,7 +232,7 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 		return nil, model.Invalid()
 	}
 
-	qb := model.query.Table(model.table.Name)
+	qb := model.Builder.Table(model.table.Name)
 	args := []interface{}{}
 	args = append(args, model.primary)
 	if len(v) == 1 {
@@ -278,7 +277,7 @@ func (model *Model) Destroy(args ...interface{}) error {
 		ids = append(ids, model.Get(model.primary))
 	}
 
-	qb := model.query.Table(model.table.Name).WhereIn(model.primary, ids)
+	qb := model.Builder.Table(model.table.Name).WhereIn(model.primary, ids)
 	if model.softDeletes {
 		_, err := qb.Update(xun.R{"deleted_at": time.Now().Format("2006-01-02 15:04:05.000000")})
 		return err
@@ -322,54 +321,53 @@ func (model *Model) With(args ...interface{}) *Model {
 // withHasOne
 func (model *Model) withHasOne(rel *Relationship, name string, closure func(query.Query)) {
 
-	if len(rel.Models) < 1 || rel.Type != "hasOne" {
-		invalidRelationship()
-	}
+	// if len(rel.Models) < 1 || rel.Type != "hasOne" {
+	// 	invalidRelationship()
+	// }
 
-	relModelName := rel.Models[0]
-	relFullname := relModelName
-	if !strings.Contains(relFullname, ".") {
-		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
-	}
+	// relModelName := rel.Models[0]
+	// relFullname := relModelName
+	// if !strings.Contains(relFullname, ".") {
+	// 	relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
+	// }
 
-	relModel := model.New(relFullname)
-	qb := relModel.Query()
-	if closure != nil {
-		closure(qb)
-	} else if rel.Columns != nil {
-		qb.Select(rel.Columns)
-	}
+	// relModel := model.New(relFullname)
+	// if closure != nil {
+	// 	closure(relModel)
+	// } else if rel.Columns != nil {
+	// 	qb.Select(rel.Columns)
+	// }
 
-	// Get Cloums
-	columns := qb.GetColumns()
-	for i := range columns {
-		if column, ok := columns[i].(string); ok && !strings.Contains(column, ".") {
-			columns[i] = fmt.Sprintf("%s.%s", name, column)
-		}
-	}
+	// // Get Cloums
+	// columns := qb.Builder.Query
+	// for i := range columns {
+	// 	if column, ok := columns[i].(string); ok && !strings.Contains(column, ".") {
+	// 		columns[i] = fmt.Sprintf("%s.%s", name, column)
+	// 	}
+	// }
 
-	// bind local
-	local := fmt.Sprintf("%s.%s_id", model.name, strings.ToLower(relModelName))
-	foreign := fmt.Sprintf("%s.id", name)
-	if len(rel.Links) == 2 {
-		local = fmt.Sprintf("%s.%s", model.name, rel.Links[0])
-		foreign = fmt.Sprintf("%s.%s", name, rel.Links[1])
-	}
+	// // bind local
+	// local := fmt.Sprintf("%s.%s_id", model.name, strings.ToLower(relModelName))
+	// foreign := fmt.Sprintf("%s.id", name)
+	// if len(rel.Links) == 2 {
+	// 	local = fmt.Sprintf("%s.%s", model.name, rel.Links[0])
+	// 	foreign = fmt.Sprintf("%s.%s", name, rel.Links[1])
+	// }
 
-	table := fmt.Sprintf("%s as %s", model.table.Name, model.table.Name)
-	tableWith := fmt.Sprintf("%s as %s", relModel.table.Name, name)
-	model.query.
-		Table(table).
-		LeftJoin(tableWith, local, "=", foreign)
+	// table := fmt.Sprintf("%s as %s", model.table.Name, model.table.Name)
+	// tableWith := fmt.Sprintf("%s as %s", relModel.table.Name, name)
+	// model.
+	// 	Table(table).
+	// 	LeftJoin(tableWith, local, "=", foreign)
 
-	fmt.Println("setup withHasOne: ", name, " SQL:", model.query.ToSQL(), " Link:", local, "<->", foreign)
+	// fmt.Println("setup withHasOne: ", name, " SQL:", model.ToSQL(), " Link:", local, "<->", foreign)
 
 }
 
 // Query return the query builder
 func (model *Model) Query() query.Query {
 
-	qb := model.query.New()
+	qb := model.Builder.New()
 
 	if model.table.Name != "" {
 		qb.Table(model.table.Name)
@@ -397,37 +395,37 @@ func (model *Model) Invalid() error {
 	return nil
 }
 
-// Create to create one model
-func (model *Model) Create(attributes interface{}) {
-}
+// // Create to create one model
+// func (model *Model) Create(attributes interface{}) {
+// }
 
-// Restore To restore a soft deleted model,
-func (model *Model) Restore() {
-}
+// // Restore To restore a soft deleted model,
+// func (model *Model) Restore() {
+// }
 
-// Insert same as the query insert
-func (model *Model) Insert(v interface{}, columns ...interface{}) {
-}
+// // Insert same as the query insert
+// func (model *Model) Insert(v interface{}, columns ...interface{}) {
+// }
 
-// Update  same as the query update
-func (model *Model) Update() {
-}
+// // Update  same as the query update
+// func (model *Model) Update() {
+// }
 
-// Upsert same as the query upsert
-func (model *Model) Upsert() {
-}
+// // Upsert same as the query upsert
+// func (model *Model) Upsert() {
+// }
 
-// UpdateOrInsert same as the query UpdateOrInsert
-func (model *Model) UpdateOrInsert() {
-}
+// // UpdateOrInsert same as the query UpdateOrInsert
+// func (model *Model) UpdateOrInsert() {
+// }
 
-// Delete same as the query Delete
-func (model *Model) Delete() {
-}
+// // Delete same as the query Delete
+// func (model *Model) Delete() {
+// }
 
-// Truncate same as the query Truncate
-func (model *Model) Truncate() {
-}
+// // Truncate same as the query Truncate
+// func (model *Model) Truncate() {
+// }
 
 // Search search by given params
 func (model *Model) Search() interface{} {

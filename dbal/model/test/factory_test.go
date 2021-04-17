@@ -13,7 +13,7 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
-var testQueryBuilder query.Query
+var testQueryBuilder *query.Builder
 var testSchemaBuilder schema.Schema
 
 func modelTestMaker(v interface{}, flow ...interface{}) *model.Model {
@@ -21,7 +21,7 @@ func modelTestMaker(v interface{}, flow ...interface{}) *model.Model {
 	if testQueryBuilder != nil && testSchemaBuilder != nil {
 		return model.Make(testQueryBuilder, testSchemaBuilder, v, flow...)
 	}
-	testQueryBuilder = query.New(unit.Driver(), unit.DSN())
+	testQueryBuilder = query.NewBuilder(unit.Driver(), unit.DSN())
 	testSchemaBuilder = schema.New(unit.Driver(), unit.DSN())
 	return model.Make(testQueryBuilder, testSchemaBuilder, v, flow...)
 }
@@ -40,7 +40,7 @@ func getQuery() query.Query {
 	if testQueryBuilder != nil {
 		return testQueryBuilder
 	}
-	testQueryBuilder = query.New(unit.Driver(), unit.DSN())
+	testQueryBuilder = query.NewBuilder(unit.Driver(), unit.DSN())
 	return testQueryBuilder
 }
 

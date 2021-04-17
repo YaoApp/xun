@@ -550,7 +550,7 @@ func (factory *Factory) createIndex(table schema.Blueprint, index Index) {
 }
 
 // makeBySchema make a new xun model instance
-func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args ...interface{}) *Model {
+func makeBySchema(buidler *query.Builder, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 
 	name, ok := v.(string)
 	if !ok {
@@ -567,16 +567,16 @@ func makeBySchema(query query.Query, schema schema.Schema, v interface{}, args .
 	}
 	model := class.New()
 	model.schema = schema
-	model.query = query
+	model.Builder = buidler
 	return model
 }
 
 // makeByStruct make a new xun model instance
-func makeByStruct(query query.Query, schema schema.Schema, v interface{}) {
+func makeByStruct(buidler *query.Builder, schema schema.Schema, v interface{}) {
 	name := getTypeName(v)
 	Class(name).New(v)
 	SetModel(v, func(model *Model) {
-		model.query = query
+		model.Builder = buidler
 		model.schema = schema
 	})
 }
