@@ -93,9 +93,23 @@ func (factory *Factory) New(v ...interface{}) *Model {
 		return nil
 	}
 
-	clone := *(factory.Model.(*Model))
+	model, ok := factory.Model.(*Model)
+	if !ok {
+		panic(fmt.Errorf("The factory.Model is not a model pointer"))
+	}
+
+	clone := *model
 	clone.values = xun.MakeRow()
 	return &clone
+}
+
+// NewBasic create a basic interface{}
+func (factory *Factory) NewBasic(v ...interface{}) Basic {
+	basic, ok := factory.Model.(Basic)
+	if !ok {
+		panic(fmt.Errorf("The factory.Model is not a model Basic interface"))
+	}
+	return basic.Clone()
 }
 
 // Methods get the model methods for auto-generate the APIs

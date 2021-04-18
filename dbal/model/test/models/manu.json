@@ -34,6 +34,12 @@
       "links": ["id", "manu_id"]
     },
     {
+      "name": "user",
+      "type": "hasOneThrough",
+      "models": ["car", "user_car", "user"],
+      "links": ["id", "manu_id", "car_id", "car_id", "user_id", "id"]
+    },
+    {
       "name": "users",
       "type": "hasManyThrough",
       "models": ["car", "user_car", "user"],

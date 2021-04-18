@@ -1,4 +1,4 @@
-// Package models  Sun Apr 18 14:46:24 CST 2021
+// Package models  Sun Apr 18 16:19:40 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -88,6 +88,12 @@ var SchemaFileContents = map[string][]byte{
       "type": "hasMany",
       "models": ["car"],
       "links": ["id", "manu_id"]
+    },
+    {
+      "name": "user",
+      "type": "hasOneThrough",
+      "models": ["car", "user_car", "user"],
+      "links": ["id", "manu_id", "car_id", "car_id", "user_id", "id"]
     },
     {
       "name": "users",

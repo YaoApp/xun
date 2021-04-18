@@ -563,6 +563,10 @@ func TestModelWithHasMany(t *testing.T) {
 }
 
 func TestModelWithHasOneThrough(t *testing.T) {
+	TestFactoryMigrate(t)
+	manu := model.MakeUsing(modelTestMaker, "models/manu")
+	rows := manu.With("user").Select("name", "type").MustGet()
+	utils.Println(rows)
 }
 
 func TestModelWithHasManyThrough(t *testing.T) {

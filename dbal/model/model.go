@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -337,195 +336,6 @@ func (model *Model) OnlyTrashed() *Model {
 	return model
 }
 
-// SelectAddColumn add a column
-func (model *Model) SelectAddColumn(foreign string) *Model {
-	columns := model.Query.Columns
-	if len(columns) > 0 {
-		columns = append(columns, foreign)
-		columns = utils.InterfaceUnique(columns)
-		model.Select(columns)
-	}
-	return model
-}
-
-// selectRelationshipColumns add the relationship-defined columns, before query.
-func (model *Model) selectRelationshipColumns(v ...interface{}) *Model {
-
-	if len(v) == 1 {
-		columns := model.explodeColumns(v[0])
-		model.Select(columns)
-		return model
-	}
-
-	columnMap := map[interface{}]bool{}
-	if len(model.Builder.Query.Columns) > 0 {
-		for _, name := range model.Builder.Query.Columns {
-			// ignore select *
-			if column, ok := name.(string); ok && column == "*" {
-				return model
-			}
-			columnMap[name] = true
-		}
-		for _, with := range model.withs {
-			columnMap[with.Local] = true
-		}
-
-		columns := []interface{}{}
-		for name := range columnMap {
-			columns = append(columns, name)
-		}
-		model.Select(columns...)
-	}
-
-	return model
-}
-
-// With where the array key is a relationship name and the array value is a closure that adds additional constraints to the eager loading query
-func (model *Model) With(args ...interface{}) *Model {
-	name, closure := prepareWithArgs(args...)
-	var rel *Relationship = nil
-	if attr, has := model.attributes[name]; has {
-		rel = attr.Relationship
-	}
-
-	if rel == nil {
-		invalidRelationship()
-	}
-
-	switch rel.Type {
-	case "hasOne":
-		model.withHas("hasOne", rel, name, closure)
-		break
-	case "hasMany":
-		model.withHas("hasMany", rel, name, closure)
-		break
-	}
-	return model
-}
-
-// withHasMany
-func (model *Model) withHas(typ string, rel *Relationship, name string, closure func(query.Query)) {
-
-	if len(rel.Models) < 1 {
-		invalidRelationship()
-	}
-
-	relModel := model.
-		MakeModelForRelationship(rel.Models[0]).
-		BasicQueryForRelationship(rel.Columns, closure)
-
-	// links M1.Local, (->) M2.Foreign, M2.Local, (->) M3.Foreign ...
-	local, foreign := relModel.getRelationshipLink(rel.Models[0], rel.Links...)
-	relModel.SelectAddColumn(foreign)
-
-	model.withs = append(model.withs, With{
-		Name:    name,
-		Type:    typ,
-		Query:   relModel.Builder,
-		Local:   local,
-		Foreign: foreign,
-	})
-
-}
-
-// ExecuteWiths Execute the withs query and merge result
-func (model *Model) ExecuteWiths(rows []xun.R) error {
-
-	if len(rows) == 0 {
-		return nil
-	}
-
-	for _, with := range model.withs {
-		var err error
-		switch with.Type {
-		case "hasOne":
-			err = model.executeHasOne(rows, with)
-		case "hasMany":
-			err = model.executeHasMany(rows, with)
-		}
-		if err != nil {
-			rows = nil
-			return err
-		}
-	}
-	return nil
-}
-
-func (model *Model) executeHasMany(rows []xun.R, with With) error {
-
-	ids := []interface{}{}
-	for _, row := range rows {
-		id := row.Get(with.Local)
-		if id == nil {
-			return fmt.Errorf("The %s is nil", with.Local)
-		}
-		ids = append(ids, id)
-	}
-
-	// get the relation rows
-	relrows, err := with.Query.WhereIn(with.Foreign, ids).Get()
-	if err != nil {
-		return err
-	}
-
-	// merge the result
-	relRowsMap := map[interface{}][]xun.R{}
-	for _, rel := range relrows {
-		id := rel.Get(with.Foreign)
-		if _, has := relRowsMap[id]; !has {
-			relRowsMap[id] = []xun.R{}
-		}
-		relRowsMap[id] = append(relRowsMap[id], rel)
-	}
-
-	for _, row := range rows {
-		id := row.Get(with.Local)
-		if rel, has := relRowsMap[id]; has {
-			row[with.Name] = rel
-		} else {
-			row[with.Name] = []xun.R{}
-		}
-	}
-
-	return nil
-}
-
-func (model *Model) executeHasOne(rows []xun.R, with With) error {
-
-	ids := []interface{}{}
-	for _, row := range rows {
-		id := row.Get(with.Local)
-		if id == nil {
-			return fmt.Errorf("The %s is nil", with.Local)
-		}
-		ids = append(ids, id)
-	}
-
-	// get the relation rows
-	relrows, err := with.Query.WhereIn(with.Foreign, ids).Get()
-	if err != nil {
-		return err
-	}
-
-	// merge the result
-	relRowsMap := map[interface{}]xun.R{}
-	for _, rel := range relrows {
-		id := rel.Get(with.Foreign)
-		relRowsMap[id] = rel
-
-	}
-	for _, row := range rows {
-		id := row.Get(with.Local)
-		if rel, has := relRowsMap[id]; has {
-			row[with.Name] = rel
-		} else {
-			row[with.Name] = xun.MakeRow()
-		}
-	}
-
-	return nil
-}
-
 // BasicQuery filter deleted_at records if using soft deletes
 func (model *Model) BasicQuery() *Model {
 
@@ -540,28 +350,6 @@ func (model *Model) BasicQuery() *Model {
 	}
 
 	return model
-}
-
-// BasicQueryForRelationship execute basic query for relationship
-func (model *Model) BasicQueryForRelationship(columns []string, closure func(query.Query)) *Model {
-
-	if closure != nil {
-		closure(model.Builder)
-	} else if columns != nil {
-		model.Select(columns)
-	}
-
-	model.BasicQuery()
-	return model
-}
-
-// MakeModelForRelationship make a new model instance for the relationship query
-func (model *Model) MakeModelForRelationship(name string) *Model {
-	relFullname := name
-	if !strings.Contains(relFullname, ".") {
-		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
-	}
-	return model.New(relFullname)
 }
 
 // Invalid determine if the model is invalid
@@ -623,12 +411,34 @@ func (model *Model) resetTrashed() *Model {
 	return model
 }
 
-func (model *Model) getRelationshipLink(name string, ids ...string) (string, string) {
-	foreign := "id"
-	local := fmt.Sprintf("%s_id", strings.ToLower(name))
-	if len(ids) == 2 {
-		local = ids[0]
-		foreign = ids[1]
+// selectRelationshipColumns add the relationship-defined columns, before query.
+func (model *Model) selectRelationshipColumns(v ...interface{}) *Model {
+
+	if len(v) == 1 {
+		columns := model.explodeColumns(v[0])
+		model.Select(columns)
+		return model
 	}
-	return local, foreign
+
+	columnMap := map[interface{}]bool{}
+	if len(model.Builder.Query.Columns) > 0 {
+		for _, name := range model.Builder.Query.Columns {
+			// ignore select *
+			if column, ok := name.(string); ok && column == "*" {
+				return model
+			}
+			columnMap[name] = true
+		}
+		for _, with := range model.withs {
+			columnMap[with.Local] = true
+		}
+
+		columns := []interface{}{}
+		for name := range columnMap {
+			columns = append(columns, name)
+		}
+		model.Select(columns...)
+	}
+
+	return model
 }
