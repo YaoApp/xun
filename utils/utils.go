@@ -112,6 +112,34 @@ func StringHave(source []string, one string) bool {
 	return false
 }
 
+// StringUnique Returns unique items in a slice
+func StringUnique(slice []string) []string {
+	uniqMap := map[string]bool{}
+	for _, v := range slice {
+		uniqMap[v] = true
+	}
+	// turn the map keys into a slice
+	uniqSlice := make([]string, 0, len(uniqMap))
+	for v := range uniqMap {
+		uniqSlice = append(uniqSlice, v)
+	}
+	return uniqSlice
+}
+
+// InterfaceUnique Returns unique items in a slice
+func InterfaceUnique(slice []interface{}) []interface{} {
+	uniqMap := map[interface{}]bool{}
+	for _, v := range slice {
+		uniqMap[v] = true
+	}
+	// turn the map keys into a slice
+	uniqSlice := make([]interface{}, 0, len(uniqMap))
+	for v := range uniqMap {
+		uniqSlice = append(uniqSlice, v)
+	}
+	return uniqSlice
+}
+
 // IsNil Check if an interface is nil
 func IsNil(value interface{}) bool {
 	if value == nil {

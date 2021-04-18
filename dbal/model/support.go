@@ -329,7 +329,7 @@ func setupAttributes(model *Model, schema *Schema) {
 
 	// init
 	model.attributes = map[string]Attribute{}
-	model.withs = []string{}
+	model.withs = []With{}
 	model.values = xun.MakeRow()
 	model.columns = []*Column{}
 	model.columnNames = []string{}

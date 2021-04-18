@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -220,9 +221,17 @@ func (model *Model) Save(v ...interface{}) error {
 
 // Get over load Get
 func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
-	model.basicQuery()
-	row, err := model.Builder.Get(v...)
-	return row, err
+	model.
+		BasicQuery().
+		SelectRelationshipColumns(v...)
+
+	rows, err := model.Builder.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	err = model.ExecuteWiths(rows)
+	return rows, err
 }
 
 // MustGet over load MustGet
@@ -234,9 +243,9 @@ func (model *Model) MustGet(v ...interface{}) []xun.R {
 
 // First Execute the query and get the first result.
 func (model *Model) First(v ...interface{}) (xun.R, error) {
-	model.basicQuery()
-	row, err := model.Builder.First(v...)
-	return row, err
+	model.BasicQuery()
+	rows, err := model.Builder.First(v...)
+	return rows, err
 }
 
 // MustFirst Execute the query and get the first result.
@@ -260,7 +269,8 @@ func (model *Model) Find(id interface{}, v ...interface{}) (xun.R, error) {
 		return nil, model.Invalid()
 	}
 
-	qb := model.Builder.Table(model.table.Name)
+	qb := model.Builder.New()
+	qb.Table(model.table.Name)
 	args := []interface{}{}
 	args = append(args, model.primary)
 	if len(v) == 1 {
@@ -327,6 +337,38 @@ func (model *Model) OnlyTrashed() *Model {
 	return model
 }
 
+// SelectRelationshipColumns add the relationship-defined columns, before query.
+func (model *Model) SelectRelationshipColumns(v ...interface{}) *Model {
+
+	if len(v) == 1 {
+		columns := model.explodeColumns(v[0])
+		model.Select(columns)
+		return model
+	}
+
+	columnMap := map[interface{}]bool{}
+	if len(model.Builder.Query.Columns) > 0 {
+		for _, name := range model.Builder.Query.Columns {
+			// ignore select *
+			if column, ok := name.(string); ok && column == "*" {
+				return model
+			}
+			columnMap[name] = true
+		}
+		for _, with := range model.withs {
+			columnMap[with.Local] = true
+		}
+
+		columns := []interface{}{}
+		for name := range columnMap {
+			columns = append(columns, name)
+		}
+		model.Select(columns...)
+	}
+
+	return model
+}
+
 // With where the array key is a relationship name and the array value is a closure that adds additional constraints to the eager loading query
 func (model *Model) With(args ...interface{}) *Model {
 	name, closure := prepareWithArgs(args...)
@@ -349,50 +391,101 @@ func (model *Model) With(args ...interface{}) *Model {
 // withHasOne
 func (model *Model) withHasOne(rel *Relationship, name string, closure func(query.Query)) {
 
-	// if len(rel.Models) < 1 || rel.Type != "hasOne" {
-	// 	invalidRelationship()
-	// }
+	if len(rel.Models) < 1 || rel.Type != "hasOne" {
+		invalidRelationship()
+	}
 
-	// relModelName := rel.Models[0]
-	// relFullname := relModelName
-	// if !strings.Contains(relFullname, ".") {
-	// 	relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
-	// }
+	relModelName := rel.Models[0]
+	relFullname := relModelName
+	if !strings.Contains(relFullname, ".") {
+		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
+	}
 
-	// relModel := model.New(relFullname)
-	// if closure != nil {
-	// 	closure(relModel)
-	// } else if rel.Columns != nil {
-	// 	qb.Select(rel.Columns)
-	// }
+	relModel := model.New(relFullname)
+	relModel.BasicQuery()
+	if closure != nil {
+		closure(relModel.Builder)
+	} else if rel.Columns != nil {
+		relModel.Select(rel.Columns)
+	}
 
-	// // Get Cloums
-	// columns := qb.Builder.Query
-	// for i := range columns {
-	// 	if column, ok := columns[i].(string); ok && !strings.Contains(column, ".") {
-	// 		columns[i] = fmt.Sprintf("%s.%s", name, column)
-	// 	}
-	// }
+	// bind local
+	foreign := "id"
+	local := fmt.Sprintf("%s_id", strings.ToLower(relModelName))
+	if len(rel.Links) == 2 {
+		local = rel.Links[0]
+		foreign = rel.Links[1]
+	}
 
-	// // bind local
-	// local := fmt.Sprintf("%s.%s_id", model.name, strings.ToLower(relModelName))
-	// foreign := fmt.Sprintf("%s.id", name)
-	// if len(rel.Links) == 2 {
-	// 	local = fmt.Sprintf("%s.%s", model.name, rel.Links[0])
-	// 	foreign = fmt.Sprintf("%s.%s", name, rel.Links[1])
-	// }
+	// add foreign id
+	columns := relModel.Query.Columns
+	if len(columns) > 0 {
+		columns = append(columns, foreign)
+		columns = utils.InterfaceUnique(columns)
+		relModel.Select(columns)
+	}
 
-	// table := fmt.Sprintf("%s as %s", model.table.Name, model.table.Name)
-	// tableWith := fmt.Sprintf("%s as %s", relModel.table.Name, name)
-	// model.
-	// 	Table(table).
-	// 	LeftJoin(tableWith, local, "=", foreign)
-
-	// fmt.Println("setup withHasOne: ", name, " SQL:", model.ToSQL(), " Link:", local, "<->", foreign)
-
+	model.withs = append(model.withs, With{
+		Name:    name,
+		Type:    "hasOne",
+		Query:   relModel.Builder,
+		Local:   local,
+		Foreign: foreign,
+	})
 }
 
-func (model *Model) basicQuery() {
+// ExecuteWiths Execute the withs query and merge result
+func (model *Model) ExecuteWiths(rows []xun.R) error {
+
+	if len(rows) == 0 {
+		return nil
+	}
+
+	for _, with := range model.withs {
+		var err error
+		switch with.Type {
+		case "hasOne":
+			err = model.executeHasOne(rows, with)
+		}
+		if err != nil {
+			rows = nil
+			return err
+		}
+	}
+	return nil
+}
+
+func (model *Model) executeHasOne(rows []xun.R, with With) error {
+
+	ids := []interface{}{}
+	rowsMap := map[interface{}]xun.R{}
+	for _, row := range rows {
+		id := row.Get(with.Local)
+		if id == nil {
+			return fmt.Errorf("The %s is nil", with.Local)
+		}
+		ids = append(ids, id)
+		rowsMap[id] = row
+	}
+
+	relrows, err := with.Query.WhereIn(with.Foreign, ids).Get()
+	if err != nil {
+		return err
+	}
+
+	// merge the result
+	for _, rel := range relrows {
+		id := rel.Get(with.Foreign)
+		if row, has := rowsMap[id]; has {
+			row[with.Name] = rel
+		}
+	}
+
+	return nil
+}
+
+// BasicQuery filter deleted_at records if using soft deletes
+func (model *Model) BasicQuery() *Model {
 
 	if model.table.Name != "" && model.Builder.Query.From.IsEmpty() {
 		model.From(model.table.Name)
@@ -403,6 +496,8 @@ func (model *Model) basicQuery() {
 	} else if model.softDeletes && !model.withDeletes {
 		model.WhereNull("deleted_at")
 	}
+
+	return model
 }
 
 // Invalid determine if the model is invalid
@@ -417,38 +512,6 @@ func (model *Model) Invalid() error {
 
 	return nil
 }
-
-// // Create to create one model
-// func (model *Model) Create(attributes interface{}) {
-// }
-
-// // Restore To restore a soft deleted model,
-// func (model *Model) Restore() {
-// }
-
-// // Insert same as the query insert
-// func (model *Model) Insert(v interface{}, columns ...interface{}) {
-// }
-
-// // Update  same as the query update
-// func (model *Model) Update() {
-// }
-
-// // Upsert same as the query upsert
-// func (model *Model) Upsert() {
-// }
-
-// // UpdateOrInsert same as the query UpdateOrInsert
-// func (model *Model) UpdateOrInsert() {
-// }
-
-// // Delete same as the query Delete
-// func (model *Model) Delete() {
-// }
-
-// // Truncate same as the query Truncate
-// func (model *Model) Truncate() {
-// }
 
 // Search search by given params
 func (model *Model) Search() interface{} {

@@ -231,8 +231,20 @@ func (row R) Get(key interface{}) interface{} {
 
 // Has detemind if has the given key
 func (row R) Has(key string) bool {
-	_, has := row[key]
-	return has
+	keys := strings.Split(fmt.Sprintf("%v", key), ".")
+	nextRow := row
+	length := len(keys) - 1
+	for i, k := range keys {
+		value, has := nextRow[k]
+		if !has {
+			return false
+		}
+		if length == i {
+			return true
+		}
+		nextRow = MakeR(value)
+	}
+	return true
 }
 
 // Del delete value with given key

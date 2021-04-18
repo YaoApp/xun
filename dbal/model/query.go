@@ -7,6 +7,7 @@ import (
 // Reset Reset()
 func (model *Model) Reset() *Model {
 	model.Builder.Reset()
+	model.withs = []With{}
 	return model
 }
 

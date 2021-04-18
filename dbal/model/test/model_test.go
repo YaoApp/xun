@@ -9,6 +9,7 @@ import (
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/model"
 	"github.com/yaoapp/xun/dbal/model/test/models"
+	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -485,18 +486,26 @@ func TestModelQuerySoftdeletesOnlyTrashed(t *testing.T) {
 }
 
 func TestModelWithHasOne(t *testing.T) {
-	// TestFactoryMigrate(t)
-	// car := model.MakeUsing(modelTestMaker, "models/car")
+	TestFactoryMigrate(t)
+	car := model.MakeUsing(modelTestMaker, "models/car")
 
-	// qb := car.With("manu").Query()
-	// rows := qb.MustGet()
-	// utils.Println(rows)
+	rows := car.With("manu").MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0].Value("manu.id"), `The return value should be 1")`)
+		assert.Equal(t, "Tesla", rows[0].Value("manu.name"), `The return value should be Tesla")`)
+		assert.True(t, rows[0].Has("manu.intro"), `The return value should not be nil")`)
+	}
 
-	// qb = car.With("manu", func(qb query.Query) {
-	// 	qb.Select("name", "type")
-	// }).Query()
-	// rows = qb.MustGet()
-	// utils.Println(rows)
+	rows = car.Reset().With("manu", func(qb query.Query) {
+		qb.Select("name", "type")
+	}).MustGet()
+	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
+	if len(rows) == 1 {
+		assert.Equal(t, int64(1), rows[0].Value("manu.id"), `The return value should be 1")`)
+		assert.Equal(t, "Tesla", rows[0].Value("manu.name"), `The return value should be Tesla")`)
+		assert.False(t, rows[0].Has("manu.intro"), `The return value should be nil")`)
+	}
 }
 
 func TestModelWithHasMany(t *testing.T) {

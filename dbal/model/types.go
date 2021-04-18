@@ -12,7 +12,7 @@ import (
 type Model struct {
 	namespace   string
 	name        string
-	withs       []string
+	withs       []With
 	attributes  map[string]Attribute
 	values      xun.R
 	table       *Table
@@ -148,6 +148,15 @@ type Relationship struct {
 	Links   []string `json:"links,omitempty"` //  M1.Local, (->) M2.Foreign, M2.Local, (->) M3.Foreign ...
 	Columns []string `json:"columns,omitempty"`
 	Wheres  []string `json:"wheres,omitempty"`
+}
+
+// With relationship struct
+type With struct {
+	Type    string      // hasOne, hasMany, hasOneThrough, hasManyThrough
+	Name    string      // with instance name
+	Query   query.Query // The query interface
+	Local   string      // the local column name
+	Foreign string      // the foreign column name
 }
 
 // Attribute the model attribute
