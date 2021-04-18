@@ -223,7 +223,7 @@ func (model *Model) Save(v ...interface{}) error {
 func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
 	model.
 		BasicQuery().
-		SelectRelationshipColumns(v...)
+		selectRelationshipColumns(v...)
 
 	rows, err := model.Builder.Get()
 	if err != nil {
@@ -337,8 +337,19 @@ func (model *Model) OnlyTrashed() *Model {
 	return model
 }
 
-// SelectRelationshipColumns add the relationship-defined columns, before query.
-func (model *Model) SelectRelationshipColumns(v ...interface{}) *Model {
+// SelectAddColumn add a column
+func (model *Model) SelectAddColumn(foreign string) *Model {
+	columns := model.Query.Columns
+	if len(columns) > 0 {
+		columns = append(columns, foreign)
+		columns = utils.InterfaceUnique(columns)
+		model.Select(columns)
+	}
+	return model
+}
+
+// selectRelationshipColumns add the relationship-defined columns, before query.
+func (model *Model) selectRelationshipColumns(v ...interface{}) *Model {
 
 	if len(v) == 1 {
 		columns := model.explodeColumns(v[0])
@@ -378,60 +389,43 @@ func (model *Model) With(args ...interface{}) *Model {
 	}
 
 	if rel == nil {
-		invalidArguments()
-	}
-
-	if rel.Type == "hasOne" {
-		model.withHasOne(rel, name, closure)
-	}
-
-	return model
-}
-
-// withHasOne
-func (model *Model) withHasOne(rel *Relationship, name string, closure func(query.Query)) {
-
-	if len(rel.Models) < 1 || rel.Type != "hasOne" {
 		invalidRelationship()
 	}
 
-	relModelName := rel.Models[0]
-	relFullname := relModelName
-	if !strings.Contains(relFullname, ".") {
-		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
+	switch rel.Type {
+	case "hasOne":
+		model.withHas("hasOne", rel, name, closure)
+		break
+	case "hasMany":
+		model.withHas("hasMany", rel, name, closure)
+		break
+	}
+	return model
+}
+
+// withHasMany
+func (model *Model) withHas(typ string, rel *Relationship, name string, closure func(query.Query)) {
+
+	if len(rel.Models) < 1 {
+		invalidRelationship()
 	}
 
-	relModel := model.New(relFullname)
-	relModel.BasicQuery()
-	if closure != nil {
-		closure(relModel.Builder)
-	} else if rel.Columns != nil {
-		relModel.Select(rel.Columns)
-	}
+	relModel := model.
+		MakeModelForRelationship(rel.Models[0]).
+		BasicQueryForRelationship(rel.Columns, closure)
 
-	// bind local
-	foreign := "id"
-	local := fmt.Sprintf("%s_id", strings.ToLower(relModelName))
-	if len(rel.Links) == 2 {
-		local = rel.Links[0]
-		foreign = rel.Links[1]
-	}
-
-	// add foreign id
-	columns := relModel.Query.Columns
-	if len(columns) > 0 {
-		columns = append(columns, foreign)
-		columns = utils.InterfaceUnique(columns)
-		relModel.Select(columns)
-	}
+	// links M1.Local, (->) M2.Foreign, M2.Local, (->) M3.Foreign ...
+	local, foreign := relModel.getRelationshipLink(rel.Models[0], rel.Links...)
+	relModel.SelectAddColumn(foreign)
 
 	model.withs = append(model.withs, With{
 		Name:    name,
-		Type:    "hasOne",
+		Type:    typ,
 		Query:   relModel.Builder,
 		Local:   local,
 		Foreign: foreign,
 	})
+
 }
 
 // ExecuteWiths Execute the withs query and merge result
@@ -446,6 +440,8 @@ func (model *Model) ExecuteWiths(rows []xun.R) error {
 		switch with.Type {
 		case "hasOne":
 			err = model.executeHasOne(rows, with)
+		case "hasMany":
+			err = model.executeHasMany(rows, with)
 		}
 		if err != nil {
 			rows = nil
@@ -455,29 +451,75 @@ func (model *Model) ExecuteWiths(rows []xun.R) error {
 	return nil
 }
 
-func (model *Model) executeHasOne(rows []xun.R, with With) error {
+func (model *Model) executeHasMany(rows []xun.R, with With) error {
 
 	ids := []interface{}{}
-	rowsMap := map[interface{}]xun.R{}
 	for _, row := range rows {
 		id := row.Get(with.Local)
 		if id == nil {
 			return fmt.Errorf("The %s is nil", with.Local)
 		}
 		ids = append(ids, id)
-		rowsMap[id] = row
 	}
 
+	// get the relation rows
 	relrows, err := with.Query.WhereIn(with.Foreign, ids).Get()
 	if err != nil {
 		return err
 	}
 
 	// merge the result
+	relRowsMap := map[interface{}][]xun.R{}
 	for _, rel := range relrows {
 		id := rel.Get(with.Foreign)
-		if row, has := rowsMap[id]; has {
+		if _, has := relRowsMap[id]; !has {
+			relRowsMap[id] = []xun.R{}
+		}
+		relRowsMap[id] = append(relRowsMap[id], rel)
+	}
+
+	for _, row := range rows {
+		id := row.Get(with.Local)
+		if rel, has := relRowsMap[id]; has {
 			row[with.Name] = rel
+		} else {
+			row[with.Name] = []xun.R{}
+		}
+	}
+
+	return nil
+}
+
+func (model *Model) executeHasOne(rows []xun.R, with With) error {
+
+	ids := []interface{}{}
+	for _, row := range rows {
+		id := row.Get(with.Local)
+		if id == nil {
+			return fmt.Errorf("The %s is nil", with.Local)
+		}
+		ids = append(ids, id)
+	}
+
+	// get the relation rows
+	relrows, err := with.Query.WhereIn(with.Foreign, ids).Get()
+	if err != nil {
+		return err
+	}
+
+	// merge the result
+	relRowsMap := map[interface{}]xun.R{}
+	for _, rel := range relrows {
+		id := rel.Get(with.Foreign)
+		relRowsMap[id] = rel
+
+	}
+	for _, row := range rows {
+		id := row.Get(with.Local)
+		if rel, has := relRowsMap[id]; has {
+			row[with.Name] = rel
+		} else {
+			row[with.Name] = xun.MakeRow()
 		}
 	}
 
@@ -498,6 +540,28 @@ func (model *Model) BasicQuery() *Model {
 	}
 
 	return model
+}
+
+// BasicQueryForRelationship execute basic query for relationship
+func (model *Model) BasicQueryForRelationship(columns []string, closure func(query.Query)) *Model {
+
+	if closure != nil {
+		closure(model.Builder)
+	} else if columns != nil {
+		model.Select(columns)
+	}
+
+	model.BasicQuery()
+	return model
+}
+
+// MakeModelForRelationship make a new model instance for the relationship query
+func (model *Model) MakeModelForRelationship(name string) *Model {
+	relFullname := name
+	if !strings.Contains(relFullname, ".") {
+		relFullname = fmt.Sprintf("%s.%s", model.namespace, relFullname)
+	}
+	return model.New(relFullname)
 }
 
 // Invalid determine if the model is invalid
@@ -557,4 +621,14 @@ func (model *Model) resetTrashed() *Model {
 	model.withDeletes = false
 	model.onlyDeletes = false
 	return model
+}
+
+func (model *Model) getRelationshipLink(name string, ids ...string) (string, string) {
+	foreign := "id"
+	local := fmt.Sprintf("%s_id", strings.ToLower(name))
+	if len(ids) == 2 {
+		local = ids[0]
+		foreign = ids[1]
+	}
+	return local, foreign
 }

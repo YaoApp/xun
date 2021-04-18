@@ -1,4 +1,4 @@
-// Package models  Sat Apr 17 16:58:45 CST 2021
+// Package models  Sun Apr 18 14:46:24 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -44,7 +44,12 @@ var SchemaFileContents = map[string][]byte{
       "name": "Tesla Cybertruck",
       "manu_id": 1,
       "deleted_at": "2020-03-04 22:24:39"
-    }
+    },
+    { "name": "Tesla Model X", "manu_id": 1, "deleted_at": null },
+    { "name": "SERENA E-POWER", "manu_id": 3, "deleted_at": null },
+    { "name": "Teana", "manu_id": 3, "deleted_at": null },
+    { "name": "RAV4", "manu_id": 2, "deleted_at": null },
+    { "name": "CH-R", "manu_id": 2, "deleted_at": null }
   ]
 }
 `),

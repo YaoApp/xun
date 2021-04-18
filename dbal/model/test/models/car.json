@@ -36,6 +36,11 @@
       "name": "Tesla Cybertruck",
       "manu_id": 1,
       "deleted_at": "2020-03-04 22:24:39"
-    }
+    },
+    { "name": "Tesla Model X", "manu_id": 1, "deleted_at": null },
+    { "name": "SERENA E-POWER", "manu_id": 3, "deleted_at": null },
+    { "name": "Teana", "manu_id": 3, "deleted_at": null },
+    { "name": "RAV4", "manu_id": 2, "deleted_at": null },
+    { "name": "CH-R", "manu_id": 2, "deleted_at": null }
   ]
 }

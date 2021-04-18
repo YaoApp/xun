@@ -219,6 +219,24 @@ func (row R) Get(key interface{}) interface{} {
 	for i, k := range keys {
 		value, has := nextRow[k]
 		if !has {
+			return nil
+		}
+		if length == i {
+			return value
+		}
+		nextRow = MakeR(value)
+	}
+	return nil
+}
+
+// MustGet get the value of the given key, if key does not exits painc
+func (row R) MustGet(key interface{}) interface{} {
+	keys := strings.Split(fmt.Sprintf("%v", key), ".")
+	nextRow := row
+	length := len(keys) - 1
+	for i, k := range keys {
+		value, has := nextRow[k]
+		if !has {
 			panic(fmt.Errorf("the key %v does not exists", key))
 		}
 		if length == i {

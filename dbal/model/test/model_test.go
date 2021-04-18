@@ -451,9 +451,11 @@ func TestModelQuerySoftdeletes(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
 	rows := car.MustGet()
-	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
-	if len(rows) == 1 {
-		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be datetime")`)
+	assert.Equal(t, 6, len(rows), `The return value should be 6")`)
+	if len(rows) == 6 {
+		for i := range rows {
+			assert.Nil(t, rows[i].Value("deleted_at"), `The return value should be datetime")`)
+		}
 	}
 }
 
@@ -461,15 +463,17 @@ func TestModelQuerySoftdeletesWithTrashed(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
 	rows := car.MustGet()
-	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
-	if len(rows) == 1 {
-		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be datetime")`)
+	assert.Equal(t, 6, len(rows), `The return value should be 6")`)
+	if len(rows) == 6 {
+		for i := range rows {
+			assert.Nil(t, rows[i].Value("deleted_at"), `The return value should be datetime")`)
+		}
 	}
 
 	car.Reset()
 	rows = car.WithTrashed().MustGet()
-	assert.Equal(t, 2, len(rows), `The return value should be 2")`)
-	if len(rows) == 2 {
+	assert.Equal(t, 7, len(rows), `The return value should be 2")`)
+	if len(rows) == 7 {
 		assert.Nil(t, rows[0].Value("deleted_at"), `The return value should be nil")`)
 		assert.NotNil(t, rows[1].Value("deleted_at"), `The return value should be datetime")`)
 	}
@@ -490,25 +494,72 @@ func TestModelWithHasOne(t *testing.T) {
 	car := model.MakeUsing(modelTestMaker, "models/car")
 
 	rows := car.With("manu").MustGet()
-	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
-	if len(rows) == 1 {
-		assert.Equal(t, int64(1), rows[0].Value("manu.id"), `The return value should be 1")`)
-		assert.Equal(t, "Tesla", rows[0].Value("manu.name"), `The return value should be Tesla")`)
-		assert.True(t, rows[0].Has("manu.intro"), `The return value should not be nil")`)
+	assert.Equal(t, 6, len(rows), `The return value should be 1")`)
+	if len(rows) == 6 {
+		for i := range rows {
+			assert.Equal(t, rows[i].Get("manu_id"), rows[i].Get("manu.id"), `The return value should be 1")`)
+			assert.True(t, rows[i].Has("manu.id"), `The return value should have manu.id field")`)
+			assert.True(t, rows[i].Has("manu.name"), `The return value should have manu.name field")`)
+			assert.True(t, rows[i].Has("manu.intro"), `The return value should have not manu.intro field")`)
+		}
 	}
 
 	rows = car.Reset().With("manu", func(qb query.Query) {
 		qb.Select("name", "type")
 	}).MustGet()
-	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
-	if len(rows) == 1 {
-		assert.Equal(t, int64(1), rows[0].Value("manu.id"), `The return value should be 1")`)
-		assert.Equal(t, "Tesla", rows[0].Value("manu.name"), `The return value should be Tesla")`)
-		assert.False(t, rows[0].Has("manu.intro"), `The return value should be nil")`)
+	assert.Equal(t, 6, len(rows), `The return value should be 1")`)
+	if len(rows) == 6 {
+		for i := range rows {
+			assert.Equal(t, rows[i].Get("manu_id"), rows[i].Get("manu.id"), `The return value should be 1")`)
+			assert.True(t, rows[i].Has("manu.id"), `The return value should have manu.id field")`)
+			assert.True(t, rows[i].Has("manu.name"), `The return value should have manu.name field")`)
+			assert.False(t, rows[i].Has("manu.intro"), `The return value should have not manu.intro field")`)
+		}
 	}
 }
 
 func TestModelWithHasMany(t *testing.T) {
+	TestFactoryMigrate(t)
+	manu := model.MakeUsing(modelTestMaker, "models/manu")
+	rows := manu.With("cars").MustGet()
+	assert.Equal(t, 3, len(rows), `The return value should be 3")`)
+	if len(rows) == 3 {
+		for i := range rows {
+			cars, has := rows[i].Get("cars").([]xun.R)
+			assert.True(t, has, `The return value should have cars")`)
+			if has {
+				assert.True(t, len(cars) > 0, `The return value should have cars")`)
+				for _, car := range cars {
+					assert.Equal(t, rows[i].Get("id"), car.Get("manu_id"), `The return value should be 1")`)
+					assert.True(t, car.Has("id"), `The return car should have id field")`)
+					assert.True(t, car.Has("name"), `The return car should have name field")`)
+					assert.True(t, car.Has("created_at"), `The return car should have created_at field")`)
+				}
+			}
+		}
+	}
+
+	rows = manu.Reset().With("cars", func(qb query.Query) {
+		qb.Select("name").
+			Where("name", "like", "%V%").
+			OrWhere("name", "like", "%M%").
+			OrWhere("name", "like", "%T%").
+			Take(100)
+	}).MustGet()
+	assert.Equal(t, 3, len(rows), `The return value should be 3")`)
+	if len(rows) == 3 {
+		for i := range rows {
+			cars, has := rows[i].Get("cars").([]xun.R)
+			assert.True(t, has, `The return value should have cars")`)
+			if has {
+				for _, car := range cars {
+					assert.Equal(t, rows[i].Get("id"), car.Get("manu_id"), `The return value should be 1")`)
+					assert.True(t, car.Has("name"), `The return car should have name field")`)
+					assert.False(t, car.Has("created_at"), `The return car should not have created_at field")`)
+				}
+			}
+		}
+	}
 }
 
 func TestModelWithHasOneThrough(t *testing.T) {
