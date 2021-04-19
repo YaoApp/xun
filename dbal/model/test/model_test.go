@@ -491,7 +491,6 @@ func TestModelQuerySoftdeletesOnlyTrashed(t *testing.T) {
 func TestModelWithHasOne(t *testing.T) {
 	TestFactoryMigrate(t)
 	car := model.MakeUsing(modelTestMaker, "models/car")
-
 	rows := car.With("manu").MustGet()
 	assert.Equal(t, 6, len(rows), `The return value should be 1")`)
 	if len(rows) == 6 {

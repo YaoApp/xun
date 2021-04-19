@@ -6,6 +6,7 @@ import (
 
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -21,6 +22,8 @@ func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
 	stmt, err := db.Prepare(builder.ToSQL())
 	if err != nil {
+		defer logger.Debug(logger.RETRIEVE, builder.ToSQL(), fmt.Sprintf("%v", builder.GetBindings())).Write()
+		defer logger.Fatal(500, err.Error()).Write()
 		return nil, err
 	}
 	rows, err := stmt.Query(builder.GetBindings()...)
