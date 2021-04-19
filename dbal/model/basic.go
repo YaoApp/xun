@@ -7,7 +7,6 @@ import (
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
-	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -26,10 +25,14 @@ func (model *Model) BasicSetup(buidler *query.Builder, schema schema.Schema) Bas
 }
 
 // SelectAddColumn add a column
-func (model *Model) SelectAddColumn(column string) Basic {
+func (model *Model) SelectAddColumn(column string, table ...string) Basic {
 	columns := model.Query.Columns
 	if len(columns) == 0 {
-		columns = append(columns, "*")
+		all := "*"
+		if len(table) > 0 {
+			all = fmt.Sprintf("%s.*", table[0])
+		}
+		columns = append(columns, all)
 	}
 	columns = append(columns, column)
 	columns = utils.InterfaceUnique(columns)
@@ -43,8 +46,6 @@ func (model *Model) TableColumnize(table string) {
 	for i, column := range columns {
 		if name, ok := column.(string); ok && !strings.Contains(name, ".") {
 			columns[i] = fmt.Sprintf("%s.%s", table, name)
-		} else {
-			defer logger.Debug(logger.RETRIEVE, fmt.Sprintf("%v", columns)).Write()
 		}
 	}
 	model.Query.Columns = columns

@@ -18,7 +18,7 @@ type Basic interface {
 	GetFullname() string
 	GetTableName() string
 
-	SelectAddColumn(column string) Basic
+	SelectAddColumn(column string, table ...string) Basic
 	TableColumnize(table string)
 
 	QueryBuilder() *query.Builder

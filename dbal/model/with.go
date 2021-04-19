@@ -47,9 +47,8 @@ func (model *Model) withHas(typ string, rel *Relationship, name string, closure 
 		BasicQueryForRelationship(rel.Columns, closure)
 
 	links := model.parseLinks(rel.Models, rel.Links)
-	relModel.SelectAddColumn(fmt.Sprintf("%s as temp_foreign_id", links[0].ForeignKey))
+	relModel.SelectAddColumn(fmt.Sprintf("%s as temp_foreign_id", links[0].ForeignKey), relModel.GetTableName())
 	relModel.QueryBuilder().Distinct("temp_foreign_id")
-
 	model.withs = append(model.withs, With{
 		Name:  name,
 		Type:  typ,
