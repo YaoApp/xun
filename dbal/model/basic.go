@@ -7,6 +7,7 @@ import (
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
+	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -34,6 +35,19 @@ func (model *Model) SelectAddColumn(column string) Basic {
 	columns = utils.InterfaceUnique(columns)
 	model.Select(columns)
 	return model
+}
+
+// TableColumnize parse columns name with table (id -> car.id)
+func (model *Model) TableColumnize(table string) {
+	columns := model.Query.Columns
+	for i, column := range columns {
+		if name, ok := column.(string); ok && !strings.Contains(name, ".") {
+			columns[i] = fmt.Sprintf("%s.%s", table, name)
+		} else {
+			defer logger.Debug(logger.RETRIEVE, fmt.Sprintf("%v", columns))
+		}
+	}
+	model.Query.Columns = columns
 }
 
 // MakeModelForRelationship make a new model instance for the relationship query

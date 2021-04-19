@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -362,17 +361,6 @@ func (model *Model) TableColumn(column string) string {
 		return fmt.Sprintf("%s.%s", table, column)
 	}
 	return column
-}
-
-// TableColumnize parse columns name with table (id -> car.id)
-func (model *Model) TableColumnize(table string) {
-	columns := model.Query.Columns
-	for i, column := range columns {
-		if name, ok := column.(string); ok && !strings.Contains(name, ".") {
-			columns[i] = fmt.Sprintf("%s.%s", table, name)
-		}
-	}
-	model.Query.Columns = columns
 }
 
 // Invalid determine if the model is invalid
