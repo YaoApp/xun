@@ -239,8 +239,8 @@ func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
 func (model *Model) MustGet(v ...interface{}) []xun.R {
 	res, err := model.Get(v...)
 	if err != nil {
-		logger.Debug(logger.RETRIEVE, model.ToSQL(), fmt.Sprintf("%v", model.GetBindings()))
-		logger.Fatal(500, err.Error())
+		defer logger.Debug(logger.RETRIEVE, model.ToSQL(), fmt.Sprintf("%v", model.GetBindings())).Write()
+		defer logger.Fatal(500, err.Error()).Write()
 	}
 	utils.PanicIF(err)
 	return res
