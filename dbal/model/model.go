@@ -9,6 +9,7 @@ import (
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
+	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -237,6 +238,10 @@ func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
 // MustGet over load MustGet
 func (model *Model) MustGet(v ...interface{}) []xun.R {
 	res, err := model.Get(v...)
+	if err != nil {
+		logger.Debug(logger.RETRIEVE, model.ToSQL(), fmt.Sprintf("%v", model.GetBindings()))
+		logger.Fatal(500, err.Error())
+	}
 	utils.PanicIF(err)
 	return res
 }
