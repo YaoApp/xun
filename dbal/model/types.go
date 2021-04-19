@@ -152,11 +152,22 @@ type Relationship struct {
 
 // With relationship struct
 type With struct {
-	Type    string      // hasOne, hasMany, hasOneThrough, hasManyThrough
-	Name    string      // with instance name
-	Query   query.Query // The query interface
-	Local   string      // the local column name
-	Foreign string      // the foreign column name
+	Type  string // hasOne, hasMany, hasOneThrough, hasManyThrough
+	Name  string // with instance name
+	Basic Basic  // The basic interface
+	Links []Link // the links
+}
+
+// Link relationship link
+type Link struct {
+	AliasFrom  string // from alias Name
+	AliasTo    string // to alias Name
+	From       string // from table
+	To         string // link to table name
+	LocalKey   string // local key
+	ForeignKey string // foreign key
+	Local      string // from.key
+	Foreign    string // to.key
 }
 
 // Attribute the model attribute

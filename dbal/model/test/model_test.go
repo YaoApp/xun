@@ -9,7 +9,6 @@ import (
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/model"
 	"github.com/yaoapp/xun/dbal/model/test/models"
-	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -504,8 +503,9 @@ func TestModelWithHasOne(t *testing.T) {
 		}
 	}
 
-	rows = car.Reset().With("manu", func(qb query.Query) {
-		qb.Select("name", "type")
+	rows = car.Reset().With("manu", func(model model.Basic) {
+		model.QueryBuilder().
+			Select("id", "name", "type")
 	}).MustGet()
 	assert.Equal(t, 6, len(rows), `The return value should be 1")`)
 	if len(rows) == 6 {
@@ -539,8 +539,9 @@ func TestModelWithHasMany(t *testing.T) {
 		}
 	}
 
-	rows = manu.Reset().With("cars", func(qb query.Query) {
-		qb.Select("name").
+	rows = manu.Reset().With("cars", func(model model.Basic) {
+		model.QueryBuilder().
+			Select("manu_id", "name").
 			Where("name", "like", "%V%").
 			OrWhere("name", "like", "%M%").
 			OrWhere("name", "like", "%T%").
@@ -566,8 +567,25 @@ func TestModelWithHasOneThrough(t *testing.T) {
 	TestFactoryMigrate(t)
 	manu := model.MakeUsing(modelTestMaker, "models/manu")
 	rows := manu.With("user").Select("name", "type").MustGet()
-	utils.Println(rows)
+	assert.Equal(t, 3, len(rows), `The return value should be 3")`)
+	if len(rows) == 3 {
+		assert.Equal(t, int64(1), rows[0].Get("user.user_id"), `The return value should be 1")`)
+		assert.Equal(t, nil, rows[1].Get("user.user_id"), `The return value should be 1")`)
+		assert.Equal(t, int64(1), rows[2].Get("user.user_id"), `The return value should be 1")`)
+	}
 }
 
 func TestModelWithHasManyThrough(t *testing.T) {
+	TestFactoryMigrate(t)
+	manu := model.MakeUsing(modelTestMaker, "models/manu")
+	rows := manu.With("users").Select("name", "type").MustGet()
+	assert.Equal(t, 3, len(rows), `The return value should be 3")`)
+	if len(rows) == 3 {
+		users1 := rows[0].Get("users").([]xun.R)
+		users2 := rows[1].Get("users").([]xun.R)
+		users3 := rows[2].Get("users").([]xun.R)
+		assert.Equal(t, int64(1), users1[0].Get("id"), `The return value should be 1")`)
+		assert.Equal(t, 0, len(users2), `The return value should be 1")`)
+		assert.Equal(t, int64(1), users3[0].Get("id"), `The return value should be 1")`)
+	}
 }

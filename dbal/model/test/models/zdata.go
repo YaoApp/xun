@@ -1,4 +1,4 @@
-// Package models  Sun Apr 18 16:19:40 CST 2021
+// Package models  Mon Apr 19 16:37:22 CST 2021
 // THIS FILE IS AUTO-GENERATED DO NOT MODIFY MANUALLY
 package models
 
@@ -24,7 +24,7 @@ var SchemaFileContents = map[string][]byte{
       "type": "hasOne",
       "models": ["manu"],
       "links": ["manu_id", "id"],
-      "columns": ["name", "type", "intro"]
+      "columns": ["id", "name", "type", "intro"]
     },
     {
       "name": "users",
@@ -93,13 +93,20 @@ var SchemaFileContents = map[string][]byte{
       "name": "user",
       "type": "hasOneThrough",
       "models": ["car", "user_car", "user"],
-      "links": ["id", "manu_id", "car_id", "car_id", "user_id", "id"]
+      "links": ["id", "manu_id", "id", "car_id", "user_id", "id"],
+      "columns": [
+        "user.nickname",
+        "id as user_id",
+        "address",
+        "status",
+        "car.name as car_name"
+      ]
     },
     {
       "name": "users",
       "type": "hasManyThrough",
       "models": ["car", "user_car", "user"],
-      "links": ["id", "manu_id", "car_id", "car_id", "user_id", "id"]
+      "links": ["id", "manu_id", "id", "car_id", "user_id", "id"]
     }
   ],
   "values": [
@@ -286,7 +293,13 @@ var SchemaFileContents = map[string][]byte{
     { "name": "car_id", "type": "bigInteger", "index": true },
     { "name": "user_id", "type": "bigInteger", "index": true }
   ],
-  "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
+  "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }],
+  "values": [
+    { "car_id": 1, "user_id": 1 },
+    { "car_id": 2, "user_id": 1 },
+    { "car_id": 3, "user_id": 1 },
+    { "car_id": 5, "user_id": 1 }
+  ]
 }
 `),
 }

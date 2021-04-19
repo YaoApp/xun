@@ -9,10 +9,20 @@ import (
 type Basic interface {
 	ToSQL() string
 	Clone() Basic
+
+	// defined in the file model.go
 	BasicSetup(buidler *query.Builder, schema schema.Schema) Basic
+
+	GetName() string
+	GetNamespace() string
+	GetFullname() string
+	GetTableName() string
+
+	SelectAddColumn(column string) Basic
+	TableColumnize(table string)
+
 	QueryBuilder() *query.Builder
 	GetRelationshipLink(name string, ids ...string) (string, string)
-	SelectAddColumn(foreign string) Basic
-	BasicQueryForRelationship(columns []string, closure func(query.Query)) Basic
+	BasicQueryForRelationship(columns []string, closure func(Basic)) Basic
 	MakeModelForRelationship(name string) Basic
 }

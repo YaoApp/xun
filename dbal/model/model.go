@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/yaoapp/xun"
@@ -30,14 +31,6 @@ func (model *Model) New(v interface{}, args ...interface{}) *Model {
 	return Make(model.Builder, model.schema, v, args...)
 }
 
-// GetFullname get the fullname of model
-func (model *Model) GetFullname() string {
-	if model.namespace == "" {
-		return model.name
-	}
-	return fmt.Sprintf("%s.%s", model.namespace, model.name)
-}
-
 // IsEmpty determine if the model is null
 func (model *Model) IsEmpty() bool {
 	return model.values.IsEmpty()
@@ -46,6 +39,14 @@ func (model *Model) IsEmpty() bool {
 // GetSchema get the query interface
 func (model *Model) GetSchema() schema.Schema {
 	return model.schema
+}
+
+// GetFullname get the fullname of model
+func (model *Model) GetFullname() string {
+	if model.namespace == "" {
+		return model.name
+	}
+	return fmt.Sprintf("%s.%s", model.namespace, model.name)
 }
 
 // GetName get the name of model
@@ -339,17 +340,39 @@ func (model *Model) OnlyTrashed() *Model {
 // BasicQuery filter deleted_at records if using soft deletes
 func (model *Model) BasicQuery() *Model {
 
-	if model.table.Name != "" && model.Builder.Query.From.IsEmpty() {
-		model.From(model.table.Name)
+	table := model.GetTableName()
+	deletedAt := model.TableColumn("deleted_at")
+	if table != "" && model.Builder.Query.From.IsEmpty() {
+		model.From(table)
 	}
 
 	if model.softDeletes && model.onlyDeletes {
-		model.WhereNotNull("deleted_at")
+		model.WhereNotNull(deletedAt)
 	} else if model.softDeletes && !model.withDeletes {
-		model.WhereNull("deleted_at")
+		model.WhereNull(deletedAt)
 	}
 
 	return model
+}
+
+// TableColumn parse column name with table (id -> car.id)
+func (model *Model) TableColumn(column string) string {
+	table := model.GetTableName()
+	if table != "" {
+		return fmt.Sprintf("%s.%s", table, column)
+	}
+	return column
+}
+
+// TableColumnize parse columns name with table (id -> car.id)
+func (model *Model) TableColumnize(table string) {
+	columns := model.Query.Columns
+	for i, column := range columns {
+		if name, ok := column.(string); ok && !strings.Contains(name, ".") {
+			columns[i] = fmt.Sprintf("%s.%s", table, name)
+		}
+	}
+	model.Query.Columns = columns
 }
 
 // Invalid determine if the model is invalid
@@ -388,6 +411,13 @@ func (model *Model) FlowRaw(flow []byte) interface{} {
 	return nil
 }
 
+// resetTrashed
+func (model *Model) resetTrashed() *Model {
+	model.withDeletes = false
+	model.onlyDeletes = false
+	return model
+}
+
 func (model *Model) explodeColumns(v interface{}) []string {
 	tags := getFieldTags(v)
 	columns := model.fliterColumns(tags)
@@ -402,13 +432,6 @@ func (model *Model) fliterColumns(input []string) []string {
 		}
 	}
 	return result
-}
-
-// resetTrashed
-func (model *Model) resetTrashed() *Model {
-	model.withDeletes = false
-	model.onlyDeletes = false
-	return model
 }
 
 // selectRelationshipColumns add the relationship-defined columns, before query.
@@ -430,7 +453,9 @@ func (model *Model) selectRelationshipColumns(v ...interface{}) *Model {
 			columnMap[name] = true
 		}
 		for _, with := range model.withs {
-			columnMap[with.Local] = true
+			// the first link
+			link := with.Links[0]
+			columnMap[link.Local] = true
 		}
 
 		columns := []interface{}{}

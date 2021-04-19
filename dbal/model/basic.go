@@ -25,13 +25,14 @@ func (model *Model) BasicSetup(buidler *query.Builder, schema schema.Schema) Bas
 }
 
 // SelectAddColumn add a column
-func (model *Model) SelectAddColumn(foreign string) Basic {
+func (model *Model) SelectAddColumn(column string) Basic {
 	columns := model.Query.Columns
-	if len(columns) > 0 {
-		columns = append(columns, foreign)
-		columns = utils.InterfaceUnique(columns)
-		model.Select(columns)
+	if len(columns) == 0 {
+		columns = append(columns, "*")
 	}
+	columns = append(columns, column)
+	columns = utils.InterfaceUnique(columns)
+	model.Select(columns)
 	return model
 }
 
@@ -45,16 +46,21 @@ func (model *Model) MakeModelForRelationship(name string) Basic {
 }
 
 // BasicQueryForRelationship execute basic query for relationship
-func (model *Model) BasicQueryForRelationship(columns []string, closure func(query.Query)) Basic {
+func (model *Model) BasicQueryForRelationship(columns []string, closure func(Basic)) Basic {
 
 	if closure != nil {
-		closure(model.Builder)
+		closure(model)
 	} else if columns != nil {
 		model.Select(columns)
 	}
-	model.BasicQuery()
 
+	model.BasicQuery()
 	return model
+}
+
+// GetTableName get the table name
+func (model *Model) GetTableName() string {
+	return model.table.Name
 }
 
 // GetRelationshipLink Get the Relationship local and foreign

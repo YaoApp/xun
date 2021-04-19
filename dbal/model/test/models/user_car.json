@@ -10,5 +10,11 @@
     { "name": "car_id", "type": "bigInteger", "index": true },
     { "name": "user_id", "type": "bigInteger", "index": true }
   ],
-  "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }]
+  "indexes": [{ "name": "car_id_user_id", "columns": ["car_id", "user_id"] }],
+  "values": [
+    { "car_id": 1, "user_id": 1 },
+    { "car_id": 2, "user_id": 1 },
+    { "car_id": 3, "user_id": 1 },
+    { "car_id": 5, "user_id": 1 }
+  ]
 }

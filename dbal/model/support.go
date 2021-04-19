@@ -136,14 +136,14 @@ func prepareDestroyArgs(args ...interface{}) []interface{} {
 	return args
 }
 
-func prepareWithArgs(args ...interface{}) (string, func(query.Query)) {
+func prepareWithArgs(args ...interface{}) (string, func(Basic)) {
 
 	if len(args) == 0 {
 		invalidArguments()
 	}
 
 	var name = ""
-	var closure func(query.Query) = nil
+	var closure func(Basic) = nil
 
 	if value, ok := args[0].(string); ok {
 		name = value
@@ -158,7 +158,7 @@ func prepareWithArgs(args ...interface{}) (string, func(query.Query)) {
 	}
 
 	if len(args) > 1 {
-		if value, ok := args[1].(func(query.Query)); ok {
+		if value, ok := args[1].(func(Basic)); ok {
 
 			closure = value
 		}

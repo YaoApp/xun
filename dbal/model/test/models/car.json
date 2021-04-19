@@ -16,7 +16,7 @@
       "type": "hasOne",
       "models": ["manu"],
       "links": ["manu_id", "id"],
-      "columns": ["name", "type", "intro"]
+      "columns": ["id", "name", "type", "intro"]
     },
     {
       "name": "users",
