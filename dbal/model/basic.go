@@ -44,7 +44,7 @@ func (model *Model) TableColumnize(table string) {
 		if name, ok := column.(string); ok && !strings.Contains(name, ".") {
 			columns[i] = fmt.Sprintf("%s.%s", table, name)
 		} else {
-			defer logger.Debug(logger.RETRIEVE, fmt.Sprintf("%v", columns))
+			defer logger.Debug(logger.RETRIEVE, fmt.Sprintf("%v", columns)).Write()
 		}
 	}
 	model.Query.Columns = columns
