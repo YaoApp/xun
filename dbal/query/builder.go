@@ -38,6 +38,11 @@ func (builder *Builder) Clone() Query {
 	return builder.clone()
 }
 
+// Builder get the query builder instance
+func (builder *Builder) Builder() *Builder {
+	return builder
+}
+
 // New create a new builder instance with current builder
 func (builder *Builder) New() Query {
 	return builder.new()

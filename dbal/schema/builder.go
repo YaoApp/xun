@@ -82,6 +82,11 @@ func newGrammar(conn *Connection) dbal.Grammar {
 	return grammar
 }
 
+// Builder get the query builder instance
+func (builder *Builder) Builder() *Builder {
+	return builder
+}
+
 // reconnect reconnect db server using setting driver and dsn
 func (builder *Builder) reconnect() {
 	driver := builder.Conn.WriteConfig.Driver

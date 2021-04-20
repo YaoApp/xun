@@ -12,6 +12,7 @@ type Query interface {
 	New() Query
 	Clone() Query
 	Reset() Query
+	Builder() *Builder
 
 	// defined in the query.go file
 	Table(name string) Query

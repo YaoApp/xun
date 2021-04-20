@@ -9,6 +9,7 @@ import (
 type Schema interface {
 	SetOption(option *dbal.Option)
 
+	Builder() *Builder
 	GetConnection() (*dbal.Connection, error)
 	GetDB() (*sqlx.DB, error)
 	GetVersion() (*dbal.Version, error)
