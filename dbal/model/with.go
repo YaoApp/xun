@@ -93,6 +93,26 @@ func (model *Model) withThrough(typ string, rel *Relationship, name string, clos
 	})
 }
 
+// ExecuteWithsPaginator  Execute the withs query and merge result
+func (model *Model) ExecuteWithsPaginator(res *xun.P) error {
+	rows := []xun.R{}
+	for _, item := range res.Items {
+		rows = append(rows, xun.MakeRow(item))
+	}
+
+	err := model.ExecuteWiths(rows)
+	if err != nil {
+		return err
+	}
+
+	items := []interface{}{}
+	for _, row := range rows {
+		items = append(items, row)
+	}
+	res.Items = items
+	return nil
+}
+
 // ExecuteWiths Execute the withs query and merge result
 func (model *Model) ExecuteWiths(rows []xun.R) error {
 

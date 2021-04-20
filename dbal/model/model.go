@@ -218,6 +218,28 @@ func (model *Model) Save(v ...interface{}) error {
 	return err
 }
 
+// Paginate over load Paginate
+func (model *Model) Paginate(pageSize int, page int, v ...interface{}) (xun.P, error) {
+	model.
+		BasicQuery().
+		selectRelationshipColumns(v...)
+
+	res, err := model.Builder.Paginate(pageSize, page)
+	if err != nil {
+		return xun.P{}, err
+	}
+
+	err = model.ExecuteWithsPaginator(&res)
+	return res, err
+}
+
+// MustPaginate paginate the given query into a simple paginator.
+func (model *Model) MustPaginate(pageSize int, page int, v ...interface{}) xun.P {
+	res, err := model.Paginate(pageSize, page, v...)
+	utils.PanicIF(err)
+	return res
+}
+
 // Get over load Get
 func (model *Model) Get(v ...interface{}) ([]xun.R, error) {
 	model.
