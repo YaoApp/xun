@@ -160,12 +160,14 @@ func TestFactoryMigrate(t *testing.T) {
 	registerModelsForTest()
 	sch := getSchema()
 	qb := getQuery()
-	models := []string{"user", "member", "manu", "car", "user_car", "null"}
+	models := []string{"user", "member", "manu", "car", "user_car"}
 	for _, name := range models {
 		name = fmt.Sprintf("models.%s", name)
 		err := model.Class(name).Migrate(sch, qb, true)
 		assert.Nil(t, err, "create %s the return value should be nil", name)
 	}
+	err := model.Class("models.null").Migrate(sch, qb, true)
+	assert.Errorf(t, err, "The return error should be 'The table name does not set'")
 }
 
 func TestFactoryMigrateError(t *testing.T) {

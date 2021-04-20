@@ -152,7 +152,7 @@ func (factory *Factory) Methods(args ...bool) []Method {
 func (factory *Factory) Migrate(schema schema.Schema, query query.Query, args ...bool) error {
 
 	if factory.Schema.Table.Name == "" {
-		return nil
+		return fmt.Errorf("The table name does not set")
 	}
 
 	table := factory.Schema.Table.Name
