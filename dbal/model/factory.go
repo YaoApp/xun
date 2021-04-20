@@ -31,6 +31,21 @@ func Register(v interface{}, args ...interface{}) {
 	panic(fmt.Errorf("The type kind (%s) can't be register, have %d arguments", reflectPtr.Type().String(), len(args)))
 }
 
+// Registered get all registered models
+func Registered() []string {
+	names := []string{}
+	for name := range modelsRegistered {
+		names = append(names, name)
+	}
+	return names
+}
+
+// IsRegistered determine if the model was registered
+func IsRegistered(name string) bool {
+	_, has := modelsAlias[name]
+	return has
+}
+
 // Class get the factory by model name
 func Class(name string) *Factory {
 	factory, has := modelsAlias[name]

@@ -11,6 +11,11 @@ import (
 	"github.com/yaoapp/xun/dbal/schema"
 )
 
+// ParseName parse the model name, return (fullname string, namespace string, name string)
+func ParseName(name string) (string, string, string) {
+	return prepareRegisterNames(name)
+}
+
 // prepareRegisterNames parse the model name, return (fullname string, namespace string, name string)
 func prepareRegisterNames(name string) (string, string, string) {
 	sep := "."
