@@ -7,7 +7,7 @@ import (
 )
 
 // Trace set the traces for content
-func (content *Content) Trace(trace ...string) *Content {
+func (content *Content) Trace(trace ...string) Writer {
 	content.Traces = append(content.Traces, trace...)
 	return content
 }
@@ -20,9 +20,6 @@ func (content *Content) Message(message string) *Content {
 
 // Write write log to the output writer
 func (content *Content) Write() {
-	if content.logger.Level < content.Level {
-		return
-	}
 	content.TimeStamp = time.Now()
 	if content.StartAt != nil {
 		content.Latency = content.TimeStamp.Sub(*content.StartAt)

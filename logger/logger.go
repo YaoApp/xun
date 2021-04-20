@@ -92,14 +92,14 @@ func (logger *Logger) SetLevel(level LogLevel) *Logger {
 }
 
 // Fatal represents truly catastrophic situations, as far as your application is concerned.
-func Fatal(code int, message string) *Content {
+func Fatal(code int, message string) Writer {
 	return DefaultErrorLogger.Fatal(code, message)
 }
 
 // Fatal represents truly catastrophic situations, as far as your application is concerned.
-func (logger *Logger) Fatal(code int, message string) *Content {
+func (logger *Logger) Fatal(code int, message string) Writer {
 	if logger.Level < LevelFatal {
-		return &Content{logger: logger}
+		return Empty{}
 	}
 
 	pc, file, line, ok := runtime.Caller(2)
@@ -122,14 +122,14 @@ func (logger *Logger) Fatal(code int, message string) *Content {
 }
 
 // Error An error is a serious issue and represents the failure of something important going on in your application.
-func Error(code int, message string) *Content {
+func Error(code int, message string) Writer {
 	return DefaultErrorLogger.Error(code, message)
 }
 
 // Error An error is a serious issue and represents the failure of something important going on in your application.
-func (logger *Logger) Error(code int, message string) *Content {
+func (logger *Logger) Error(code int, message string) Writer {
 	if logger.Level < LevelError {
-		return &Content{logger: logger}
+		return Empty{}
 	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
@@ -151,14 +151,14 @@ func (logger *Logger) Error(code int, message string) *Content {
 }
 
 // Warn Now we're getting into the grayer area of hypotheticals.
-func Warn(methodType string, trace ...string) *Content {
+func Warn(methodType string, trace ...string) Writer {
 	return DefaultLogger.Warn(methodType, trace...)
 }
 
 // Warn Now we're getting into the grayer area of hypotheticals.
-func (logger *Logger) Warn(methodType string, trace ...string) *Content {
+func (logger *Logger) Warn(methodType string, trace ...string) Writer {
 	if logger.Level < LevelWarn {
-		return &Content{logger: logger}
+		return Empty{}
 	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
@@ -179,15 +179,14 @@ func (logger *Logger) Warn(methodType string, trace ...string) *Content {
 }
 
 // Info Finally, we can dial down the stress level.
-func Info(methodType string, trace ...string) *Content {
+func Info(methodType string, trace ...string) Writer {
 	return DefaultLogger.Info(methodType, trace...)
-
 }
 
 // Info Finally, we can dial down the stress level.
-func (logger *Logger) Info(methodType string, trace ...string) *Content {
+func (logger *Logger) Info(methodType string, trace ...string) Writer {
 	if logger.Level < LevelInfo {
-		return &Content{logger: logger}
+		return Empty{}
 	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
@@ -208,14 +207,14 @@ func (logger *Logger) Info(methodType string, trace ...string) *Content {
 }
 
 // Debug With DEBUG, you start to include more granular, diagnostic information.
-func Debug(methodType string, trace ...string) *Content {
+func Debug(methodType string, trace ...string) Writer {
 	return DefaultLogger.Debug(methodType, trace...)
 }
 
 // Debug With DEBUG, you start to include more granular, diagnostic information.
-func (logger *Logger) Debug(methodType string, trace ...string) *Content {
+func (logger *Logger) Debug(methodType string, trace ...string) Writer {
 	if logger.Level < LevelDebug {
-		return &Content{logger: logger}
+		return Empty{}
 	}
 	pc, file, line, ok := runtime.Caller(2)
 	method := "unknown"
