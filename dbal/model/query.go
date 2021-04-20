@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal/query"
 )
 
@@ -8,6 +9,7 @@ import (
 func (model *Model) Reset() *Model {
 	model.Builder.Reset()
 	model.withs = []With{}
+	model.values = xun.MakeRow()
 	return model
 }
 

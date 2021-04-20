@@ -25,9 +25,11 @@ func MakeUsing(maker MakerFunc, v interface{}, args ...interface{}) *Model {
 	return maker(v, args...)
 }
 
-// New create a new xun model instance
-func (model *Model) New(v interface{}, args ...interface{}) *Model {
-	return Make(model.Builder, model.schema, v, args...)
+// New create a new model instance
+func (model *Model) New() Model {
+	new := Model(*model)
+	new.Reset()
+	return new
 }
 
 // IsEmpty determine if the model is null
