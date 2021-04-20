@@ -15,13 +15,13 @@ type T struct {
 
 // P an Paginator struct, P is the first letter of "Paginator"
 type P struct {
-	Items        []interface{}
-	Total        int
-	TotalPages   int
-	PageSize     int
-	CurrentPage  int
-	NextPage     int
-	PreviousPage int
-	LastPage     int
-	Options      map[string]interface{}
+	Items        []interface{}          `json:"items"`
+	Total        int                    `json:"total"`
+	TotalPages   int                    `json:"total_pages"`
+	PageSize     int                    `json:"page_size"`
+	CurrentPage  int                    `json:"current_page"`
+	NextPage     int                    `json:"next_page"`
+	PreviousPage int                    `json:"previous_page"`
+	LastPage     int                    `json:"last_page"`
+	Options      map[string]interface{} `json:"options,omtempty"`
 }
