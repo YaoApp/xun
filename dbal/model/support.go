@@ -631,6 +631,9 @@ func getFieldTags(v interface{}) []string {
 
 func getFieldMaps(v interface{}) map[string]string {
 	reflectPtr := reflect.ValueOf(v)
+	if reflectPtr.Kind() != reflect.Ptr {
+		return map[string]string{}
+	}
 	structValue := reflectPtr.Elem()
 	structType := reflect.TypeOf(structValue.Interface())
 	fieldMap := map[string]string{}

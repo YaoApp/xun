@@ -55,12 +55,20 @@ func Call(model interface{}, process string, in []interface{}) ([]interface{}, e
 
 // Copy copy a model
 func Copy(model interface{}) interface{} {
+
+	if mod, ok := model.(*Model); ok {
+		new := Model(*mod)
+		return &new
+	}
+
 	nInter := reflect.New(reflect.TypeOf(model).Elem())
 	val := reflect.ValueOf(model).Elem()
 	nVal := nInter.Elem()
 	for i := 0; i < val.NumField(); i++ {
 		nvField := nVal.Field(i)
-		nvField.Set(val.Field(i))
+		if nvField.CanSet() {
+			nvField.Set(val.Field(i))
+		}
 	}
 	return nInter.Interface()
 }
