@@ -611,6 +611,9 @@ func setFieldValue(v interface{}, field string, value interface{}) {
 
 func getFieldTags(v interface{}) []string {
 	reflectPtr := reflect.ValueOf(v)
+	if reflectPtr.Kind() != reflect.Ptr {
+		return []string{}
+	}
 	structValue := reflectPtr.Elem()
 	structType := reflect.TypeOf(structValue.Interface())
 	tags := []string{}

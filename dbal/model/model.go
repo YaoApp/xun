@@ -11,6 +11,60 @@ import (
 	"github.com/yaoapp/xun/utils"
 )
 
+// New create a new model interface by name
+func New(name string, buidler *query.Builder, schema schema.Schema) interface{} {
+	model := Class(name).Model
+
+	_, err := Call(model, "BasicSetup", []interface{}{buidler, schema})
+	if err != nil {
+		panic(err)
+	}
+
+	out, err := Call(model, "New", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(out) != 1 {
+		panic("The return value is not model")
+	}
+
+	return out[0]
+}
+
+// Call execute model method, and return values.
+func Call(model interface{}, process string, in []interface{}) ([]interface{}, error) {
+	reflectModelType := reflect.TypeOf(model)
+	method, has := reflectModelType.MethodByName(process)
+	if !has {
+		return nil, fmt.Errorf("The method %s does not exists", process)
+	}
+
+	reflectIn := []reflect.Value{reflect.ValueOf(model)}
+	for _, v := range in {
+		reflectIn = append(reflectIn, reflect.ValueOf(v))
+	}
+	out := []interface{}{}
+	reflectOut := method.Func.Call(reflectIn)
+	for _, res := range reflectOut {
+		out = append(out, res.Interface())
+	}
+
+	return out, nil
+}
+
+// Copy copy a model
+func Copy(model interface{}) interface{} {
+	nInter := reflect.New(reflect.TypeOf(model).Elem())
+	val := reflect.ValueOf(model).Elem()
+	nVal := nInter.Elem()
+	for i := 0; i < val.NumField(); i++ {
+		nvField := nVal.Field(i)
+		nvField.Set(val.Field(i))
+	}
+	return nInter.Interface()
+}
+
 // Make make a new xun model instance
 func Make(buidler *query.Builder, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 	if reflect.TypeOf(v).Kind() == reflect.Ptr {
@@ -26,10 +80,10 @@ func MakeUsing(maker MakerFunc, v interface{}, args ...interface{}) *Model {
 }
 
 // New create a new model instance
-func (model *Model) New() Model {
+func (model *Model) New() *Model {
 	new := Model(*model)
 	new.Reset()
-	return new
+	return &new
 }
 
 // IsEmpty determine if the model is null
