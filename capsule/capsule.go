@@ -210,3 +210,19 @@ func (manager *Manager) Make(name string) interface{} {
 	schema := manager.Schema()
 	return model.New(name, query.Builder(), schema)
 }
+
+// Migrate to migrate a model database table
+func Migrate(name string, args ...bool) error {
+	if Global == nil {
+		err := errors.New("the global capsule not set")
+		panic(err)
+	}
+	return Global.Migrate(name, args...)
+}
+
+// Migrate to migrate a model database table
+func (manager *Manager) Migrate(name string, args ...bool) error {
+	query := manager.Query()
+	schema := manager.Schema()
+	return model.Class(name).Migrate(schema, query, args...)
+}
