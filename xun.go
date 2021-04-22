@@ -229,6 +229,29 @@ func (row R) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetString get the string value  of the given key
+func (row R) GetString(key interface{}) string {
+	value := row.Get(key)
+	if stringVal, ok := value.(string); ok {
+		return stringVal
+	}
+	return fmt.Sprintf("%v", value)
+}
+
+// GetInt get the int value of the given key
+func (row R) GetInt(key interface{}) int {
+	value := row.Get(key)
+	num := MakeN(value)
+	return num.MustInt()
+}
+
+// GetFloat get the float value of the given key
+func (row R) GetFloat(key interface{}, places int) float64 {
+	value := row.Get(key)
+	num := MakeN(value)
+	return num.MustToFixed(places)
+}
+
 // MustGet get the value of the given key, if key does not exits painc
 func (row R) MustGet(key interface{}) interface{} {
 	keys := strings.Split(fmt.Sprintf("%v", key), ".")
