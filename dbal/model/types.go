@@ -112,7 +112,7 @@ type Index struct {
 	Comment string   `json:"comment,omitempty"`
 	Name    string   `json:"name,omitempty"`
 	Columns []string `json:"columns,omitempty"`
-	Type    string   `json:"string"` // primary,unique,index,match
+	Type    string   `json:"type,omitempty"` // primary,unique,index,match
 }
 
 // Table the model mapping table in DB
