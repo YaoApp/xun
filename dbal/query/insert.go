@@ -12,7 +12,7 @@ import (
 func (builder *Builder) Insert(v interface{}, columns ...interface{}) error {
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsert(builder.Query, columns, values)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer logger.Debug(logger.CREATE, sql, fmt.Sprintf("%v", bindings)).TimeCost(time.Now())
 
 	_, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	return err

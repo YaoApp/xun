@@ -462,6 +462,31 @@ func (model *Model) Invalid() error {
 	return nil
 }
 
+// UpdateOrInsert UpdateOrInsert()
+func (model *Model) UpdateOrInsert(attributes interface{}, values ...interface{}) (bool, error) {
+
+	if model.Timestamps && len(values) > 0 {
+		for i := range values {
+			row, ok := values[i].(xun.R)
+			if ok {
+				row["updated_at"] = time.Now().Format("2006-01-02 15:04:05.000000")
+				values[i] = row
+			}
+		}
+	}
+
+	return model.
+		Builder.Table(model.GetTableName()).
+		UpdateOrInsert(attributes, values...)
+}
+
+// MustUpdateOrInsert MustUpdateOrInsert()
+func (model *Model) MustUpdateOrInsert(attributes interface{}, values ...interface{}) bool {
+	res, err := model.UpdateOrInsert(attributes, values...)
+	utils.PanicIF(err)
+	return res
+}
+
 // Search search by given params
 func (model *Model) Search() interface{} {
 	return nil
