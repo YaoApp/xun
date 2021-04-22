@@ -19,11 +19,11 @@ var testSchemaBuilder schema.Schema
 func modelTestMaker(v interface{}, flow ...interface{}) *model.Model {
 	unit.SetLogger()
 	if testQueryBuilder != nil && testSchemaBuilder != nil {
-		return model.Make(testQueryBuilder, testSchemaBuilder, v, flow...)
+		return model.Build(testQueryBuilder, testSchemaBuilder, v, flow...)
 	}
 	testQueryBuilder = query.NewBuilder(unit.Driver(), unit.DSN())
 	testSchemaBuilder = schema.New(unit.Driver(), unit.DSN())
-	return model.Make(testQueryBuilder, testSchemaBuilder, v, flow...)
+	return model.Build(testQueryBuilder, testSchemaBuilder, v, flow...)
 }
 
 func getSchema() schema.Schema {
@@ -77,7 +77,7 @@ func TestMakeByStruct(t *testing.T) {
 }
 
 func TestMakeByStructStyle2(t *testing.T) {
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	user.SetAddress("hello new address style2")
 	assert.Equal(t, "models.User", reflect.TypeOf(user).String(), "The return type of member should be models.User")
 	assert.Equal(t, "hello new address style2", user.Address, "The user address should be hello new address")

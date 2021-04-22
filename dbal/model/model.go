@@ -73,13 +73,13 @@ func Copy(model interface{}) interface{} {
 	return nInter.Interface()
 }
 
-// Make make a new xun model instance
-func Make(buidler *query.Builder, schema schema.Schema, v interface{}, args ...interface{}) *Model {
+// Build to build a new xun model instance
+func Build(buidler *query.Builder, schema schema.Schema, v interface{}, args ...interface{}) *Model {
 	if reflect.TypeOf(v).Kind() == reflect.Ptr {
-		makeByStruct(buidler, schema, v)
+		buildByStruct(buidler, schema, v)
 		return nil
 	}
-	return makeBySchema(buidler, schema, v, args...)
+	return buildBySchema(buidler, schema, v, args...)
 }
 
 // MakeUsing create model using makeer

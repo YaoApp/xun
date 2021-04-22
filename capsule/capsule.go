@@ -179,18 +179,34 @@ func (manager *Manager) Query() query.Query {
 		})
 }
 
-// Make to build a new xun model instance
-func Make(v interface{}, flow ...interface{}) *model.Model {
+// Build to build a new xun model instance
+func Build(v interface{}, flow ...interface{}) *model.Model {
 	if Global == nil {
 		err := errors.New("the global capsule not set")
 		panic(err)
 	}
-	return Global.Make(v, flow...)
+	return Global.Build(v, flow...)
 }
 
-// Make to build a new xun model instance
-func (manager *Manager) Make(v interface{}, flow ...interface{}) *model.Model {
+// Build to build a new xun model instance
+func (manager *Manager) Build(v interface{}, flow ...interface{}) *model.Model {
 	query := manager.Query()
 	schema := manager.Schema()
-	return model.Make(query.Builder(), schema, v, flow...)
+	return model.Build(query.Builder(), schema, v, flow...)
+}
+
+// Make to create a new xun registered model instance
+func Make(name string) interface{} {
+	if Global == nil {
+		err := errors.New("the global capsule not set")
+		panic(err)
+	}
+	return Global.Make(name)
+}
+
+// Make to create a new xun model instance
+func (manager *Manager) Make(name string) interface{} {
+	query := manager.Query()
+	schema := manager.Schema()
+	return model.New(name, query.Builder(), schema)
 }

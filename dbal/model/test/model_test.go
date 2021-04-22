@@ -14,7 +14,7 @@ import (
 
 func TestModelColumns(t *testing.T) {
 	registerModelsForTest()
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	columns := user.Columns()
 	assert.Equal(t, 8, len(columns), "The return columns count of model should be 8")
 
@@ -25,7 +25,7 @@ func TestModelColumns(t *testing.T) {
 
 func TestModelSearchable(t *testing.T) {
 	registerModelsForTest()
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	columns := user.Searchable()
 	searchable := []string{"status", "gender", "id", "nickname", "score"}
 	for _, column := range searchable {
@@ -42,7 +42,7 @@ func TestModelSearchable(t *testing.T) {
 
 func TestModelPrimaryKeys(t *testing.T) {
 	registerModelsForTest()
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	columns := user.PrimaryKeys()
 	primaryKeys := []string{"id"}
 	for _, column := range primaryKeys {
@@ -59,7 +59,7 @@ func TestModelPrimaryKeys(t *testing.T) {
 
 func TestModelPrimary(t *testing.T) {
 	registerModelsForTest()
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	assert.Equal(t, "id", user.Primary(), "The return primary key should be id")
 
 	member := model.MakeUsing(modelTestMaker, "models/member")
@@ -87,7 +87,7 @@ func TestModelFillSchemaXunR(t *testing.T) {
 
 func TestModelFillStructXunR(t *testing.T) {
 	registerModelsForTest()
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	user.Fill(xun.R{
 		"nickname":  "Ava",
 		"bio":       "Yao Framework CEO",
@@ -115,7 +115,7 @@ func TestModelFillStructUser(t *testing.T) {
 		Score:    99.26,
 		Status:   "DONE",
 	}
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	user.Fill(row, &user)
 	assert.Equal(t, "Ava", user.Value("nickname"), "The nickname should be Ava")
 	assert.Equal(t, "Ava", user.Nickname, "The nickname should be Ava")
@@ -127,7 +127,7 @@ func TestModelFillStructUser(t *testing.T) {
 
 func TestModelFind(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	row, err := user.Find(1)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.Equal(t, int64(1), row.Value("id"), `The return id should be 1")`)
@@ -138,7 +138,7 @@ func TestModelFind(t *testing.T) {
 
 func TestModelFindEmpty(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	row, err := user.Find(2)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.True(t, row.IsEmpty(), `The return row should be empty")`)
@@ -146,7 +146,7 @@ func TestModelFindEmpty(t *testing.T) {
 
 func TestModelFindBind(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.Equal(t, int64(1), user.Value("id"), `The return id should be 1")`)
@@ -157,7 +157,7 @@ func TestModelFindBind(t *testing.T) {
 
 func TestModelFindBindStruct(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	row := struct {
 		ID       int
 		Nickname string
@@ -174,7 +174,7 @@ func TestModelFindBindStruct(t *testing.T) {
 
 func TestModelFindBindEmpty(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	_, err := user.Find(2, &user)
 	assert.Equal(t, nil, err, `The return error should be nil")`)
 	assert.True(t, user.IsEmpty(), `The return model should be empty")`)
@@ -190,7 +190,7 @@ func TestModelFindSoftDeletes(t *testing.T) {
 
 func TestModelSave(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 
 	// Insert
 	err := user.Fill(xun.R{
@@ -212,7 +212,7 @@ func TestModelSave(t *testing.T) {
 
 func TestModelSaveUpdate(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	// Insert
 	err := user.Fill(xun.R{
 		"nickname":  "Ava",
@@ -259,7 +259,7 @@ func TestModelSaveInsert(t *testing.T) {
 
 func TestModelSaveUniqueKeys(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	err := user.Fill(xun.R{
 		"nickname": "admin",
 		"vote":     100,
@@ -277,7 +277,7 @@ func TestModelSaveUniqueKeys(t *testing.T) {
 
 func TestModelSavePrimary(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 
@@ -298,7 +298,7 @@ func TestModelSavePrimary(t *testing.T) {
 
 func TestModelSaveBind(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 
@@ -316,7 +316,7 @@ func TestModelSaveBind(t *testing.T) {
 
 func TestModelSaveBindStruct(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	_, err := user.Find(1, &user)
 	assert.Equal(t, nil, err, `The return value should be nil")`)
 	row := struct {
@@ -341,7 +341,7 @@ func TestModelSaveBindStruct(t *testing.T) {
 
 func TestModelDestory(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	assert.False(t, user.MustFind(1).IsEmpty(), `The user table should have 1 row`)
 
 	err := user.MustFind(1).Destroy()
@@ -351,7 +351,7 @@ func TestModelDestory(t *testing.T) {
 
 func TestModelDestoryByID(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	assert.False(t, user.MustFind(1).IsEmpty(), `The user table should have 1 row`)
 
 	err := user.Destroy(1)
@@ -361,7 +361,7 @@ func TestModelDestoryByID(t *testing.T) {
 
 func TestModelDestoryByIDs(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	err := user.Fill(xun.R{
 		"nickname": "Ava",
 		"vote":     100,
@@ -381,7 +381,7 @@ func TestModelDestoryByIDs(t *testing.T) {
 
 func TestModelDestoryByIDsStyle2(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	err := user.Fill(xun.R{
 		"nickname": "Ava",
 		"vote":     100,
@@ -438,7 +438,7 @@ func TestModelOnlyTrashed(t *testing.T) {
 
 func TestModelQuery(t *testing.T) {
 	TestFactoryMigrate(t)
-	user := models.MakeUser(modelTestMaker)
+	user := models.BuildeUser(modelTestMaker)
 	rows := user.MustGet()
 	assert.Equal(t, 1, len(rows), `The return value should be 1")`)
 	if len(rows) == 1 {

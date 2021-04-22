@@ -23,13 +23,13 @@ func init() {
 	)
 }
 
-// MakeUser create a new user instance
-func MakeUser(maker ...model.MakerFunc) User {
+// BuildeUser create a new user instance
+func BuildeUser(builder ...model.MakerFunc) User {
 	user := User{}
-	if len(maker) == 0 {
-		maker[0] = capsule.Make
+	if len(builder) == 0 {
+		builder[0] = capsule.Build
 	}
-	model.MakeUsing(maker[0], &user)
+	model.MakeUsing(builder[0], &user)
 	return user
 }
 
