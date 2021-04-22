@@ -461,8 +461,19 @@ func (n N) ToFixed(places int) (float64, error) {
 	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
-	format := "%" + fmt.Sprintf(".%df", places)
-	return strconv.ParseFloat(fmt.Sprintf(format, n.Number), 64)
+
+	value, ok := n.Number.(string)
+	if !ok {
+		value = fmt.Sprintf("%v", n.Number)
+	}
+
+	num, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, err
+	}
+	output := math.Pow(10, float64(places))
+	num = num * output
+	return float64(int(num+math.Copysign(0.5, num))) / output, nil
 }
 
 // MustToFixed the return value is the type of float64 and keeps the given decimal places
