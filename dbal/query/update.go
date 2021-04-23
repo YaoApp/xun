@@ -17,7 +17,13 @@ func (builder *Builder) Update(v interface{}) (int64, error) {
 	sql, bindings := builder.Grammar.CompileUpdate(builder.Query, values)
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 
-	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
+	stmt, err := builder.UseWrite().DB().Prepare(sql)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(bindings...)
 	if err != nil {
 		return 0, err
 	}
@@ -77,7 +83,13 @@ func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update inter
 	sql, bindings := builder.Grammar.CompileUpsert(builder.Query, columns, values, utils.Flatten(uniqueBy), update)
 	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
 
-	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
+	stmt, err := builder.UseWrite().DB().Prepare(sql)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(bindings...)
 	if err != nil {
 		return 0, err
 	}
