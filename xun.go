@@ -232,6 +232,10 @@ func (row R) Get(key interface{}) interface{} {
 // GetString get the string value  of the given key
 func (row R) GetString(key interface{}) string {
 	value := row.Get(key)
+	if value == nil {
+		return ""
+	}
+
 	if stringVal, ok := value.(string); ok {
 		return stringVal
 	}
@@ -243,6 +247,22 @@ func (row R) GetInt(key interface{}) int {
 	value := row.Get(key)
 	num := MakeN(value)
 	return num.MustInt()
+}
+
+// GetBool get the int value of the given key
+func (row R) GetBool(key interface{}) bool {
+	value := row.Get(key)
+	switch value.(type) {
+	case bool:
+		return value.(bool)
+	case int, int64, int32, int16, int8, uint64, uint32, uint16, uint8, float32, float64:
+		value := MakeN(value).MustInt()
+		return value > 0
+	case string:
+		return value.(string) != ""
+
+	}
+	return false
 }
 
 // GetFloat get the float value of the given key
@@ -522,6 +542,14 @@ func (n N) Int() (int, error) {
 	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
+
+	if value, ok := n.Number.(bool); ok {
+		if value {
+			return 1, nil
+		}
+		return 0, nil
+	}
+
 	value, err := strconv.ParseInt(fmt.Sprintf("%v", n.Number), 10, 64)
 	if err != nil {
 		return 0, err

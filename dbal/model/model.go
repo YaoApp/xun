@@ -487,6 +487,33 @@ func (model *Model) MustUpdateOrInsert(attributes interface{}, values ...interfa
 	return res
 }
 
+// Insert Insert new records into the database.
+func (model *Model) Insert(v interface{}, columns ...interface{}) error {
+	return model.
+		Builder.Table(model.GetTableName()).
+		Insert(v, columns...)
+}
+
+// MustInsert Insert new records into the database.
+func (model *Model) MustInsert(v interface{}, columns ...interface{}) {
+	err := model.Insert(v, columns...)
+	utils.PanicIF(err)
+}
+
+// InsertGetID Insert a new record and get the value of the primary key.
+func (model *Model) InsertGetID(v interface{}, args ...interface{}) (int64, error) {
+	return model.
+		Builder.Table(model.GetTableName()).
+		InsertGetID(v, args...)
+}
+
+// MustInsertGetID Insert a new record and get the value of the primary key.
+func (model *Model) MustInsertGetID(v interface{}, args ...interface{}) int64 {
+	lastID, err := model.InsertGetID(v, args...)
+	utils.PanicIF(err)
+	return lastID
+}
+
 // Search search by given params
 func (model *Model) Search() interface{} {
 	return nil
