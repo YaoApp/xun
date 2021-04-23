@@ -514,6 +514,19 @@ func (model *Model) MustInsertGetID(v interface{}, args ...interface{}) int64 {
 	return lastID
 }
 
+// Truncate Run a truncate statement on the table.
+func (model *Model) Truncate() error {
+	return model.
+		Builder.Table(model.GetTableName()).
+		Truncate()
+}
+
+// MustTruncate Run a truncate statement on the table.
+func (model *Model) MustTruncate() {
+	err := model.Truncate()
+	utils.PanicIF(err)
+}
+
 // Search search by given params
 func (model *Model) Search() interface{} {
 	return nil
