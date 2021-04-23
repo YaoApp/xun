@@ -229,6 +229,12 @@ func (row R) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetTime get the value of the given key, and cast the type to xun.T
+func (row R) GetTime(key interface{}) T {
+	value := row.Get(key)
+	return MakeTime(value)
+}
+
 // GetString get the string value  of the given key
 func (row R) GetString(key interface{}) string {
 	value := row.Get(key)
