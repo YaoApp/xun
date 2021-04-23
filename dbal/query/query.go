@@ -21,6 +21,8 @@ func (builder *Builder) Table(name string) Query {
 func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
 	stmt, err := db.Prepare(builder.ToSQL())
+	defer stmt.Close()
+
 	if err != nil {
 		defer logger.Debug(logger.RETRIEVE, builder.ToSQL(), fmt.Sprintf("%v", builder.GetBindings())).Write()
 		defer logger.Fatal(500, err.Error()).Write()

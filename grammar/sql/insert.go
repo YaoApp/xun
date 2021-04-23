@@ -43,10 +43,18 @@ func (grammarSQL SQL) CompileInsertGetID(query *dbal.Query, columns []interface{
 
 // ProcessInsertGetID Execute an insert and get ID statement and return the id
 func (grammarSQL SQL) ProcessInsertGetID(sql string, bindings []interface{}, sequence string) (int64, error) {
-	res, err := grammarSQL.DB.Exec(sql, bindings...)
+	stmt, err := grammarSQL.DB.Prepare(sql)
+	defer stmt.Close()
+
 	if err != nil {
 		return 0, err
 	}
+
+	res, err := stmt.Exec(bindings...)
+	if err != nil {
+		return 0, err
+	}
+
 	return res.LastInsertId()
 }
 
