@@ -1,5 +1,7 @@
 package xun
 
+import "net/textproto"
+
 // R alias map[string]interface{}, R is the first letter of "Row"
 type R map[string]interface{}
 
@@ -24,4 +26,12 @@ type P struct {
 	PreviousPage int                    `json:"previous_page"`
 	LastPage     int                    `json:"last_page"`
 	Options      map[string]interface{} `json:"options,omtempty"`
+}
+
+// UploadFile upload file
+type UploadFile struct {
+	Name     string
+	TempFile string
+	Size     int64
+	Header   textproto.MIMEHeader
 }
