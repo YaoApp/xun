@@ -452,6 +452,9 @@ func MakeNum(v interface{}) N {
 
 // MakeN Create a new xun.N struct
 func MakeN(v interface{}) N {
+	if num, ok := v.(N); ok {
+		return num
+	}
 	return N{Number: v}
 }
 
@@ -484,6 +487,25 @@ func (n *N) UnmarshalJSON(data []byte) error {
 
 // ToFixed the return value is the type of float64 and keeps the given decimal places
 func (n N) ToFixed(places int) (float64, error) {
+	num, err := n.Float64()
+	if err != nil {
+		return 0, err
+	}
+
+	output := math.Pow(10, float64(places))
+	num = num * output
+	return float64(int(num+math.Copysign(0.5, num))) / output, nil
+}
+
+// MustToFixed the return value is the type of float64 and keeps the given decimal places
+func (n N) MustToFixed(places int) float64 {
+	value, err := n.ToFixed(places)
+	utils.PanicIF(err)
+	return value
+}
+
+// Float64 the return value is the type of float64
+func (n N) Float64() (float64, error) {
 	if n.Number == nil {
 		return 0, fmt.Errorf("the value is nil")
 	}
@@ -497,14 +519,12 @@ func (n N) ToFixed(places int) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	output := math.Pow(10, float64(places))
-	num = num * output
-	return float64(int(num+math.Copysign(0.5, num))) / output, nil
+	return num, nil
 }
 
-// MustToFixed the return value is the type of float64 and keeps the given decimal places
-func (n N) MustToFixed(places int) float64 {
-	value, err := n.ToFixed(places)
+// MustFloat64 the return value is the type of float64
+func (n N) MustFloat64() float64 {
+	value, err := n.Float64()
 	utils.PanicIF(err)
 	return value
 }
