@@ -194,3 +194,12 @@ func IsNumeric(v interface{}) bool {
 		reflect.Uint64.String(),
 	}, reflect.TypeOf(v).Kind().String())
 }
+
+// CopySlice copy slice struct
+func CopySlice(values []interface{}) []interface{} {
+	new := []interface{}{}
+	for _, v := range values {
+		new = append(new, v)
+	}
+	return new
+}

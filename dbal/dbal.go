@@ -275,8 +275,149 @@ func (expression Expression) GetValue() string {
 
 // Clone clone the query instance
 func (query *Query) Clone() *Query {
-	new := *query
+
+	new := Query{
+		UseWriteConnection: query.UseWriteConnection,    // Whether to use write connection for the select. default is false
+		Lock:               query.CopyLock(),            //  Indicates whether row locking is being used.
+		From:               query.CopyFrom(),            // The table which the query is targeting.
+		Columns:            query.CopyColumns(),         // The columns that should be returned. (Name or Expression)
+		Aggregate:          query.CopyAggregate(),       // An aggregate function and column to be run.
+		Wheres:             query.CopyWheres(),          // The where constraints for the query.
+		Joins:              query.CopyJoins(),           // The table joins for the query.
+		Unions:             query.CopyUnions(),          // The query union statements.
+		UnionLimit:         query.UnionLimit,            // The maximum number of union records to return.
+		UnionOffset:        query.UnionOffset,           // The number of union records to skip.
+		UnionOrders:        query.CopyUnionOrders(),     // The orderings for the union query.
+		Orders:             query.CopyOrders(),          // The orderings for the query.
+		Limit:              query.Limit,                 // The maximum number of records to return.
+		Offset:             query.Offset,                // The number of records to skip.
+		Groups:             query.CopyGroups(),          // The groupings for the query.
+		Havings:            query.CopyHavings(),         // The having constraints for the query.
+		Bindings:           query.CopyBindings(),        // The current query value bindings.
+		Distinct:           query.Distinct,              // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct. default is false
+		DistinctColumns:    query.CopyDistinctColumns(), // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct.
+		IsJoinClause:       query.IsJoinClause,          // Determine if the query is a join clause.
+		BindingOffset:      query.BindingOffset,         // The Binding offset before select
+	}
+
+	// // new := NewQuery()
+	// // *new = *query
+	// // new.Bindings = map[string][]interface{}{}
+	// // new.Bindings = *&query.Bindings
+	// fmt.Printf("%p\n%p\n", &new.From, &query.From)
+	// os.Exit(0)
 	return &new
+}
+
+// CopyBindings copy Bindings
+func (query *Query) CopyBindings() map[string][]interface{} {
+	new := map[string][]interface{}{}
+	for key, bindings := range query.Bindings {
+		new[key] = []interface{}{}
+		for _, binding := range bindings {
+			new[key] = append(new[key], binding)
+		}
+	}
+	return new
+}
+
+// CopyAggregate copy Aggregate
+func (query *Query) CopyAggregate() Aggregate {
+	new := query.Aggregate
+	return new
+}
+
+// CopyLock copy Lock
+func (query *Query) CopyLock() interface{} {
+	new := query.Lock
+	return new
+}
+
+// CopyFrom copy from
+func (query *Query) CopyFrom() From {
+	new := query.From
+	return new
+}
+
+// CopyColumns copy columns
+func (query *Query) CopyColumns() []interface{} {
+	new := []interface{}{}
+	for _, column := range query.Columns {
+		new = append(new, column)
+	}
+	return new
+}
+
+// CopyDistinctColumns copy DistinctColumns
+func (query *Query) CopyDistinctColumns() []interface{} {
+	new := []interface{}{}
+	for _, column := range query.DistinctColumns {
+		new = append(new, column)
+	}
+	return new
+}
+
+// CopyWheres copy wheres
+func (query *Query) CopyWheres() []Where {
+	new := []Where{}
+	for _, where := range query.Wheres {
+		new = append(new, where)
+	}
+	return new
+}
+
+// CopyJoins copy joins
+func (query *Query) CopyJoins() []Join {
+	new := []Join{}
+	for _, join := range query.Joins {
+		new = append(new, join)
+	}
+	return new
+}
+
+// CopyUnions copy unions
+func (query *Query) CopyUnions() []Union {
+	new := []Union{}
+	for _, union := range query.Unions {
+		new = append(new, union)
+	}
+	return new
+}
+
+// CopyUnionOrders copy UnionOrders
+func (query *Query) CopyUnionOrders() []Order {
+	new := []Order{}
+	for _, order := range query.UnionOrders {
+		new = append(new, order)
+	}
+	return new
+}
+
+// CopyOrders copy Orders
+func (query *Query) CopyOrders() []Order {
+	new := []Order{}
+	for _, order := range query.Orders {
+		new = append(new, order)
+	}
+	return new
+}
+
+// CopyGroups copy Groups
+func (query *Query) CopyGroups() []interface{} {
+	new := []interface{}{}
+	for _, group := range query.Groups {
+		new = append(new, group)
+	}
+	return new
+}
+
+// CopyHavings copy Havings
+func (query *Query) CopyHavings() []Having {
+	new := []Having{}
+	for _, having := range query.Havings {
+		new = append(new, having)
+	}
+	return new
 }
 
 // AddColumn add a column to query

@@ -61,10 +61,10 @@ func (builder *Builder) NewBuilder() *Builder {
 
 // clone create a new builder instance with current builder
 func (builder *Builder) clone() *Builder {
-	new := *builder
-	query := *builder.Query
-	new.Query = &query
-	return &new
+	new := builder.new()
+	*new = *builder
+	new.Query = builder.Query.Clone()
+	return new
 }
 
 // new create a new builder instance
