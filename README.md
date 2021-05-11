@@ -254,10 +254,10 @@ qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).PrintSQL()
 
 Read more [Xun Query References](docs/query.md)
 
-### Using The Model Interface
+<!-- ### Using The Model Interface
 
 ```golang
 // comming soon
 ```
 
-Read more [Xun Model References](docs/model.md)
+Read more [Xun Model References](docs/model.md) -->
