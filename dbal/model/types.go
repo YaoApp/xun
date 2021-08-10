@@ -48,7 +48,7 @@ type Schema struct {
 	Columns       []Column            `json:"columns,omitempty"`
 	Indexes       []Index             `json:"indexes,omitempty"`
 	Relationships []Relationship      `json:"relationships,omitempty"`
-	Relations     map[string]Relation `json:"Relations,omitempty"` // the new relationship description
+	Relations     map[string]Relation `json:"relations,omitempty"` // the new relationship description
 	Option        SchemaOption        `json:"option,omitempty"`
 	Values        []xun.R             `json:"values,omitempty"`
 }
@@ -149,7 +149,7 @@ type Relation struct {
 	Model    string `json:"model"`
 	Foreign  string `json:"foreign,omitempty"`
 	Parent   string `json:"parent,omitempty"`
-	maxLevel int    `json:"max_level,omitempty"`
+	MaxLevel int    `json:"max_level,omitempty"`
 }
 
 // Relationship xun model relationships
