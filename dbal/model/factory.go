@@ -102,6 +102,7 @@ func (factory *Factory) New(v ...interface{}) *Model {
 		}
 		SetModel(factory.Model, func(model *Model) {
 			model.values = xun.MakeRow()
+			model.relations = factory.Schema.Relations
 		})
 		new := reflect.ValueOf(factory.Model).Elem()
 		ptr.Elem().Set(new)
@@ -115,6 +116,7 @@ func (factory *Factory) New(v ...interface{}) *Model {
 
 	clone := *model
 	clone.values = xun.MakeRow()
+	clone.relations = factory.Schema.Relations
 	return &clone
 }
 

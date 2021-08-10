@@ -214,6 +214,11 @@ func (model *Model) Columns() []*Column {
 	return model.columns
 }
 
+// Relations get the Relations of model struct
+func (model *Model) Relations() map[string]Relation {
+	return model.relations
+}
+
 // Searchable get the the searchable columns
 func (model *Model) Searchable() []string {
 	return model.searchable

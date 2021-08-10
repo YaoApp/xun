@@ -27,6 +27,7 @@ type Model struct {
 	softDeletes bool
 	Timestamps  bool
 	schema      schema.Schema
+	relations   map[string]Relation
 	*query.Builder
 }
 
@@ -42,13 +43,14 @@ type Factory struct {
 
 // Schema the Xun model schema description struct
 type Schema struct {
-	Name          string         `json:"name"`
-	Table         Table          `json:"table,omitempty"`
-	Columns       []Column       `json:"columns,omitempty"`
-	Indexes       []Index        `json:"indexes,omitempty"`
-	Relationships []Relationship `json:"relationships,omitempty"`
-	Option        SchemaOption   `json:"option,omitempty"`
-	Values        []xun.R        `json:"values,omitempty"`
+	Name          string              `json:"name"`
+	Table         Table               `json:"table,omitempty"`
+	Columns       []Column            `json:"columns,omitempty"`
+	Indexes       []Index             `json:"indexes,omitempty"`
+	Relationships []Relationship      `json:"relationships,omitempty"`
+	Relations     map[string]Relation `json:"Relations,omitempty"` // the new relationship description
+	Option        SchemaOption        `json:"option,omitempty"`
+	Values        []xun.R             `json:"values,omitempty"`
 }
 
 // Flow the Xun model flow description struct
@@ -139,6 +141,16 @@ const (
 	RelMorphByMany    = "morphByMany"
 	RelMorphMap       = "morphMap"
 )
+
+// Relation the new xun model relation
+type Relation struct {
+	Type     string `json:"type"`
+	Key      string `json:"key,omitempty"`
+	Model    string `json:"model"`
+	Foreign  string `json:"foreign,omitempty"`
+	Parent   string `json:"parent,omitempty"`
+	maxLevel int    `json:"max_level,omitempty"`
+}
 
 // Relationship xun model relationships
 type Relationship struct {
