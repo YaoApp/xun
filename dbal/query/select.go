@@ -25,6 +25,18 @@ func (builder *Builder) Select(columns ...interface{}) Query {
 	return builder
 }
 
+// SelectAppend Set the columns to be selected.
+// Select("field1", "field2")
+// Select("field1", "field2 as f2")
+// Select("field1", dbal.Raw("Count(id) as v"))
+func (builder *Builder) SelectAppend(columns ...interface{}) Query {
+	columns = builder.prepareColumns(columns...)
+	for _, column := range columns {
+		builder.addSelect(column)
+	}
+	return builder
+}
+
 // SelectRaw Add a new "raw" select expression to the query.
 func (builder *Builder) SelectRaw(expression string, bindings ...interface{}) Query {
 	builder.addSelect(dbal.Raw(expression))

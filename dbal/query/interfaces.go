@@ -58,6 +58,7 @@ type Query interface {
 
 	// defined in the select.go file
 	Select(columns ...interface{}) Query
+	SelectAppend(columns ...interface{}) Query
 	SelectRaw(expression string, bindings ...interface{}) Query
 	SelectSub(qb interface{}, alias string) Query
 	Distinct(args ...interface{}) Query
