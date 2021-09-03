@@ -8,6 +8,7 @@ import (
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
+	"github.com/yaoapp/xun/utils"
 )
 
 func TestGroupGroupBy(t *testing.T) {
@@ -204,6 +205,11 @@ func TestGroupOrHavingBetween(t *testing.T) {
 	rows := qb.MustGet()
 	assert.Equal(t, 3, len(rows), "the return value should have 2 items")
 	if len(rows) == 3 {
+		// DEBUG
+		utils.Println(rows)
+		utils.Println(sql)
+		utils.Println(qb.GetBindings())
+
 		assert.Equal(t, int64(2), rows[0]["cnt"].(int64), "the cnt of first item should be 1")
 		assert.Equal(t, int64(5), rows[0]["vote"].(int64), "the vote of first item should be 5")
 		assert.Equal(t, int64(1), rows[1]["cnt"].(int64), "the cnt of second item should be 2")
