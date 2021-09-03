@@ -8,6 +8,18 @@ services:
 jobs:
   fast_finish: true
   include:
+    - name: MySQL8.0-1.17.x
+      go: 1.17.x
+      env:
+        - XUN_UNIT_NAME=mysql  XUN_UNIT_DRIVER=mysql XUN_UNIT_DRIVER=mysql XUN_UNIT_LOG=/mysql8.0.log XUN_UNIT_SOURCE="root:123456@tcp(127.0.0.1:3308)/xun?charset=utf8mb4&parseTime=True&loc=Local" GO111MODULE=on XUN_MODE=test
+      before_install:
+        - unit/service.sh mysql8.0 # Start MySQL 8.0 service
+    - name: MySQL8.0-1.15.x
+      go: 1.15.x
+      env:
+        - XUN_UNIT_NAME=mysql  XUN_UNIT_DRIVER=mysql XUN_UNIT_DRIVER=mysql XUN_UNIT_LOG=/mysql8.0.log XUN_UNIT_SOURCE="root:123456@tcp(127.0.0.1:3308)/xun?charset=utf8mb4&parseTime=True&loc=Local" GO111MODULE=on XUN_MODE=test
+      before_install:
+        - unit/service.sh mysql8.0 # Start MySQL 8.0 service
     - name: MySQL5.7-1.15.x
       go: 1.15.x
       env:
