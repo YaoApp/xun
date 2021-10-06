@@ -308,7 +308,7 @@ func TestBuilderGetVersion(t *testing.T) {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
-	} else if unit.Is("postgres") {
+	} else if unit.Is("postgres9.6") {
 		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
 		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
 		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
@@ -521,7 +521,7 @@ func TestBuilderMustGetVersion(t *testing.T) {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 8, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 0, int(version.Minor), "the minor version should be 6")
-	} else if unit.Is("postgres") {
+	} else if unit.Is("postgres9.6") {
 		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
 		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
 		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")

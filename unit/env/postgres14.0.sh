@@ -1,0 +1,5 @@
+export XUN_UNIT_NAME="postgres14.0"
+export XUN_UNIT_SOURCE="postgres://xun:123456@db-server:5140/xun?sslmode=disable"
+export XUN_UNIT_DRIVER="postgres"
+export XUN_UNIT_LOG="/Users/max/Code/yao/xun/unit/postgres14.0.log"
+export XUN_MODE="test"

@@ -29,9 +29,33 @@ func (grammarSQL Postgres) GetVersion() (*dbal.Version, error) {
 	if len(verArr) < 2 {
 		return nil, fmt.Errorf("Can't parse the version: %s", rows[0])
 	}
+
 	ver, err := semver.Make(verArr[1])
-	if err != nil {
-		return nil, err
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
+	}
+
+	defer logger.Warn(logger.RETRIEVE, "The version is: "+verArr[1]).TimeCost(time.Now())
+	if strings.Contains(verArr[1], ".") {
+		ver, err = semver.Make(verArr[1] + ".0")
+	}
+
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
+	}
+
+	ver, err = semver.Make(verArr[1] + ".0.0")
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
 	}
 
 	return &dbal.Version{

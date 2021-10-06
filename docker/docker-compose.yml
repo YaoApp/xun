@@ -1,0 +1,55 @@
+version: "2.2"
+services:
+  postgres-9.6:
+    container_name: xun-postgres-9.6
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=xun
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=xun
+    ports:
+      - "5096:5432"
+  postgres-14.0:
+    container_name: xun-postgres-14
+    image: postgres:14.0
+    environment:
+      - POSTGRES_USER=xun
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=xun
+    ports:
+      - "5140:5432"
+  mysql-8.0:
+    container_name: xun-mysql-8.0
+    image: mysql:8.0.26
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: xun
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: xun
+    ports:
+      - "3308:3306"
+  mysql-5.7:
+    container_name: xun-mysql-5.7
+    image: mysql:5.7.25
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: xun
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: xun
+    ports:
+      - "3307:3306"
+  mysql-5.6:
+    container_name: xun-mysql-5.6
+    image: mysql:5.6.51
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: xun
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: xun
+    ports:
+      - "3306:3306"
+volumes:
+  xdebug-log:
