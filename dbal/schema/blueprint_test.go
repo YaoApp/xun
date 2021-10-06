@@ -474,32 +474,35 @@ func TestBlueprintText(t *testing.T) {
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
+		true,
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "text", nil, true)
 }
 
 func TestBlueprintMediumText(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) })
-	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "mediumText", nil)
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) }, true)
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "mediumText", nil, true)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
-	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) },
+		true,
 	)
-	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "mediumText", nil)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "mediumText", nil, true)
 }
 
 func TestBlueprintLongText(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) })
-	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "longText", nil)
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) }, true)
+	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "longText", nil, true)
 	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
-	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) },
+		true,
 	)
-	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "longText", nil)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "longText", nil, true)
 }
 
 func TestBlueprintBinary(t *testing.T) {
@@ -1162,31 +1165,38 @@ func testAlterTable(executable bool, t *testing.T, create columnFunc, alter colu
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
 
-func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter columnFunc) {
+func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter columnFunc, withoutIndex ...bool) {
 	if !executable {
 		return
 	}
 	testCreateTable(t, create)
 	builder := getTestBuilder()
 	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
-		table.DropIndex("fieldWithIndex_index")
-		table.DropIndex("fieldWithUnique_unique")
-		table.DropIndex("field_field2nd")
-		table.DropIndex("field2nd_field3rd")
-		alter(table, "field1st", 1, 1)         // Create new column
-		alter(table, "field2nd", 4, 4)         // Alter field2nd column
-		alter(table, "field4th", 16, 8)        // Alter field4th column
-		alter(table, "fieldWithIndex", 32, 2)  // Alter fieldWithIndex column
-		alter(table, "fieldWithUnique", 64, 4) // Alter fieldWithIndex column
+		if len(withoutIndex) == 0 {
+			table.DropIndex("fieldWithIndex_index")
+			table.DropIndex("fieldWithUnique_unique")
+			table.DropIndex("field_field2nd")
+			table.DropIndex("field2nd_field3rd")
+		}
+		alter(table, "field1st", 1, 1)  // Create new column
+		alter(table, "field2nd", 4, 4)  // Alter field2nd column
+		alter(table, "field4th", 16, 8) // Alter field4th column
+
+		if len(withoutIndex) == 0 {
+			alter(table, "fieldWithIndex", 32, 2)  // Alter fieldWithIndex column
+			alter(table, "fieldWithUnique", 64, 4) // Alter fieldWithIndex column
+		}
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
 
-	// Add index
-	err = builder.AlterTable("table_test_blueprint", func(table Blueprint) {
-		table.AddUnique("field_field2nd", "field", "field2nd")
-		table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
-	})
-	assert.Equal(t, nil, err, "the return error should be nil")
+	if len(withoutIndex) == 0 {
+		// Add index
+		err = builder.AlterTable("table_test_blueprint", func(table Blueprint) {
+			table.AddUnique("field_field2nd", "field", "field2nd")
+			table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
+		})
+		assert.Equal(t, nil, err, "the return error should be nil")
+	}
 }
 
 func testGetTable() Blueprint {
