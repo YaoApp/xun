@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/yaoapp/xun/logger"
@@ -23,7 +24,7 @@ func Is(name string) bool {
 
 // Not the DSN should not be the  name given
 func Not(name string) bool {
-	return os.Getenv("XUN_UNIT_NAME") != name
+	return strings.Contains(os.Getenv("XUN_UNIT_NAME"), name)
 }
 
 //DriverIs the drvier should be the name given
