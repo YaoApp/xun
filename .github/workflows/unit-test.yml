@@ -1,4 +1,4 @@
-name: Unit-Test
+name: UnitTest
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go: [1.13, 1.17]
-        db: [Postgres9.6]
+        db: [MySQL5.7, MySQL5.6, Postgres9.6, SQLite3]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
