@@ -38,6 +38,7 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 
 	ver, err := semver.Make(rows[0])
 	if err != nil {
+		defer logger.Error(500, rows[0]).Write()
 		return nil, err
 	}
 
