@@ -11,10 +11,12 @@ startMySQL() {
     docker_run="$docker_run --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci"
     sh -c "$docker_run"
 
-    DB_DSN="$INPUT_USER:$INPUT_PASSWORD@tcp(127.0.0.1:3306)/$INPUT_DB?charset=utf8mb4&parseTime=True&loc=Local"
-    echo "DSN=$DB_DSN" >> $GITHUB_ENV
+    DB_HOST="tcp(127.0.0.1:3306)/$INPUT_DB?charset=utf8mb4&parseTime=True&loc=Local"
+    DB_USER=$INPUT_USER
+    echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+    echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=mysql" >> $GITHUB_ENV
-    echo $DB_DSN
+    echo "$DB_HOST$DB_HOST"
 }
 
 startPostgres() {
@@ -26,11 +28,12 @@ startPostgres() {
     docker_run="$docker_run -e POSTGRES_PASSWORD=$INPUT_PASSWORD"
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
 
-    DB_DSN="$INPUT_USER:$INPUT_PASSWORD@127.0.0.1/$INPUT_DB?sslmode=disable"
-    echo "DSN=postgres://$DB_DSN" >> $GITHUB_ENV
+    DB_HOST="127.0.0.1/$INPUT_DB?sslmode=disable"
+    DB_USER=$INPUT_USER
+    echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+    echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=postgres" >> $GITHUB_ENV
-    echo $DB_DSN
-    echo "postgres://$DB_DSN"
+    echo "$DB_HOST$DB_HOST"
 }
 
 startSQLite3() {
