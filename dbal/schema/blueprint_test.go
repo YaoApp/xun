@@ -468,7 +468,7 @@ func TestBlueprintChar(t *testing.T) {
 }
 
 func TestBlueprintText(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Text(name) })
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Text(name) }, true)
 	testCheckColumnsAfterCreate(unit.Always, t, "text", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
@@ -1121,7 +1121,7 @@ func TestBlueprintClean(t *testing.T) {
 
 // The blueprint test utils
 
-func testCreateTable(t *testing.T, create columnFunc) {
+func testCreateTable(t *testing.T, create columnFunc, withoutIndex ...bool) {
 	builder := getTestBuilder()
 	builder.DropTableIfExists("table_test_blueprint")
 	err := builder.CreateTable("table_test_blueprint", func(table Blueprint) {
@@ -1135,10 +1135,13 @@ func testCreateTable(t *testing.T, create columnFunc) {
 		create(table, "field7th", 64, 32)
 		create(table, "field8th", 128, 64)
 		create(table, "field9th", 255, 128)
-		create(table, "fieldWithIndex", 32, 2).Index()
-		create(table, "fieldWithUnique", 64, 4).Unique()
-		table.AddUnique("field_field2nd", "field", "field2nd")
-		table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
+
+		if len(withoutIndex) == 0 {
+			create(table, "fieldWithIndex", 32, 2).Index()
+			create(table, "fieldWithUnique", 64, 4).Unique()
+			table.AddUnique("field_field2nd", "field", "field2nd")
+			table.AddIndex("field2nd_field3rd", "field2nd", "field3rd")
+		}
 	})
 	assert.Equal(t, nil, err, "the return error should be nil")
 }
