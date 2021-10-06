@@ -16,20 +16,20 @@ type columnFunc func(table Blueprint, name string, args ...int) *Column
 func TestBlueprintTinyInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.TinyInteger(name) })
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "tinyInteger", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "smallInteger", nil)
 	testCheckIndexesAfterCreate(true, t, nil)
 	testAlterTable(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.TinyInteger(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "tinyInteger", nil)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "smallInteger", nil)
 }
 
 func TestBlueprintUnsignedTinyInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedTinyInteger(name) })
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "tinyInteger", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "smallInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "tinyInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
 
@@ -38,7 +38,7 @@ func TestBlueprintUnsignedTinyInteger(t *testing.T) {
 		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedTinyInteger(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "tinyInteger", testCheckUnsigned)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "smallInteger", nil)
 }
 
 func TestBlueprintTinyIncrements(t *testing.T) {
@@ -58,7 +58,7 @@ func TestBlueprintTinyIncrements(t *testing.T) {
 	column := table.GetColumn("id")
 	testCheckAutoIncrementing(t, "id", column)
 
-	if unit.Is("postgres") {
+	if unit.Is("postgres9.6") {
 		assert.Equal(t, "smallInteger", column.Type, "the column type should be smallInteger")
 	} else if unit.Is("sqlite3") {
 		assert.Equal(t, "integer", column.Type, "the column type should be integer")
@@ -89,14 +89,14 @@ func TestBlueprintSmallInteger(t *testing.T) {
 
 func TestBlueprintUnsignedSmallInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) })
-	testCheckColumnsAfterCreate(unit.Is("postgres") || unit.Is("sqlite3"), t, "smallInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6") || unit.Is("sqlite3"), t, "smallInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "smallInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
 	testAlterTable(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedSmallInteger(name) },
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "smallInteger", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "smallInteger", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "smallInteger", testCheckUnsigned)
 }
 
@@ -156,7 +156,7 @@ func TestBlueprintUnsignedInteger(t *testing.T) {
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedInteger(name) },
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "integer", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "integer", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "integer", testCheckUnsigned)
 }
 
@@ -203,7 +203,7 @@ func TestBlueprintBigInteger(t *testing.T) {
 func TestBlueprintUnsignedBigInteger(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.UnsignedBigInteger(name) })
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "bigInteger", testCheckUnsigned)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "bigInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
 
@@ -211,7 +211,7 @@ func TestBlueprintUnsignedBigInteger(t *testing.T) {
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.UnsignedBigInteger(name) },
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "bigInteger", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
 }
 
@@ -265,7 +265,7 @@ func TestBlueprintID(t *testing.T) {
 func TestBlueprintForeignID(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.ForeignID(name) })
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "bigInteger", testCheckUnsigned)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "bigInteger", nil)
 	testCheckColumnsAfterCreate(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
 	testCheckIndexesAfterCreate(true, t, nil)
 
@@ -273,7 +273,7 @@ func TestBlueprintForeignID(t *testing.T) {
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, args[0]) },
 		func(table Blueprint, name string, args ...int) *Column { return table.ForeignID(name) },
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "bigInteger", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "bigInteger", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "bigInteger", testCheckUnsigned)
 }
 
@@ -329,7 +329,7 @@ func TestBlueprintUnsignedDecimal(t *testing.T) {
 			return table.UnsignedDecimal(name, total, places)
 		},
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "decimal", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "decimal", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "decimal", testCheckUnsigned)
 }
 
@@ -385,7 +385,7 @@ func TestBlueprintUnsignedFloat(t *testing.T) {
 			return table.UnsignedFloat(name, total, places)
 		},
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "float", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "float", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "float", testCheckUnsigned)
 }
 
@@ -441,7 +441,7 @@ func TestBlueprintUnsignedDouble(t *testing.T) {
 			return table.UnsignedDouble(name, total, places)
 		},
 	)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "double", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "double", nil)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "double", testCheckUnsigned)
 }
 
@@ -482,7 +482,7 @@ func TestBlueprintText(t *testing.T) {
 func TestBlueprintMediumText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) }, true)
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "mediumText", nil, true)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil)
 	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
@@ -495,7 +495,7 @@ func TestBlueprintMediumText(t *testing.T) {
 func TestBlueprintLongText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) }, true)
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "longText", nil, true)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "text", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil)
 	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
@@ -545,14 +545,14 @@ func TestBlueprintDate(t *testing.T) {
 func TestBlueprintDateTime(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.DateTime(name) })
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "dateTime", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestamp", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestamp", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column { return table.DateTime(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", nil)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestamp", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestamp", nil)
 }
 
 func TestBlueprintDateTimeWithP(t *testing.T) {
@@ -560,7 +560,7 @@ func TestBlueprintDateTimeWithP(t *testing.T) {
 		return table.DateTime(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "dateTime", testCheckDateTimePrecision6)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestamp", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestamp", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "dateTime", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
@@ -570,20 +570,20 @@ func TestBlueprintDateTimeWithP(t *testing.T) {
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", testCheckDateTimePrecision6)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestamp", testCheckDateTimePrecision6)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestamp", testCheckDateTimePrecision6)
 }
 
 func TestBlueprintDateTimeTz(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.DateTimeTz(name) })
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "dateTime", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestampTz", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestampTz", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column { return table.DateTimeTz(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", nil)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestampTz", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestampTz", nil)
 }
 
 func TestBlueprintDateTimeTzWithP(t *testing.T) {
@@ -591,7 +591,7 @@ func TestBlueprintDateTimeTzWithP(t *testing.T) {
 		return table.DateTimeTz(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "dateTime", testCheckDateTimePrecision6)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestampTz", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "dateTime", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
@@ -601,7 +601,7 @@ func TestBlueprintDateTimeTzWithP(t *testing.T) {
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "dateTime", testCheckDateTimePrecision6)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestampTz", testCheckDateTimePrecision6)
 }
 
 func TestBlueprintTime(t *testing.T) {
@@ -634,14 +634,14 @@ func TestBlueprintTimeWithP(t *testing.T) {
 func TestBlueprintTimeTz(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.TimeTz(name) })
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "time", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timeTz", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timeTz", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column { return table.TimeTz(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", nil)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timeTz", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timeTz", nil)
 }
 
 func TestBlueprintTimeTzWithP(t *testing.T) {
@@ -649,7 +649,7 @@ func TestBlueprintTimeTzWithP(t *testing.T) {
 		return table.TimeTz(name, 6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "time", testCheckDateTimePrecision6)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timeTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timeTz", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "time", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
@@ -659,7 +659,7 @@ func TestBlueprintTimeTzWithP(t *testing.T) {
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "time", testCheckDateTimePrecision6)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timeTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timeTz", testCheckDateTimePrecision6)
 }
 
 func TestBlueprintTimestamp(t *testing.T) {
@@ -691,14 +691,14 @@ func TestBlueprintTimestampWithP(t *testing.T) {
 func TestBlueprintTimestampTz(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.TimestampTz(name) })
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "timestamp", nil)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestampTz", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestampTz", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.String(name, 128) },
 		func(table Blueprint, name string, args ...int) *Column { return table.TimestampTz(name) },
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "timestamp", nil)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestampTz", nil)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestampTz", nil)
 }
 
 func TestBlueprintTimestampTzWithP(t *testing.T) {
@@ -706,7 +706,7 @@ func TestBlueprintTimestampTzWithP(t *testing.T) {
 		return table.TimestampTz(name).SetDateTimePrecision(6)
 	})
 	testCheckColumnsAfterCreate(unit.Not("postgres") && unit.Not("sqlite3"), t, "timestamp", testCheckDateTimePrecision6)
-	testCheckColumnsAfterCreate(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "timestampTz", testCheckDateTimePrecision6)
 	testCheckColumnsAfterCreate(unit.Is("sqlite3"), t, "timestamp", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
@@ -716,7 +716,7 @@ func TestBlueprintTimestampTzWithP(t *testing.T) {
 		},
 	)
 	testCheckColumnsAfterAlterTable(unit.Not("sqlite3") && unit.Not("postgres"), t, "timestamp", testCheckDateTimePrecision6)
-	testCheckColumnsAfterAlterTable(unit.Is("postgres"), t, "timestampTz", testCheckDateTimePrecision6)
+	testCheckColumnsAfterAlterTable(unit.Is("postgres9.6"), t, "timestampTz", testCheckDateTimePrecision6)
 }
 
 func TestBlueprintBoolean(t *testing.T) {

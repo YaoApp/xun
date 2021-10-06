@@ -300,7 +300,7 @@ func TestBuilderGetVersion(t *testing.T) {
 	if err != nil {
 		return
 	}
-	if unit.Is("mysql") {
+	if unit.Is("mysql5.7") {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 7, int(version.Minor), "the minor version should be 7")
@@ -308,7 +308,7 @@ func TestBuilderGetVersion(t *testing.T) {
 		assert.Equal(t, "mysql", version.Driver, "the driver should be mysql")
 		assert.Equal(t, 5, int(version.Major), "the major version should be 5")
 		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
-	} else if unit.Is("postgres") {
+	} else if unit.Is("postgres9.6") {
 		assert.Equal(t, "postgres", version.Driver, "the driver should be postgres")
 		assert.Equal(t, 9, int(version.Major), "the major version should be 9")
 		assert.Equal(t, 6, int(version.Minor), "the minor version should be 6")
@@ -575,7 +575,7 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
-	if unit.Is("postgres") {
+	if unit.Is("postgres9.6") {
 		assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 64")
 	}
 
@@ -637,7 +637,7 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
 	}
 
-	if unit.Is("postgres") {
+	if unit.Is("postgres9.6") {
 		assert.Nil(t, nameLatest, "the index name_latest should has none")
 		assert.Nil(t, nameCounter, "the index name_counter should has none")
 	} else if unit.Not("sqlite3") {
@@ -658,7 +658,7 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 func checkTable(t *testing.T, table Blueprint) {
 
 	DefaultBigIntPrecision := 20
-	if unit.Is("postgres") {
+	if unit.Is("postgres9.6") {
 		DefaultBigIntPrecision = 64
 	}
 
@@ -689,7 +689,7 @@ func checkTable(t *testing.T, table Blueprint) {
 	assert.True(t, nil != table.GetColumn("latest"), "the column latest should be created")
 	if table.GetColumn("latest") != nil {
 		assert.Equal(t, columnType, table.GetColumn("latest").Type, "the latest type should be %s", columnType)
-		if unit.Is("postgres") {
+		if unit.Is("postgres9.6") {
 			assert.Equal(t, DefaultBigIntPrecision, utils.IntVal(table.GetColumn("latest").Precision), "the latest precision should be 19")
 		}
 		if unit.Not("postgres") {
