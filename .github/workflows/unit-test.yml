@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go: [1.13, 1.17]
-        db: [MySQL8.0, MySQL5.7, MySQL5.6, Postgres9.6, Postgres14, SQLite3]
+        db: [MySQL5.7]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
           echo "XUN_UNIT_SOURCE=$DSN" >> $GITHUB_ENV
           echo "XUN_UNIT_NAME=$DB_DRIVER" >> $GITHUB_ENV
           echo "XUN_UNIT_DRIVER=$DB_DRIVER" >> $GITHUB_ENV
-          echo "XUN_UNIT_LOG=$HOME/${{ matrix.go }}.log" >> $GITHUB_ENV
+          echo "XUN_UNIT_LOG=$HOME/${{ matrix.db }}-${{ matrix.go }}.log" >> $GITHUB_ENV
 
       - name: Run Test
         run: |
