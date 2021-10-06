@@ -24,7 +24,7 @@ func Is(name string) bool {
 
 // Not the DSN should not be the  name given
 func Not(name string) bool {
-	return strings.Contains(os.Getenv("XUN_UNIT_NAME"), name)
+	return !strings.Contains(os.Getenv("XUN_UNIT_NAME"), name)
 }
 
 //DriverIs the drvier should be the name given
