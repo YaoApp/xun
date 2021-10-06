@@ -56,7 +56,7 @@ jobs:
           elif [ "$DB_DRIVER" = "postgres" ]; then
             XUN_UNIT_SOURCE="postgres://$DB_USER:$PASSWORD@$DB_HOST" make test
           else
-            make test
+            XUN_UNIT_SOURCE="$DB_HOST" make test
           fi
 
       - name: Codecov Report
