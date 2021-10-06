@@ -787,7 +787,7 @@ func TestBlueprintUUID(t *testing.T) {
 	testCheckColumnsAfterCreate(unit.DriverIs("sqlite3"), t, "string", nil)
 	testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
-		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
+		func(table Blueprint, name string, args ...int) *Column { return table.String(name) },
 		func(table Blueprint, name string, args ...int) *Column {
 			return table.UUID(name)
 		},
