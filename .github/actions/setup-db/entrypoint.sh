@@ -29,7 +29,7 @@ startPostgres() {
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
 
     # waiting for postgres ready
-    timeout 90s bash -c "until docker exec postgres_$VERSION pg_isready ; do sleep 5 ; done"
+    timeout 90s sh -c "until docker exec postgres_$VERSION pg_isready ; do sleep 5 ; done"
 
     DB_HOST="127.0.0.1/$INPUT_DB?sslmode=disable"
     DB_USER=$INPUT_USER
