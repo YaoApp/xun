@@ -1234,7 +1234,7 @@ func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string,
 
 	if len(withoutIndex) > 0 {
 		names := []string{
-			"field", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th"
+			"field", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th",
 		}
 	}
 
@@ -1265,7 +1265,7 @@ func testCheckColumnsAfterAlterTable(executable bool, t *testing.T, typeName str
 
 	if len(withoutIndex) > 0 {
 		alterNames = []string{
-			"field1st", "field2nd", "field4th"
+			"field1st", "field2nd", "field4th",
 		}
 		names = []string{
 			"field", "field1st", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th",
