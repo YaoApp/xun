@@ -506,27 +506,29 @@ func TestBlueprintLongText(t *testing.T) {
 }
 
 func TestBlueprintBinary(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name) })
-	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil)
-	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name) }, true)
+	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil, true)
+	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.Binary(name) },
+		true,
 	)
-	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil, true)
 }
 
 func TestBlueprintBinaryWithL(t *testing.T) {
-	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name, 600) })
-	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil)
-	testCheckColumnsAfterCreate(unit.DriverIs("mysql"), t, "binary", testCheckLength600)
-	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Binary(name, 600) }, true)
+	testCheckColumnsAfterCreate(unit.Always, t, "binary", nil, true)
+	testCheckColumnsAfterCreate(unit.DriverIs("mysql"), t, "binary", testCheckLength600, true)
+	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.Binary(name, 600) },
+		true,
 	)
-	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil)
-	testCheckColumnsAfterAlterTable(unit.DriverIs("mysql"), t, "binary", testCheckLength600)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "binary", nil, true)
+	testCheckColumnsAfterAlterTable(unit.DriverIs("mysql"), t, "binary", testCheckLength600, true)
 }
 
 func TestBlueprintDate(t *testing.T) {
