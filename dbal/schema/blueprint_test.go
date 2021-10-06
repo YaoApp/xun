@@ -482,7 +482,7 @@ func TestBlueprintText(t *testing.T) {
 func TestBlueprintMediumText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.MediumText(name) }, true)
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "mediumText", nil, true)
-	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil, true)
 	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
@@ -495,7 +495,7 @@ func TestBlueprintMediumText(t *testing.T) {
 func TestBlueprintLongText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.LongText(name) }, true)
 	testCheckColumnsAfterCreate(unit.Not("postgres"), t, "longText", nil, true)
-	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil)
+	testCheckColumnsAfterCreate(unit.Is("postgres9.6"), t, "text", nil, true)
 	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
