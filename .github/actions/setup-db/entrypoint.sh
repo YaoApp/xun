@@ -26,7 +26,7 @@ startPostgres() {
     docker_run="$docker_run -e POSTGRES_PASSWORD=$INPUT_PASSWORD"
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
 
-    DB_DSN="postgres://$INPUT_USER:$INPUT_PASSWORD@127.0.0.1/$INPUT_DB?sslmode=disable"
+    DB_DSN="$INPUT_USER:$INPUT_PASSWORD@127.0.0.1/$INPUT_DB?sslmode=disable"
     echo "DSN=$DB_DSN" >> $GITHUB_ENV
     echo "DB_DRIVER=postgres" >> $GITHUB_ENV
     echo $DB_DSN
