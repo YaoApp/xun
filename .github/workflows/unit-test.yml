@@ -54,7 +54,7 @@ jobs:
           if [ "$DB_DRIVER" = "mysql" ]; then
             XUN_UNIT_SOURCE="$DB_USER:$PASSWORD@$DB_HOST" make test
           elif [ "$DB_DRIVER" = "postgres" ]; then
-            XUN_UNIT_SOURCE="$POSTGRES_DSN" make test
+            XUN_UNIT_SOURCE="postgres://$DB_USER:$PASSWORD@$DB_HOST" make test
           else
             make test
           fi
