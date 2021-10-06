@@ -469,13 +469,13 @@ func TestBlueprintChar(t *testing.T) {
 
 func TestBlueprintText(t *testing.T) {
 	testCreateTable(t, func(table Blueprint, name string, args ...int) *Column { return table.Text(name) }, true)
-	testCheckColumnsAfterCreate(unit.Always, t, "text", nil)
-	testCheckIndexesAfterCreate(unit.Always, t, nil)
+	testCheckColumnsAfterCreate(unit.Always, t, "text", nil, true)
+	// testCheckIndexesAfterCreate(unit.Always, t, nil)
 	testAlterTableSafe(unit.Not("sqlite3"), t,
 		func(table Blueprint, name string, args ...int) *Column { return table.BigInteger(name) },
 		func(table Blueprint, name string, args ...int) *Column { return table.Text(name) },
 	)
-	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "text", nil)
+	testCheckColumnsAfterAlterTable(unit.Not("sqlite3"), t, "text", nil, true)
 }
 
 func TestBlueprintMediumText(t *testing.T) {
@@ -1221,7 +1221,7 @@ func testCheckAutoIncrementing(t *testing.T, name string, column *Column) {
 	assert.Equal(t, "AutoIncrement", utils.StringVal(column.Extra), "the column %s extra should be AutoIncrement", name)
 }
 
-func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column)) {
+func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column), withoutIndex ...bool) {
 	if !executable {
 		return
 	}
@@ -1231,6 +1231,13 @@ func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string,
 		"field", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th",
 		"fieldWithIndex", "fieldWithUnique",
 	}
+
+	if len(withoutIndex) > 0 {
+		names := []string{
+			"field", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th"
+		}
+	}
+
 	assert.True(t, table.HasColumn(names...), "should return true")
 	for name, column := range columns {
 		if name != "id" {
@@ -1242,7 +1249,7 @@ func testCheckColumnsAfterCreate(executable bool, t *testing.T, typeName string,
 	}
 }
 
-func testCheckColumnsAfterAlterTable(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column)) {
+func testCheckColumnsAfterAlterTable(executable bool, t *testing.T, typeName string, check func(t *testing.T, name string, column *Column), withoutIndex ...bool) {
 	if !executable {
 		return
 	}
@@ -1254,6 +1261,15 @@ func testCheckColumnsAfterAlterTable(executable bool, t *testing.T, typeName str
 	names := []string{
 		"field", "field1st", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th",
 		"fieldWithIndex", "fieldWithUnique",
+	}
+
+	if len(withoutIndex) > 0 {
+		alterNames = []string{
+			"field1st", "field2nd", "field4th"
+		}
+		names = []string{
+			"field", "field1st", "field2nd", "field3rd", "field4th", "field5th", "field6th", "field7th", "field8th", "field9th",
+		}
 	}
 	assert.True(t, table.HasColumn(names...), "should return true")
 	for _, name := range alterNames {
