@@ -19,7 +19,7 @@ var logOutput *os.File = nil
 
 // Is the DSN should be the name given
 func Is(name string) bool {
-	return os.Getenv("XUN_UNIT_NAME") == name
+	return strings.Contains(os.Getenv("XUN_UNIT_NAME"), name)
 }
 
 // Not the DSN should not be the  name given

@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/YaoApp/xun)](https://goreportcard.com/report/github.com/YaoApp/xun)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yaoapp/xun.svg)](https://pkg.go.dev/github.com/yaoapp/xun)
 
-Xun Database is an object-relational mapper (ORM), that is written in golang and supports JSON schema. Xun providing `query builder`, `schema builder` and `model builder`, can change the table structure at run time, especially suitable for use in Low-Code application.
+Xun Database is an object-relational mapper (ORM), that is written in golang and supports JSON schema. Xun providing `query builder` and `schema builder`, can change the table structure at run time, especially suitable for use in Low-Code application.
 
 The name Xun comes from the Chinese word 巽(xùn). It is one of the eight trigrams, a symbol of wind. it also symbolizes the object filled in everywhere.
 
@@ -88,9 +88,6 @@ func main(){
 
     // Get the schema interface
     sch := db.Schema()
-
-    // Get the model interface
-    mod := db.Model()
 
 }
 ```
@@ -213,34 +210,6 @@ func main(){
 }
 ```
 
-`Type Binding`
-
-```golang
-type User struct {
-    ID int `json:"id"`
-    Name string `json:"name"`
-    Nickname string `json:"nickname"`
-    Weight float32 `json:"weight"`
-}
-
-
-users := []User{}
-
-err := qb.Table("user").Where("weight", ">", 99.00 ).Bind(&users)
-if err != nil  {
-    painic(err)
-}
-
-err = qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).Bind(&users)
-if err != nil  {
-    painic(err)
-}
-
-qb.Table("user").Where("weight", ">", 99.00 ).MustBind(&users)
-qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).MustBind(&users)
-
-```
-
 `Print SQL`
 
 ```golang
@@ -253,11 +222,3 @@ qb.Select("SELECT * FROM `user` WHERE weight > ?", 99.00).PrintSQL()
 ```
 
 Read more [Xun Query References](docs/query.md)
-
-<!-- ### Using The Model Interface
-
-```golang
-// comming soon
-```
-
-Read more [Xun Model References](docs/model.md) -->
