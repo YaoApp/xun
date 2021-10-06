@@ -56,7 +56,7 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 		}, nil
 	}
 
-	ver, err = semver.Make(rows[0] + "0.0")
+	ver, err = semver.Make(rows[0] + ".0.0")
 	if err == nil {
 		return &dbal.Version{
 			Version: ver,
@@ -65,7 +65,6 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 	}
 
 	ver, _ = semver.Make("1.0.0")
-
 	return &dbal.Version{
 		Version: ver,
 		Driver:  grammarSQL.Driver,
