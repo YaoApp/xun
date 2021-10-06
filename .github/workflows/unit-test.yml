@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup ENV
         run: |
-          echo "XUN_UNIT_NAME=$DB_DRIVER" >> $GITHUB_ENV
+          echo "XUN_UNIT_NAME=$DB_NAME" >> $GITHUB_ENV
           echo "XUN_UNIT_DRIVER=$DB_DRIVER" >> $GITHUB_ENV
           echo "XUN_UNIT_LOG=$HOME/${{ matrix.db }}-${{ matrix.go }}.log" >> $GITHUB_ENV
 

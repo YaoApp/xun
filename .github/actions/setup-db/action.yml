@@ -1,6 +1,6 @@
 inputs:
   kind:
-    description: "Chose the kind of database (MySQL8.0, MySQL5.7, Postgres9.6, Postgres14, SQLite3)"
+    description: "Chose the kind of database (MySQL8.0, MySQL5.7, Postgres9.6, Postgres14.0, SQLite3)"
     required: true
   db:
     description: "The name of database"

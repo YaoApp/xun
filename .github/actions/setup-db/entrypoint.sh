@@ -22,6 +22,7 @@ startMySQL() {
     echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
     echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=mysql" >> $GITHUB_ENV
+    echo "DB_NAME=mysql$VERSION" >> $GITHUB_ENV
     echo "$DB_HOST"
 }
 
@@ -43,6 +44,7 @@ startPostgres() {
     echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
     echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=postgres" >> $GITHUB_ENV
+    echo "DB_NAME=postgres$VERSION" >> $GITHUB_ENV
     echo "$DB_HOST"
 }
 
@@ -50,6 +52,7 @@ startSQLite3() {
     echo "Start SQLite3"
     echo "DB_HOST=file:$INPUT_DB.db?cache=shared&mode=memory" >> $GITHUB_ENV
     echo "DB_DRIVER=sqlite3" >> $GITHUB_ENV
+    echo "DB_NAME=sqlite3" >> $GITHUB_ENV
     echo "$DB_HOST"
 }
 
@@ -67,8 +70,8 @@ MySQL5.6)
 Postgres9.6)
     startPostgres 9.6
     ;;
-Postgres14)
-    startPostgres 14
+Postgres14.0)
+    startPostgres 14.0
     ;;
 SQLite3)
     startSQLite3 
