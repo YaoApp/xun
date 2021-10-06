@@ -1134,7 +1134,7 @@ func testCreateTable(t *testing.T, create columnFunc) {
 		create(table, "field6th", 32, 16)
 		create(table, "field7th", 64, 32)
 		create(table, "field8th", 128, 64)
-		create(table, "field9th", 256, 128)
+		create(table, "field9th", 255, 128)
 		create(table, "fieldWithIndex", 32, 2).Index()
 		create(table, "fieldWithUnique", 64, 4).Unique()
 		table.AddUnique("field_field2nd", "field", "field2nd")
