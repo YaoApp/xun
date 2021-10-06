@@ -1,0 +1,5 @@
+export XUN_UNIT_NAME="mysql8.0"
+export XUN_UNIT_LOG="/Users/max/Code/yao/xun/unit/mysql.log"
+export XUN_UNIT_SOURCE="root:123456@tcp(db-server:3308)/xun?charset=utf8mb4&parseTime=True&loc=Local"
+export XUN_UNIT_DRIVER="mysql"
+export XUN_MODE="test"

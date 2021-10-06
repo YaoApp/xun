@@ -8,7 +8,6 @@ import (
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/schema"
 	"github.com/yaoapp/xun/unit"
-	"github.com/yaoapp/xun/utils"
 )
 
 func TestGroupGroupBy(t *testing.T) {
@@ -188,7 +187,8 @@ func TestGroupOrHavingBetween(t *testing.T) {
 		Select("vote", dbal.Raw("Count(id) as cnt")).
 		GroupBy("vote").
 		Having("vote", "=", 8).
-		OrHavingBetween("vote", []int{5, 7})
+		OrHavingBetween("vote", []int{5, 7}).
+		OrderBy(`vote`, "desc")
 
 	// select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` = ? or `vote` between ? and ?
 	// select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" = $2 or "vote" between $3 and $4
@@ -196,9 +196,9 @@ func TestGroupOrHavingBetween(t *testing.T) {
 	// checking sql
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
-		assert.Equal(t, `select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" = $2 or "vote" between $3 and $4`, sql, "the query sql not equal")
+		assert.Equal(t, `select "vote", Count(id) as cnt from "table_test_group" where "email" like $1 group by "vote" having "vote" = $2 or "vote" between $3 and $4 order by "vote" desc`, sql, "the query sql not equal")
 	} else {
-		assert.Equal(t, "select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` = ? or `vote` between ? and ?", sql, "the query sql not equal")
+		assert.Equal(t, "select `vote`, Count(id) as cnt from `table_test_group` where `email` like ? group by `vote` having `vote` = ? or `vote` between ? and ? order by `vote` desc", sql, "the query sql not equal")
 	}
 
 	// check values
@@ -206,16 +206,15 @@ func TestGroupOrHavingBetween(t *testing.T) {
 	assert.Equal(t, 3, len(rows), "the return value should have 2 items")
 	if len(rows) == 3 {
 		// DEBUG
-		utils.Println(rows)
-		utils.Println(sql)
-		utils.Println(qb.GetBindings())
-
-		assert.Equal(t, int64(2), rows[0]["cnt"].(int64), "the cnt of first item should be 1")
-		assert.Equal(t, int64(5), rows[0]["vote"].(int64), "the vote of first item should be 5")
-		assert.Equal(t, int64(1), rows[1]["cnt"].(int64), "the cnt of second item should be 2")
-		assert.Equal(t, int64(6), rows[1]["vote"].(int64), "the vote of second item should be DONE")
-		assert.Equal(t, int64(1), rows[2]["cnt"].(int64), "the cnt of last item should be 2")
-		assert.Equal(t, int64(8), rows[2]["vote"].(int64), "the vote of last item should be DONE")
+		// utils.Println(rows)
+		// utils.Println(sql)
+		// utils.Println(qb.GetBindings())
+		assert.Equal(t, int64(1), rows[0]["cnt"].(int64), "the cnt of first item should be 1")
+		assert.Equal(t, int64(8), rows[0]["vote"].(int64), "the vote of first item should be 8")
+		assert.Equal(t, int64(1), rows[1]["cnt"].(int64), "the cnt of second item should be 1")
+		assert.Equal(t, int64(6), rows[1]["vote"].(int64), "the vote of second item should be 6")
+		assert.Equal(t, int64(2), rows[2]["cnt"].(int64), "the cnt of last item should be 2")
+		assert.Equal(t, int64(5), rows[2]["vote"].(int64), "the vote of last item should be 5")
 	}
 }
 
