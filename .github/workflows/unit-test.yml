@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go: [1.13, 1.17]
-        db: [Postgres9.6]
+        db: [MySQL8.0]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
