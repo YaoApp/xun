@@ -1,0 +1,54 @@
+name: Unit-Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [1.13, 1.17]
+        db: [MySQL8.0, MySQL5.7, MySQL5.6, Postgres9.6, Postgres14, SQLite3]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup ${{ matrix.db }}
+        uses: ./.github/actions/setup-db
+        with:
+          kind: "${{ matrix.db }}"
+          db: "gou"
+          user: "gou"
+          password: "123456"
+
+      - name: Setup Go ${{ matrix.go }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Setup Go Tools
+        run: |
+          if [[ "${GO111MODULE}" = "on" ]]; then go mod download; fi
+          if [[ "${GO111MODULE}" = "on" ]]; then export PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; fi
+          if [[ "${GO111MODULE}" = "on" ]]; then make tools; fi
+
+      - name: Setup ENV
+        run: |
+          echo "XUN_UNIT_SOURCE=$DSN" >> $GITHUB_ENV
+          echo "XUN_UNIT_NAME=$DB_DRIVER" >> $GITHUB_ENV
+          echo "XUN_UNIT_DRIVER=$DB_DRIVER" >> $GITHUB_ENV
+          echo "XUN_UNIT_LOG=$HOME/${{ matrix.go }}.log" >> $GITHUB_ENV
+
+      - name: Run Test
+        run: |
+          make vet
+          make fmt-check
+          make misspell-check
+          make test
+
+      - name: Codecov Report
+        uses: codecov/codecov-action@v2
