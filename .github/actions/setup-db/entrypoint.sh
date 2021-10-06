@@ -16,24 +16,27 @@ startMySQL() {
     echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
     echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=mysql" >> $GITHUB_ENV
-    echo "$DB_HOST$DB_HOST"
+    echo "$DB_HOST"
 }
 
 startPostgres() {
     VERSION=$1
     echo "Start Postgres $VERSION"
-    docker_run="docker run"
+    docker_run="$docker_run --name postgres_$VERSION"
     docker_run="$docker_run -e POSTGRES_DB=$INPUT_DB"
     docker_run="$docker_run -e POSTGRES_USER=$INPUT_USER"
     docker_run="$docker_run -e POSTGRES_PASSWORD=$INPUT_PASSWORD"
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
+
+    # waiting for postgres ready
+    timeout 90s bash -c "until docker exec postgres_$VERSION pg_isready ; do sleep 5 ; done"
 
     DB_HOST="127.0.0.1/$INPUT_DB?sslmode=disable"
     DB_USER=$INPUT_USER
     echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
     echo "DB_USER=$DB_USER" >> $GITHUB_ENV
     echo "DB_DRIVER=postgres" >> $GITHUB_ENV
-    echo "$DB_HOST$DB_HOST"
+    echo "$DB_HOST"
 }
 
 startSQLite3() {
