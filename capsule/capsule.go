@@ -10,7 +10,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Load sqlite3 driver
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/dbal/model"
 	"github.com/yaoapp/xun/dbal/query"
 	"github.com/yaoapp/xun/dbal/schema"
 )
@@ -177,52 +176,4 @@ func (manager *Manager) Query() query.Query {
 			ReadConfig:  read.Config,
 			Option:      manager.Option,
 		})
-}
-
-// Build to build a new xun model instance
-func Build(v interface{}, flow ...interface{}) *model.Model {
-	if Global == nil {
-		err := errors.New("the global capsule not set")
-		panic(err)
-	}
-	return Global.Build(v, flow...)
-}
-
-// Build to build a new xun model instance
-func (manager *Manager) Build(v interface{}, flow ...interface{}) *model.Model {
-	query := manager.Query()
-	schema := manager.Schema()
-	return model.Build(query.Builder(), schema, v, flow...)
-}
-
-// Make to create a new xun registered model instance
-func Make(name string) interface{} {
-	if Global == nil {
-		err := errors.New("the global capsule not set")
-		panic(err)
-	}
-	return Global.Make(name)
-}
-
-// Make to create a new xun model instance
-func (manager *Manager) Make(name string) interface{} {
-	query := manager.Query()
-	schema := manager.Schema()
-	return model.New(name, query.Builder(), schema)
-}
-
-// Migrate to migrate a model database table
-func Migrate(name string, args ...bool) error {
-	if Global == nil {
-		err := errors.New("the global capsule not set")
-		panic(err)
-	}
-	return Global.Migrate(name, args...)
-}
-
-// Migrate to migrate a model database table
-func (manager *Manager) Migrate(name string, args ...bool) error {
-	query := manager.Query()
-	schema := manager.Schema()
-	return model.Class(name).Migrate(schema, query, args...)
 }

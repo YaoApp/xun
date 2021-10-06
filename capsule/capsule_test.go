@@ -13,7 +13,6 @@ func TestAddConnection(t *testing.T) {
 		AddReadConn("secondary", "mysql", "xiang:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local")
 	manager.Schema()
 	manager.Query()
-	manager.Build("hello", []byte("{}"))
 
 }
 
@@ -27,7 +26,6 @@ func TestAddConnectionSqlite(t *testing.T) {
 func TestGlobal(t *testing.T) {
 	Schema()
 	Query()
-	Build("hello", []byte("{}"))
 }
 
 func TestSetAsGlobal(t *testing.T) {
@@ -36,5 +34,4 @@ func TestSetAsGlobal(t *testing.T) {
 	manager.SetAsGlobal()
 	Schema()
 	Query()
-	Build("hello", []byte("{}"))
 }
