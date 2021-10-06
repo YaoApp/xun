@@ -27,9 +27,10 @@ startPostgres() {
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
 
     DB_DSN="$INPUT_USER:$INPUT_PASSWORD@127.0.0.1/$INPUT_DB?sslmode=disable"
-    echo "DSN=$DB_DSN" >> $GITHUB_ENV
+    echo "DSN=postgres://$DB_DSN" >> $GITHUB_ENV
     echo "DB_DRIVER=postgres" >> $GITHUB_ENV
     echo $DB_DSN
+    echo "postgres://$DB_DSN"
 }
 
 startSQLite3() {
