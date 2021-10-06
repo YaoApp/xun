@@ -27,6 +27,7 @@ startPostgres() {
     docker_run="$docker_run -e POSTGRES_USER=$INPUT_USER"
     docker_run="$docker_run -e POSTGRES_PASSWORD=$INPUT_PASSWORD"
     docker_run="$docker_run -d -p 5432:5432 postgres:$VERSION"
+    sh -c "$docker_run"
 
     # waiting for postgres ready
     timeout 90s sh -c "until docker exec postgres_$VERSION pg_isready ; do sleep 5 ; done"
