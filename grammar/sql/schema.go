@@ -37,10 +37,34 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 	}
 
 	ver, err := semver.Make(rows[0])
-	if err != nil {
-		defer logger.Error(500, rows[0]).Write()
-		return nil, err
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
 	}
+	defer logger.Warn(logger.RETRIEVE, rows[0]).TimeCost(time.Now())
+
+	if strings.Contains(rows[0], ".") {
+		ver, err = semver.Make(rows[0] + ".0")
+	}
+
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
+	}
+
+	ver, err = semver.Make(rows[0] + "0.0")
+	if err == nil {
+		return &dbal.Version{
+			Version: ver,
+			Driver:  grammarSQL.Driver,
+		}, nil
+	}
+
+	ver, _ = semver.Make("1.0.0")
 
 	return &dbal.Version{
 		Version: ver,
