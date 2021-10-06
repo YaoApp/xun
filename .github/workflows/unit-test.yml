@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go: [1.13, 1.17]
-        db: [MySQL8.0]
+        db: [MySQL5.7, Postgres9.6]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -21,8 +21,8 @@ jobs:
         uses: ./.github/actions/setup-db
         with:
           kind: "${{ matrix.db }}"
-          db: "gou"
-          user: "gou"
+          db: "xun"
+          user: "xun"
           password: ${{ secrets.UNIT_PASS }}
 
       - name: Setup Go ${{ matrix.go }}
@@ -45,6 +45,7 @@ jobs:
       - name: Run Test
         env:
           PASSWORD: ${{ secrets.UNIT_PASS }}
+          POSTGRES_DSN: ${{ secrets.UNIT_POSTGRES_DSN }}
         run: |
           make vet
           make fmt-check
@@ -53,7 +54,7 @@ jobs:
           if [ "$DB_DRIVER" = "mysql" ]; then
             XUN_UNIT_SOURCE="$DB_USER:$PASSWORD@$DB_HOST" make test
           elif [ "$DB_DRIVER" = "postgres" ]; then
-            XUN_UNIT_SOURCE="postgres://$DB_USER:$PASSWORD@$DB_HOST" make test
+            XUN_UNIT_SOURCE="$POSTGRES_DSN" make test
           else
             make test
           fi
