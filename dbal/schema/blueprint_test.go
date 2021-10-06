@@ -1169,7 +1169,7 @@ func testAlterTableSafe(executable bool, t *testing.T, create columnFunc, alter 
 	if !executable {
 		return
 	}
-	testCreateTable(t, create)
+	testCreateTable(t, create, withoutIndex...)
 	builder := getTestBuilder()
 	err := builder.AlterTable("table_test_blueprint", func(table Blueprint) {
 		if len(withoutIndex) == 0 {
