@@ -26,7 +26,7 @@ func (grammarSQL SQL) GetSchema() string {
 // GetVersion get the version of the connection database
 func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 	sql := fmt.Sprintf("SELECT VERSION()")
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	// defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {

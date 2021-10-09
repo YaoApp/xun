@@ -17,7 +17,7 @@ import (
 // GetVersion get the version of the connection database
 func (grammarSQL SQLite3) GetVersion() (*dbal.Version, error) {
 	sql := fmt.Sprintf("SELECT SQLITE_VERSION()")
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	// defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
