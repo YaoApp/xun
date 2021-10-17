@@ -57,6 +57,7 @@ type Query interface {
 	MustAvg(columns ...interface{}) xun.N
 
 	// defined in the select.go file
+	SQL(stmt string, bindings ...interface{}) Query
 	Select(columns ...interface{}) Query
 	SelectAppend(columns ...interface{}) Query
 	SelectRaw(expression string, bindings ...interface{}) Query

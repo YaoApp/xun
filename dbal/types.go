@@ -260,4 +260,5 @@ type Query struct {
 	DistinctColumns    []interface{}            // Indicates if the query returns distinct results. Occasionally contains the columns that should be distinct.
 	IsJoinClause       bool                     // Determine if the query is a join clause.
 	BindingOffset      int                      // The Binding offset before select
+	SQL                string                   // The SQL STMT
 }

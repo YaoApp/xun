@@ -15,6 +15,7 @@ var BindingKeys = []string{
 	"groupBy", "having",
 	"order",
 	"union", "unionOrder",
+	"sql",
 }
 
 // Operators the default Operators
@@ -104,6 +105,7 @@ func NewQuery() *Query {
 			"order":      {},
 			"union":      {},
 			"unionOrder": {},
+			"sql":        {},
 		},
 	}
 	return &query

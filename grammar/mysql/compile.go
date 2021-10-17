@@ -16,6 +16,11 @@ func (grammarSQL MySQL) CompileSelect(query *dbal.Query) string {
 // CompileSelectOffset Compile a select query into SQL.
 func (grammarSQL MySQL) CompileSelectOffset(query *dbal.Query, offset *int) string {
 
+	// SQL STMT
+	if query.SQL != "" {
+		return query.SQL
+	}
+
 	if len(query.Unions) > 0 && query.Aggregate.Func != "" {
 		return grammarSQL.CompileUnionAggregate(query)
 	}

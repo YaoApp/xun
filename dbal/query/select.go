@@ -7,6 +7,13 @@ import (
 	"github.com/yaoapp/xun/dbal"
 )
 
+// SQL Add a new "raw" sql STMT to the query.
+func (builder *Builder) SQL(stmt string, bindings ...interface{}) Query {
+	builder.Query.SQL = stmt
+	builder.Query.AddBinding("sql", bindings)
+	return builder
+}
+
 // Select Set the columns to be selected.
 // Select("field1", "field2")
 // Select("field1", "field2 as f2")
