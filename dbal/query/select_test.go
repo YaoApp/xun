@@ -10,6 +10,19 @@ import (
 	"github.com/yaoapp/xun/unit"
 )
 
+func TestSelectSQL(t *testing.T) {
+	NewTableFoSelectTest()
+	qb := getTestBuilder()
+	if unit.DriverIs("postgres") {
+		qb.SQL(`select * from "table_test_select" as "t" where "email" like $1 order by "id" asc`, "%@yao.run")
+	} else {
+		qb.SQL("select * from `table_test_select` as `t` where `email` like ? order by `id` asc", "%@yao.run")
+	}
+	// select * from `table_test_select` as `t` where `email` like ? order by `id` asc
+	// select * from "table_test_select" as "t" where "email" like $1 order by "id" asc
+	checktestSelectDefault(t, qb)
+}
+
 func TestSelectSelectDefault(t *testing.T) {
 	NewTableFoSelectTest()
 	qb := getTestBuilder()
