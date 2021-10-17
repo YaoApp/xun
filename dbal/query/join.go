@@ -12,6 +12,11 @@ func (builder *Builder) Join(table string, first interface{}, args ...interface{
 	return builder.join(dbal.NewName(table), "", first, operator, second, "inner", "on", 0)
 }
 
+// JoinRaw Add a join sql clause to the query.
+func (builder *Builder) JoinRaw(sql string, bindings ...interface{}) Query {
+	return builder.joinRaw(sql, bindings)
+}
+
 // JoinSub Add a subquery join clause to the query.
 func (builder *Builder) JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query {
 	operator, second := builder.joinPrepare(args...)
@@ -120,6 +125,16 @@ func (builder *Builder) join(table interface{}, alias string, first interface{},
 		builder.Query.Joins = append(builder.Query.Joins, join)
 		builder.Query.AddBinding("join", qb.GetBindings())
 	}
+	return builder
+}
+
+// joinRaw Add a sql join clause to the query.
+func (builder *Builder) joinRaw(sql string, bindings []interface{}) Query {
+	builder.Query.Joins = append(builder.Query.Joins, dbal.Join{
+		Type: "raw",
+		SQL:  sql,
+	})
+	builder.Query.AddBinding("join", bindings)
 	return builder
 }
 

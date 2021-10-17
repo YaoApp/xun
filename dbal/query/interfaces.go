@@ -74,6 +74,7 @@ type Query interface {
 
 	// defined in the join.go file
 	Join(table string, first interface{}, args ...interface{}) Query
+	JoinRaw(sql string, bindings ...interface{}) Query
 	JoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query
 	LeftJoin(table string, first interface{}, args ...interface{}) Query
 	LeftJoinSub(qb interface{}, alias string, first interface{}, args ...interface{}) Query

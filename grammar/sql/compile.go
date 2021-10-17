@@ -137,6 +137,15 @@ func (grammarSQL SQL) CompileUnion(query *dbal.Query, union dbal.Union, offset *
 func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset *int) string {
 	sql := ""
 	for _, join := range joins {
+
+		// Join Raw inteface()
+		if join.Type == "raw" {
+			if raw, ok := join.SQL.(string); ok {
+				sql = strings.Trim(sql+" "+raw, " ")
+			}
+			continue
+		}
+
 		table := grammarSQL.WrapTable(join.Name)
 		if join.SQL != nil && join.Alias != "" {
 			sql := grammarSQL.CompileSub(join.SQL, offset)
