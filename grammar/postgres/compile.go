@@ -20,6 +20,11 @@ func (grammarSQL Postgres) CompileSelectOffset(query *dbal.Query, offset *int) s
 
 	// SQL STMT
 	if query.SQL != "" {
+		if !strings.Contains(query.SQL, "limit") && !strings.Contains(query.SQL, "offset") {
+			limit := grammarSQL.CompileLimit(query, query.Limit, offset)
+			offset := grammarSQL.CompileOffset(query, query.Offset)
+			return strings.TrimSpace(fmt.Sprintf("%s %s %s", query.SQL, limit, offset))
+		}
 		return query.SQL
 	}
 
