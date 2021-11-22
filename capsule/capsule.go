@@ -1,7 +1,9 @@
 package capsule
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -34,24 +36,24 @@ func NewWithOption(option dbal.Option) *Manager {
 }
 
 // AddConn Register a connection with the manager.
-func AddConn(name string, driver string, datasource string) *Manager {
-	return New().AddConn(name, driver, datasource)
+func AddConn(name string, driver string, datasource string, timeout ...time.Duration) *Manager {
+	return New().AddConn(name, driver, datasource, timeout...)
 }
 
 // AddConn Register a connection with the manager.
-func (manager *Manager) AddConn(name string, driver string, datasource string) *Manager {
-	manager.AddConnection(name, driver, datasource, false)
+func (manager *Manager) AddConn(name string, driver string, datasource string, timeout ...time.Duration) *Manager {
+	manager.AddConnection(name, driver, datasource, false, timeout...)
 	return manager
 }
 
 // AddReadConn Register a readonly connection with the manager.
-func AddReadConn(name string, driver string, datasource string) *Manager {
-	return New().AddReadConn(name, driver, datasource)
+func AddReadConn(name string, driver string, datasource string, timeout ...time.Duration) *Manager {
+	return New().AddReadConn(name, driver, datasource, timeout...)
 }
 
 // AddReadConn Register a readonly with the manager.
-func (manager *Manager) AddReadConn(name string, driver string, datasource string) *Manager {
-	manager.AddConnection(name, driver, datasource, true)
+func (manager *Manager) AddReadConn(name string, driver string, datasource string, timeout ...time.Duration) *Manager {
+	manager.AddConnection(name, driver, datasource, true, timeout...)
 	return manager
 }
 
@@ -61,7 +63,7 @@ func (manager *Manager) SetOption(option dbal.Option) {
 }
 
 // AddConnection Register a connection with the manager.
-func (manager *Manager) AddConnection(name string, driver string, datasource string, readonly bool) *Manager {
+func (manager *Manager) AddConnection(name string, driver string, datasource string, readonly bool, timeouts ...time.Duration) *Manager {
 	config := dbal.Config{
 		Name:     name,
 		Driver:   driver,
@@ -69,10 +71,29 @@ func (manager *Manager) AddConnection(name string, driver string, datasource str
 		ReadOnly: readonly,
 	}
 
+	db := sqlx.MustOpen(config.Driver, config.DSN)
+
+	// Cheking database connection
+	timeout := 1 * time.Second
+	if len(timeouts) > 0 {
+		timeout = timeouts[0]
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	go func() {
+		err := db.PingContext(ctx)
+		if err != nil {
+			panic(fmt.Sprintf("Connection timeout %s (%s: %s)", timeout, config.Driver, config.DSN))
+		}
+		cancel()
+	}()
+
+	<-ctx.Done()
 	conn := &Connection{
-		DB:     *sqlx.MustOpen(config.Driver, config.DSN),
+		DB:     *db,
 		Config: &config,
 	}
+
 	manager.Pool.Primary = append(manager.Pool.Primary, conn)
 	if config.ReadOnly == true {
 		manager.Pool.Readonly = append(manager.Pool.Readonly, conn)
@@ -84,7 +105,6 @@ func (manager *Manager) AddConnection(name string, driver string, datasource str
 	if Global == nil {
 		Global = manager
 	}
-
 	return manager
 }
 
