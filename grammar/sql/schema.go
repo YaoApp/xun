@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -43,7 +42,7 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 			Driver:  grammarSQL.Driver,
 		}, nil
 	}
-	defer logger.Warn(logger.RETRIEVE, rows[0]).TimeCost(time.Now())
+	defer log.With(log.F{"version": ver}).Trace(sql)
 
 	if strings.Contains(rows[0], ".") {
 		ver, err = semver.Make(rows[0] + ".0")
@@ -74,7 +73,7 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 // GetTables Get all of the table names for the database.
 func (grammarSQL SQL) GetTables() ([]string, error) {
 	sql := "SHOW TABLES"
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	tables := []string{}
 	err := grammarSQL.DB.Select(&tables, sql)
 	if err != nil {
@@ -86,7 +85,7 @@ func (grammarSQL SQL) GetTables() ([]string, error) {
 // TableExists check if the table exists
 func (grammarSQL SQL) TableExists(name string) (bool, error) {
 	sql := fmt.Sprintf("SHOW TABLES like %s", grammarSQL.VAL(name))
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
@@ -202,7 +201,7 @@ func (grammarSQL SQL) GetIndexListing(dbName string, tableName string) ([]*dbal.
 		grammarSQL.VAL(dbName),
 		grammarSQL.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	indexes := []*dbal.Index{}
 	err := grammarSQL.DB.Select(&indexes, sql)
 	if err != nil {
@@ -265,7 +264,7 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string) ([]*dbal
 		grammarSQL.Quoter.VAL(dbName),
 		grammarSQL.Quoter.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	columns := []*dbal.Column{}
 	err := grammarSQL.DB.Select(&columns, sql)
 	if err != nil {
@@ -372,7 +371,7 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 		"\n) %s %s %s ROW_FORMAT=DYNAMIC",
 		engine, charset, collation,
 	)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 
 	// Callback
@@ -386,7 +385,7 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 // DropTable a table from the schema.
 func (grammarSQL SQL) DropTable(name string) error {
 	sql := fmt.Sprintf("DROP TABLE %s", grammarSQL.ID(name))
-	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -394,7 +393,7 @@ func (grammarSQL SQL) DropTable(name string) error {
 // DropTableIfExists if the table exists, drop it from the schema.
 func (grammarSQL SQL) DropTableIfExists(name string) error {
 	sql := fmt.Sprintf("DROP TABLE IF EXISTS %s", grammarSQL.ID(name))
-	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -402,7 +401,7 @@ func (grammarSQL SQL) DropTableIfExists(name string) error {
 // RenameTable rename a table on the schema.
 func (grammarSQL SQL) RenameTable(old string, new string) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME %s", grammarSQL.ID(old), grammarSQL.ID(new))
-	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -455,7 +454,7 @@ func (grammarSQL SQL) AlterTable(table *dbal.Table) error {
 		}
 	}
 
-	defer logger.Debug(logger.CREATE, strings.Join(stmts, "\n")).TimeCost(time.Now())
+	defer log.Debug(strings.Join(stmts, "\n"))
 
 	// Return Errors
 	if len(errs) > 0 {

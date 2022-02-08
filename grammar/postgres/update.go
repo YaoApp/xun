@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 )
 
 // Upsert Upsert new records or update the existing ones.
@@ -26,7 +25,7 @@ func (grammarSQL Postgres) Upsert(query *dbal.Query, values []xun.R, uniqueBy []
 	}
 
 	sql, bindings := grammarSQL.CompileUpsert(query, columns, insertValues, uniqueBy, updateValues)
-	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	return grammarSQL.DB.Exec(sql, bindings...)
 }
 

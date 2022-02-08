@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -22,8 +22,7 @@ func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
 	stmt, err := db.Prepare(builder.ToSQL())
 	if err != nil {
-		defer logger.Debug(logger.RETRIEVE, builder.ToSQL(), fmt.Sprintf("%v", builder.GetBindings())).Write()
-		defer logger.Fatal(500, err.Error()).Write()
+		defer log.With(log.F{"bindings": builder.GetBindings()}).Error(builder.ToSQL())
 		return nil, err
 	}
 

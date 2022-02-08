@@ -2,9 +2,8 @@ package query
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/yaoapp/xun/logger"
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -12,7 +11,7 @@ import (
 func (builder *Builder) Insert(v interface{}, columns ...interface{}) error {
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsert(builder.Query, columns, values)
-	defer logger.Debug(logger.CREATE, sql, fmt.Sprintf("%v", bindings)).TimeCost(time.Now())
+	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
@@ -34,7 +33,7 @@ func (builder *Builder) MustInsert(v interface{}, columns ...interface{}) {
 func (builder *Builder) InsertOrIgnore(v interface{}, columns ...interface{}) (int64, error) {
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertOrIgnore(builder.Query, columns, values)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
@@ -69,7 +68,7 @@ func (builder *Builder) InsertGetID(v interface{}, args ...interface{}) (int64, 
 
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertGetID(builder.Query, columns, values, seq)
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 	return builder.Grammar.ProcessInsertGetID(sql, bindings, seq)
 }
 

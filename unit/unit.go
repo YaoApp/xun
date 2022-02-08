@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/yaoapp/xun/logger"
 )
 
 // "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local"
@@ -69,8 +68,8 @@ func SetLogger() {
 		}
 		logOutput = output
 	}
-	logger.DefaultLogger.SetOutput(output)
-	logger.DefaultErrorLogger.SetOutput(output)
+	// logger.DefaultLogger.SetOutput(output)
+	// logger.DefaultErrorLogger.SetOutput(output)
 }
 
 // Catch and out

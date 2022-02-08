@@ -1,16 +1,14 @@
 package query
 
 import (
-	"time"
-
-	"github.com/yaoapp/xun/logger"
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun/utils"
 )
 
 // Delete Delete records from the database.
 func (builder *Builder) Delete() (int64, error) {
 	sql, bindings := builder.Grammar.CompileDelete(builder.Query)
-	defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
+	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 
 	res, err := builder.UseWrite().DB().Exec(sql, bindings...)
 	if err != nil {
@@ -31,7 +29,7 @@ func (builder *Builder) MustDelete() int64 {
 func (builder *Builder) Truncate() error {
 	sqls, bindings := builder.Grammar.CompileTruncate(builder.Query)
 	for i, sql := range sqls {
-		defer logger.Debug(logger.DELETE, sql).TimeCost(time.Now())
+		defer log.With(log.F{"bindings": bindings}).Debug(sql)
 		_, err := builder.UseWrite().DB().Exec(sql, bindings[i]...)
 		if err != nil {
 			return err

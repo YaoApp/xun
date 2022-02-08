@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -38,7 +37,7 @@ func (grammarSQL Postgres) GetVersion() (*dbal.Version, error) {
 		}, nil
 	}
 
-	defer logger.Warn(logger.RETRIEVE, "The version is: "+verArr[1]).TimeCost(time.Now())
+	defer log.With(log.F{"version": ver}).Trace(sql)
 	if strings.Contains(verArr[1], ".") {
 		ver, err = semver.Make(verArr[1] + ".0")
 	}
@@ -71,7 +70,7 @@ func (grammarSQL Postgres) GetTables() ([]string, error) {
 		grammarSQL.VAL(grammarSQL.GetDatabase()),
 		grammarSQL.VAL(grammarSQL.GetSchema()),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	tables := []string{}
 	err := grammarSQL.DB.Select(&tables, sql)
 	if err != nil {
@@ -88,7 +87,7 @@ func (grammarSQL Postgres) TableExists(name string) (bool, error) {
 		grammarSQL.VAL(grammarSQL.GetSchema()),
 		grammarSQL.VAL(name),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
@@ -112,7 +111,7 @@ func (grammarSQL Postgres) CreateType(table *dbal.Table, types map[string][]stri
 		WHEN duplicate_object THEN null;
 	END $$;
 	`, table.SchemaName, name, typ)
-		defer logger.Debug(logger.CREATE, typeSQL).TimeCost(time.Now())
+		defer log.Debug(typeSQL)
 		_, err := grammarSQL.DB.Exec(typeSQL)
 		if err != nil {
 			return err
@@ -171,7 +170,7 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
 	sql = sql + fmt.Sprintf("\n)")
 
 	// Create table
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err = grammarSQL.DB.Exec(sql)
 	if err != nil {
 		return err
@@ -234,8 +233,9 @@ func (grammarSQL Postgres) createTableCreateIndex(table *dbal.Table, indexes []*
 		}
 	}
 	if len(indexStmts) > 0 {
-		defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
-		_, err := grammarSQL.DB.Exec(strings.Join(indexStmts, ";\n"))
+		sql := strings.Join(indexStmts, ";\n")
+		defer log.Debug(sql)
+		_, err := grammarSQL.DB.Exec(sql)
 		return err
 	}
 	return nil
@@ -243,8 +243,9 @@ func (grammarSQL Postgres) createTableCreateIndex(table *dbal.Table, indexes []*
 
 func (grammarSQL Postgres) createTableAddComment(table *dbal.Table, commentStmts []string) error {
 	if len(commentStmts) > 0 {
-		defer logger.Debug(logger.CREATE, commentStmts...).TimeCost(time.Now())
-		_, err := grammarSQL.DB.Exec(strings.Join(commentStmts, ";\n"))
+		sql := strings.Join(commentStmts, ";\n")
+		defer log.Debug(sql)
+		_, err := grammarSQL.DB.Exec(sql)
 		return err
 	}
 	return nil
@@ -253,7 +254,7 @@ func (grammarSQL Postgres) createTableAddComment(table *dbal.Table, commentStmts
 // RenameTable rename a table on the schema.
 func (grammarSQL Postgres) RenameTable(old string, new string) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old), grammarSQL.ID(new))
-	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -375,7 +376,7 @@ func (grammarSQL Postgres) AlterTable(table *dbal.Table) error {
 		}
 	}
 
-	defer logger.Debug(logger.CREATE, strings.Join(stmts, "\n")).TimeCost(time.Now())
+	defer log.Debug(strings.Join(stmts, "\n"))
 
 	// Return Errors
 	if len(errs) > 0 {
@@ -677,7 +678,7 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string) ([]*
 		grammarSQL.VAL(dbName),
 		grammarSQL.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	indexes := []*dbal.Index{}
 	err := grammarSQL.DB.Select(&indexes, sql)
 	if err != nil {
@@ -742,7 +743,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 		grammarSQL.VAL(dbName),
 		grammarSQL.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	columns := []*dbal.Column{}
 	err := grammarSQL.DB.Select(&columns, sql)
 	if err != nil {

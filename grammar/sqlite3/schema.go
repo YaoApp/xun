@@ -6,11 +6,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun/dbal"
-	"github.com/yaoapp/xun/logger"
 	"github.com/yaoapp/xun/utils"
 )
 
@@ -31,7 +30,7 @@ func (grammarSQL SQLite3) GetVersion() (*dbal.Version, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer log.With(log.F{"version": ver}).Trace(sql)
 	return &dbal.Version{
 		Version: ver,
 		Driver:  grammarSQL.Driver,
@@ -41,7 +40,7 @@ func (grammarSQL SQLite3) GetVersion() (*dbal.Version, error) {
 // GetTables Get all of the table names for the database.
 func (grammarSQL SQLite3) GetTables() ([]string, error) {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table'")
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	tables := []string{}
 	err := grammarSQL.DB.Select(&tables, sql)
 	if err != nil {
@@ -53,7 +52,7 @@ func (grammarSQL SQLite3) GetTables() ([]string, error) {
 // TableExists check if the table exists
 func (grammarSQL SQLite3) TableExists(name string) (bool, error) {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.VAL(name))
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
@@ -120,7 +119,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
 	sql = sql + fmt.Sprintf("\n)")
 
 	// Create table
-	defer logger.Debug(logger.CREATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	if err != nil {
 		return err
@@ -133,7 +132,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
 			grammarSQL.SQLAddIndex(index),
 		)
 	}
-	defer logger.Debug(logger.CREATE, indexStmts...).TimeCost(time.Now())
+	defer log.Debug(strings.Join(indexStmts, ";\n"))
 	_, err = grammarSQL.DB.Exec(strings.Join(indexStmts, ";\n"))
 
 	for _, cmd := range cbCommands {
@@ -150,7 +149,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
 // RenameTable rename a table on the schema.
 func (grammarSQL SQLite3) RenameTable(old string, new string) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old), grammarSQL.ID(new))
-	defer logger.Debug(logger.UPDATE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -279,7 +278,7 @@ func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string) ([]*d
 		grammarSQL.VAL(tableName),
 		grammarSQL.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	indexes := []*dbal.Index{}
 	err := grammarSQL.DB.Select(&indexes, sql)
 	if err != nil {
@@ -332,7 +331,7 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string) 
 		strings.Join(selectColumns, ","),
 		grammarSQL.VAL(tableName),
 	)
-	defer logger.Debug(logger.RETRIEVE, sql).TimeCost(time.Now())
+	defer log.Debug(sql)
 	columns := []*dbal.Column{}
 	err := grammarSQL.DB.Select(&columns, sql)
 	if err != nil {
@@ -433,12 +432,12 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 			command.Callback(err)
 			break
 		case "DropColumn", "ChangeColumn", "DropPrimary", "RenameIndex":
-			logger.Warn(logger.CREATE, "sqlite3 not support "+command.Name+" operation").Write()
+			log.Warn("sqlite3 not support %s operation", command.Name)
 			break
 		}
 	}
 
-	defer logger.Debug(logger.CREATE, strings.Join(stmts, "\n")).TimeCost(time.Now())
+	defer log.Debug(strings.Join(stmts, "\n"))
 	// Return Errors
 	if len(errs) > 0 {
 		message := ""
