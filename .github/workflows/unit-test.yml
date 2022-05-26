@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [1.13, 1.17]
+        go: [1.18.2]
         db: [MySQL8.0, MySQL5.7, MySQL5.6, Postgres9.6, Postgres14.0, SQLite3]
     steps:
       - name: Checkout code
@@ -26,15 +26,13 @@ jobs:
           password: ${{ secrets.UNIT_PASS }}
 
       - name: Setup Go ${{ matrix.go }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
 
       - name: Setup Go Tools
         run: |
-          if [[ "${GO111MODULE}" = "on" ]]; then go mod download; fi
-          if [[ "${GO111MODULE}" = "on" ]]; then export PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; fi
-          if [[ "${GO111MODULE}" = "on" ]]; then make tools; fi
+          make tools
 
       - name: Setup ENV
         run: |
