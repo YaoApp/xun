@@ -33,7 +33,6 @@ jobs:
       - name: Setup Go Tools
         run: |
           make tools
-          find /home/runner/go/bin
 
       - name: Setup ENV
         run: |

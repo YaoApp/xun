@@ -76,5 +76,5 @@ misspell:
 
 .PHONY: tools
 tools:
-	go get -u golang.org/x/lint/golint@latest; \
-	go get -u github.com/client9/misspell/cmd/misspell@latest;
+	go install golang.org/x/lint/golint@latest; \
+	go install github.com/client9/misspell/cmd/misspell@latest;
