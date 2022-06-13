@@ -58,12 +58,14 @@ func (builder *Builder) Chunk(size int, callback func(items []interface{}, page 
 			}
 		}
 
-		if countResults == 0 || countResults != size {
-			break
+		// log.Trace("Chunk: countResults: %d size: %d page: %d", countResults, size, page)
+		if err := callback(results, page); err != nil {
+			// log.Error("Chunk: %s", err.Error())
+			return err
 		}
 
-		if err := callback(results, page); err != nil {
-			return err
+		if countResults == 0 || countResults != size {
+			break
 		}
 
 		page++
