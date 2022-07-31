@@ -202,6 +202,7 @@ func (builder *Builder) GetTable(name string) (Blueprint, error) {
 	// attaching columns
 	for _, column := range table.Table.Columns {
 		name := column.Name
+		table.ColumnNames = append(table.ColumnNames, name)
 		table.ColumnMap[name] = &Column{
 			Column: column,
 			Table:  table,
@@ -211,6 +212,7 @@ func (builder *Builder) GetTable(name string) (Blueprint, error) {
 	// attaching indexes
 	for _, index := range table.Table.Indexes {
 		name := index.Name
+		table.IndexNames = append(table.IndexNames, name)
 		table.IndexMap[name] = &Index{
 			Index: index,
 			Table: table,

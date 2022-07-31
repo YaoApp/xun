@@ -25,19 +25,31 @@ func (table *Table) GetFullName() string {
 func NewTable(name string, builder *Builder) *Table {
 	tableName := fmt.Sprintf("%s%s", builder.Conn.Option.Prefix, name)
 	table := &Table{
-		Name:      name,
-		Prefix:    builder.Conn.Option.Prefix,
-		Table:     dbal.NewTable(tableName, builder.Schema, builder.Database),
-		Builder:   builder,
-		ColumnMap: map[string]*Column{},
-		IndexMap:  map[string]*Index{},
+		Name:        name,
+		Prefix:      builder.Conn.Option.Prefix,
+		Table:       dbal.NewTable(tableName, builder.Schema, builder.Database),
+		Builder:     builder,
+		IndexNames:  []string{},
+		ColumnNames: []string{},
+		ColumnMap:   map[string]*Column{},
+		IndexMap:    map[string]*Index{},
 	}
 	return table
+}
+
+// GetColumnNames Get the column names
+func (table *Table) GetColumnNames() []string {
+	return table.ColumnNames
 }
 
 // GetColumns Get the columns map of the table
 func (table *Table) GetColumns() map[string]*Column {
 	return table.ColumnMap
+}
+
+// GetIndexNames Get the index names
+func (table *Table) GetIndexNames() []string {
+	return table.IndexNames
 }
 
 // GetIndexes Get the indexes map of the table

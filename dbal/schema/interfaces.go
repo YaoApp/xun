@@ -49,7 +49,9 @@ type Blueprint interface {
 	GetName() string
 	GetPrefix() string
 	GetFullName() string
+	GetColumnNames() []string
 	GetColumns() map[string]*Column
+	GetIndexNames() []string
 	GetIndexes() map[string]*Index
 
 	// defined in column.go
