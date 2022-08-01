@@ -95,6 +95,8 @@ func (grammarSQL SQL) GetDefaultValue(column *dbal.Column) string {
 	if column.Default != nil {
 		if value, ok := column.Default.(string); ok {
 			defaultValue = grammarSQL.VAL(value)
+		} else if value, ok := column.Default.([]byte); ok {
+			defaultValue = grammarSQL.VAL(string(value))
 		} else {
 			defaultValue = fmt.Sprintf("%v", column.Default)
 		}
