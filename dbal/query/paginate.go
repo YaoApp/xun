@@ -174,7 +174,7 @@ func (builder *Builder) getCountForPagination(columns []interface{}) (int, error
 		_, err := builder.new().
 			mergeBindings(clone).
 			setAggregate("count", builder.withoutSelectAliases(columns)).
-			FromRaw(fmt.Sprintf("(%s) as %s", clone.ToSQL(), builder.Grammar.Wrap("aggregate_table"))).
+			FromRaw(fmt.Sprintf("(%s) as %s", clone.ToSQL(), builder.Grammar.Wrap("aggregate_table", false))).
 			Value("aggregate", &aggregate)
 
 		return aggregate, err

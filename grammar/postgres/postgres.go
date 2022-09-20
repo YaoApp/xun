@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 	"net/url"
-	"path/filepath"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Load postgres driver
@@ -36,6 +36,24 @@ func init() {
 // 	grammarSQL.Schema = schema
 // }
 
+// parseOptions parses options out of a tag string, skipping the name
+func parseOptions(tag string) map[string]string {
+	parts := strings.Split(tag, " ")
+	options := make(map[string]string, len(parts))
+	if len(parts) > 0 {
+		for _, opt := range parts[:] {
+			// short circuit potentially expensive split op
+			if strings.Contains(opt, "=") {
+				kv := strings.Split(opt, "=")
+				options[kv[0]] = kv[1]
+				continue
+			}
+			options[opt] = ""
+		}
+	}
+	return options
+}
+
 // setup the method will be executed when db server was connected
 func (grammarSQL *Postgres) setup(db *sqlx.DB, config *dbal.Config, option *dbal.Option) error {
 	if db == nil {
@@ -54,9 +72,10 @@ func (grammarSQL *Postgres) setup(db *sqlx.DB, config *dbal.Config, option *dbal
 	if err != nil {
 		return err
 	}
-	grammarSQL.DatabaseName = filepath.Base(uinfo.Path)
-	schema := uinfo.Query().Get("search_path")
-	if schema == "" {
+	dsnItemList := parseOptions(uinfo.Path)
+	grammarSQL.DatabaseName = dsnItemList["dbname"]
+	schema, ok := dsnItemList["schema"]
+	if !ok || schema == "" {
 		schema = "public"
 	}
 	grammarSQL.SchemaName = schema

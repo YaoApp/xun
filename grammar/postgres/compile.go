@@ -151,7 +151,7 @@ func (grammarSQL Postgres) WhereDate(query *dbal.Query, where dbal.Where, bindin
 	} else {
 		value = where.Value.(dbal.Expression).GetValue()
 	}
-	return fmt.Sprintf("%s::date %s%s", grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("%s::date %s%s", grammarSQL.Wrap(where.Column, false), where.Operator, value)
 }
 
 // WhereTime Compile a "where time" clause.
@@ -163,7 +163,7 @@ func (grammarSQL Postgres) WhereTime(query *dbal.Query, where dbal.Where, bindin
 	} else {
 		value = where.Value.(dbal.Expression).GetValue()
 	}
-	return fmt.Sprintf("%s::time %s%s", grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("%s::time %s%s", grammarSQL.Wrap(where.Column, false), where.Operator, value)
 }
 
 // WhereDay Compile a "where day" clause.
@@ -190,7 +190,7 @@ func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where d
 	} else {
 		value = where.Value.(dbal.Expression).GetValue()
 	}
-	return fmt.Sprintf("extract(%s from %s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("extract(%s from %s)%s%s", typ, grammarSQL.Wrap(where.Column, false), where.Operator, value)
 }
 
 // CompileLock the lock into SQL.

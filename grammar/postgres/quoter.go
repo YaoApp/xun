@@ -16,7 +16,7 @@ type Quoter struct {
 
 // ID quoting query Identifier (`id`)
 func (quoter Quoter) ID(name string) string {
-	name = strings.ReplaceAll(name, "\"", "")
+	name = strings.ReplaceAll(name, "`", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
 	return "\"" + name + "\""
@@ -45,7 +45,7 @@ func (quoter Quoter) VAL(v interface{}) string {
 }
 
 // Wrap a value in keyword identifiers.
-func (quoter *Quoter) Wrap(value interface{}) string {
+func (quoter *Quoter) Wrap(value interface{}, isUpdate bool) string {
 	switch value.(type) {
 	case dbal.Expression:
 		return value.(dbal.Expression).GetValue()
@@ -62,21 +62,24 @@ func (quoter *Quoter) Wrap(value interface{}) string {
 		}
 		return fmt.Sprintf("%s ", col.SQL)
 	case string:
-		return quoter.WrapAliasedValue(value.(string))
+		return quoter.WrapAliasedValue(value.(string), isUpdate)
 	default:
 		return fmt.Sprintf("%v", value)
 	}
 }
 
 // WrapAliasedValue Wrap a value that has an alias.
-func (quoter *Quoter) WrapAliasedValue(value string) string {
+func (quoter *Quoter) WrapAliasedValue(value string, isUpdate bool) string {
 	if value == "*" {
 		return "*"
 	}
 	if strings.Contains(value, ".") {
 		arrs := strings.Split(value, ".")
 		table := arrs[0]
-		name := quoter.WrapAliasedValue(arrs[1])
+		name := quoter.WrapAliasedValue(arrs[1], isUpdate)
+		if isUpdate {
+			return name
+		}
 		return fmt.Sprintf("%s.%s", quoter.ID(table), name)
 	}
 
@@ -118,8 +121,13 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 // Parameterize Create query parameter place-holders for an array.
 func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
-	for idx, value := range values {
-		params = append(params, quoter.Parameter(value, idx+1+offset))
+	var params_index = 1
+	for _, value := range values {
+		param := quoter.Parameter(value, params_index+offset)
+		params = append(params, param)
+		if !quoter.IsExpression(value) {
+			params_index++
+		}
 	}
 	return strings.Join(params, ",")
 }
@@ -128,7 +136,7 @@ func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 func (quoter *Quoter) Columnize(columns []interface{}) string {
 	wrapColumns := []string{}
 	for _, col := range columns {
-		wrapColumns = append(wrapColumns, quoter.Wrap(col))
+		wrapColumns = append(wrapColumns, quoter.Wrap(col, false))
 	}
 	return strings.Join(wrapColumns, ", ")
 }

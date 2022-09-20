@@ -9,7 +9,7 @@ type Grammar interface {
 	NewWith(db *sqlx.DB, config *Config, option *Option) (Grammar, error)
 	NewWithRead(write *sqlx.DB, writeConfig *Config, read *sqlx.DB, readConfig *Config, option *Option) (Grammar, error)
 
-	Wrap(value interface{}) string
+	Wrap(value interface{}, isUpdate bool) string
 	WrapTable(value interface{}) string
 
 	OnConnected() error
@@ -52,7 +52,7 @@ type Quoter interface {
 	Bind(db *sqlx.DB, prefix string, dbRead ...*sqlx.DB) Quoter
 	ID(value string) string
 	VAL(value interface{}) string // operates on both string and []byte and int or other types.
-	Wrap(value interface{}) string
+	Wrap(value interface{}, isUpdate bool) string
 	WrapTable(value interface{}) string
 	WrapUnion(sql string) string
 	IsExpression(value interface{}) bool

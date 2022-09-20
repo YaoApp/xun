@@ -25,13 +25,13 @@ func (grammarSQL MySQL) CompileUpsert(query *dbal.Query, columns []interface{}, 
 	if kind == reflect.Array || kind == reflect.Slice {
 		for i := 0; i < update.Len(); i++ {
 			column := fmt.Sprintf("%v", update.Index(i).Interface())
-			segments = append(segments, fmt.Sprintf("%s=values(%s)", grammarSQL.Wrap(column), grammarSQL.Wrap(column)))
+			segments = append(segments, fmt.Sprintf("%s=values(%s)", grammarSQL.Wrap(column, true), grammarSQL.Wrap(column, true)))
 		}
 	} else if kind == reflect.Map {
 		for _, key := range update.MapKeys() {
 			column := fmt.Sprintf("%v", key)
 			value := update.MapIndex(key).Interface()
-			segments = append(segments, fmt.Sprintf("%s=%s", grammarSQL.Wrap(column), grammarSQL.Parameter(value, offset)))
+			segments = append(segments, fmt.Sprintf("%s=%s", grammarSQL.Wrap(column, true), grammarSQL.Parameter(value, offset)))
 			if !dbal.IsExpression(value) {
 				bindings = append(bindings, value)
 				offset++

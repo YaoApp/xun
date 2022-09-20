@@ -83,7 +83,7 @@ func (manager *Manager) AddConnection(name string, driver string, datasource str
 	go func() {
 		err := db.PingContext(ctx)
 		if err != nil {
-			panic(fmt.Sprintf("Connection timeout %s (%s: %s)", timeout, config.Driver, config.DSN))
+			panic(fmt.Sprintf("Connection error: %s (Driver: '%s', DSN: '%s')", err, config.Driver, config.DSN))
 		}
 		cancel()
 	}()

@@ -143,7 +143,11 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
 	for _, command := range table.Commands {
 		switch command.Name {
 		case "AddColumn":
-			columns = append(columns, command.Params[0].(*dbal.Column))
+			column := command.Params[0].(*dbal.Column)
+			if column.Length != nil && *column.Length == column.DefaultLength {
+				*column.Length = 0
+			}
+			columns = append(columns, column)
 			cbCommands = append(cbCommands, command)
 			break
 		case "CreateIndex":
