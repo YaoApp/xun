@@ -44,7 +44,7 @@ jobs:
       - name: Run Test
         env:
           PASSWORD: ${{ secrets.UNIT_PASS }}
-          POSTGRES_DSN: ${{ secrets.UNIT_POSTGRES_DSN }}
+          # POSTGRES_DSN: ${{ secrets.UNIT_POSTGRES_DSN }}
         run: |
           make vet
           make fmt-check

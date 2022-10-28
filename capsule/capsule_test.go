@@ -2,36 +2,72 @@ package capsule
 
 import (
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yaoapp/xun/unit"
 )
 
-func TestAddConnection(t *testing.T) {
+func TestAdd(t *testing.T) {
 	unit.SetLogger()
-	manager := New().
-		AddConn("primary", "mysql", "root:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local").
-		AddReadConn("secondary", "mysql", "xiang:123456@tcp(192.168.31.119:3306)/xiang?charset=utf8mb4&parseTime=True&loc=Local")
-	manager.Schema()
-	manager.Query()
+	m1, err := Add("test", unit.Driver(), unit.DSN())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(m1.Pool.Primary))
 
+	m2, err := m1.Add("test2", "mysql", "root:123456@tcp(1.2.3.4:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 2, len(m2.Pool.Primary))
+	assert.Equal(t, m1, m2)
 }
 
-func TestAddConnectionSqlite(t *testing.T) {
-	manager := New().
-		AddConn("primary", "sqlite3", "sqlite3://:memory:/capsule-test.db")
-	manager.Schema()
-	manager.Query()
+func TestAddRead(t *testing.T) {
+	unit.SetLogger()
+	m1, err := AddRead("test", unit.Driver(), unit.DSN())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(m1.Pool.Readonly))
+
+	m2, err := m1.Add("test2", "mysql", "root:123456@tcp(1.2.3.4:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 2, len(m2.Pool.Readonly))
+	assert.Equal(t, m1, m2)
 }
 
-func TestGlobal(t *testing.T) {
-	Schema()
-	Query()
-}
+func TestPing(t *testing.T) {
+	unit.SetLogger()
+	m1, err := Add("test", unit.Driver(), unit.DSN())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(m1.Pool.Primary))
 
-func TestSetAsGlobal(t *testing.T) {
-	manager := New().
-		AddConn("primary", "sqlite3", "sqlite3://:memory:/capsule-test-2.db")
-	manager.SetAsGlobal()
-	Schema()
-	Query()
+	conn, err := m1.Primary()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = conn.Ping(2 * time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m2, err := Add("test2", "mysql", "root:123456@tcp(1.2.3.4:3306)/xun?charset=utf8mb4&parseTime=True&loc=Local")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	conn, err = m2.Primary()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = conn.Ping(1 * time.Second)
+	assert.Equal(t, "context deadline exceeded", err.Error())
 }

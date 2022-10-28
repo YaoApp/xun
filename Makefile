@@ -4,7 +4,7 @@ PACKAGES ?= $(shell $(GO) list ./...)
 VETPACKAGES ?= $(shell $(GO) list ./... | grep -v /examples/)
 GOFILES := $(shell find . -name "*.go")
 
-TESTFOLDER := $(shell $(GO) list ./... | grep -E 'dbal/schema$$|dbal/query$$' | grep -v examples)
+TESTFOLDER := $(shell $(GO) list ./... | grep -E 'dbal/schema$$|dbal/query$$|capsule$$' | grep -v examples)
 # TESTFOLDER := $(shell $(GO) list ./... | grep -E 'dbal/model/test$$' | grep -v examples)
 TESTTAGS ?= ""
 
