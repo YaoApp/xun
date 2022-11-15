@@ -28,7 +28,7 @@ type P struct {
 	Options      map[string]interface{} `json:"options,omtempty"`
 }
 
-// UploadFile upload file
+// UploadFile deprecated -> gou.UploadFile upload file
 type UploadFile struct {
 	Name     string
 	TempFile string
