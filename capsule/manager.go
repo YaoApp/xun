@@ -1,6 +1,9 @@
 package capsule
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun/dbal"
 	"github.com/yaoapp/xun/dbal/query"
@@ -90,4 +93,23 @@ func (manager *Manager) Query() query.Query {
 			ReadConfig:  read.Config,
 			Option:      manager.Option,
 		})
+}
+
+// Close the connections
+func (manager *Manager) Close() error {
+
+	messages := []string{}
+	manager.Connections.Range(func(key, value any) bool {
+		conn, _ := value.(*Connection)
+		err := conn.Close()
+		if err != nil {
+			messages = append(messages, err.Error())
+		}
+		return true
+	})
+
+	if len(messages) > 0 {
+		return fmt.Errorf("%s", strings.Join(messages, ";"))
+	}
+	return nil
 }
