@@ -114,16 +114,34 @@ func useBuilder(conn *Connection) *Builder {
 
 // newGrammar create a new grammar interface
 func newGrammar(conn *Connection) dbal.Grammar {
-	driver := conn.WriteConfig.Driver
+	var driver string
+	var err error
+	if conn.WriteConfig != nil {
+		driver = conn.WriteConfig.Driver
+	} else if conn.ReadConfig != nil {
+		driver = conn.ReadConfig.Driver
+	}
+
 	grammar, has := dbal.Grammars[driver]
 	if !has {
 		panic(fmt.Errorf("The %s driver not import", driver))
 	}
-	// create ne grammar using the registered grammars
-	grammar, err := grammar.NewWithRead(conn.Write, conn.WriteConfig, conn.Read, conn.ReadConfig, conn.Option)
-	if err != nil {
-		panic(fmt.Errorf("grammar setup error. (%s)", err))
+
+	if conn.Write != nil {
+		// create new grammar using the registered grammars ( read and write)
+		grammar, err = grammar.NewWithRead(conn.Write, conn.WriteConfig, conn.Read, conn.ReadConfig, conn.Option)
+		if err != nil {
+			panic(fmt.Errorf("grammar setup error. (%s)", err))
+		}
+
+	} else if conn.Read != nil {
+		// create new grammar using the registered grammars ( readonly )
+		grammar, err = grammar.NewWith(conn.Read, conn.ReadConfig, conn.Option)
+		if err != nil {
+			panic(fmt.Errorf("grammar setup error. (%s)", err))
+		}
 	}
+
 	err = grammar.OnConnected()
 	if err != nil {
 		panic(fmt.Errorf("the OnConnected event error. (%s)", err))
