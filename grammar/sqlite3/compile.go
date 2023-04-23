@@ -148,7 +148,7 @@ func (grammarSQL SQLite3) WhereDateBased(typ string, query *dbal.Query, where db
 		value = where.Value.(dbal.Expression).GetValue()
 	}
 
-	return fmt.Sprintf("strftime('%s',%s) %s cast(%s as text)", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("strftime('%s',%s) %s cast(%s as text)", typ, grammarSQL.Wrap(where.Column, false), where.Operator, value)
 }
 
 // CompileLock the lock into SQL.

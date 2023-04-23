@@ -108,7 +108,7 @@ func (builder *Builder) Increment(column interface{}, amount interface{}, extra 
 	if !utils.IsNumeric(amount) {
 		panic(fmt.Errorf("non-numeric value passed to increment method"))
 	}
-	wrapped := builder.Grammar.Wrap(column)
+	wrapped := builder.Grammar.Wrap(column, true)
 	values := map[string]interface{}{}
 	if len(extra) > 0 {
 		values = xun.MakeR(extra[0]).ToMap()
@@ -129,7 +129,7 @@ func (builder *Builder) Decrement(column interface{}, amount interface{}, extra 
 	if !utils.IsNumeric(amount) {
 		panic(fmt.Errorf("non-numeric value passed to decrement method"))
 	}
-	wrapped := builder.Grammar.Wrap(column)
+	wrapped := builder.Grammar.Wrap(column, true)
 	values := map[string]interface{}{}
 	if len(extra) > 0 {
 		values = xun.MakeR(extra[0]).ToMap()

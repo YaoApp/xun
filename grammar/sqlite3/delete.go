@@ -27,7 +27,7 @@ func (grammarSQL SQLite3) CompileDelete(query *dbal.Query) (string, []interface{
 	selectSQL := grammarSQL.CompileSelectOffset(query, &offset)
 
 	bindings = append(bindings, query.GetBindings()...)
-	sql := fmt.Sprintf("delete from  %s where %s in (%s)", table, grammarSQL.Wrap("rowid"), selectSQL)
+	sql := fmt.Sprintf("delete from  %s where %s in (%s)", table, grammarSQL.Wrap("rowid", false), selectSQL)
 
 	return sql, bindings
 }

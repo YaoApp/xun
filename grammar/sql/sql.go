@@ -149,8 +149,8 @@ func (grammarSQL SQL) GetOperators() []string {
 }
 
 // Wrap a value in keyword identifiers.
-func (grammarSQL SQL) Wrap(value interface{}) string {
-	return grammarSQL.Quoter.Wrap(value)
+func (grammarSQL SQL) Wrap(value interface{}, isUpdate bool) string {
+	return grammarSQL.Quoter.Wrap(value, isUpdate)
 }
 
 // WrapTable Wrap a table in keyword identifiers.

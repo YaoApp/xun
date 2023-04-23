@@ -40,7 +40,7 @@ func (grammarSQL SQL) CompileUpdateColumns(query *dbal.Query, values map[string]
 	columns := []string{}
 	bindings := []interface{}{}
 	for key, value := range values {
-		columns = append(columns, fmt.Sprintf("%s=%s", grammarSQL.Wrap(key), grammarSQL.Parameter(value, *offset+1)))
+		columns = append(columns, fmt.Sprintf("%s=%s", grammarSQL.Wrap(key, true), grammarSQL.Parameter(value, *offset+1)))
 		if !dbal.IsExpression(value) {
 			bindings = append(bindings, value)
 			*offset++

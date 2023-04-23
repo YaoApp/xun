@@ -31,7 +31,9 @@ func (grammarSQL Postgres) SQLAddColumn(column *dbal.Column) string {
 	} else if typ == "ENUM" {
 		typ = strings.ToLower("ENUM__" + strings.Join(column.Option, "_EOPT_"))
 	} else if column.Length != nil {
-		typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
+		if *column.Length > 0 {
+			typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Length))
+		}
 	}
 
 	unsigned := ""

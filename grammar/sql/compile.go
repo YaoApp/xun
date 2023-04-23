@@ -79,7 +79,7 @@ func (grammarSQL SQL) CompileSelectOffset(query *dbal.Query, offset *int) string
 // CompileExists Compile an exists statement into SQL.
 func (grammarSQL SQL) CompileExists(query *dbal.Query) string {
 	sql := grammarSQL.CompileSelect(query)
-	return fmt.Sprintf("select exists(%s) as %s", sql, grammarSQL.Wrap("exists"))
+	return fmt.Sprintf("select exists(%s) as %s", sql, grammarSQL.Wrap("exists", false))
 }
 
 // CompileUnionAggregate Compile a union aggregate query into SQL.
@@ -279,7 +279,7 @@ func (grammarSQL SQL) HavingBasic(query *dbal.Query, having dbal.Having, binding
 	if !dbal.IsExpression(having.Value) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
-	column := grammarSQL.Wrap(having.Column)
+	column := grammarSQL.Wrap(having.Column, false)
 	parameter := grammarSQL.Parameter(having.Value, *bindingOffset)
 
 	return fmt.Sprintf("%s %s %s %s", having.Boolean, column, having.Operator, parameter)
@@ -294,7 +294,7 @@ func (grammarSQL SQL) HavingBetween(query *dbal.Query, having dbal.Having, bindi
 	if having.Not {
 		between = "not between"
 	}
-	column := grammarSQL.Wrap(having.Column)
+	column := grammarSQL.Wrap(having.Column, false)
 	if !dbal.IsExpression(having.Values[0]) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
@@ -321,7 +321,7 @@ func (grammarSQL SQL) CompileOrders(query *dbal.Query, orders []dbal.Order, bind
 		if order.SQL != "" {
 			clauses = append(clauses, order.SQL)
 		} else {
-			clauses = append(clauses, fmt.Sprintf("%s %s", grammarSQL.Wrap(order.Column), order.Direction))
+			clauses = append(clauses, fmt.Sprintf("%s %s", grammarSQL.Wrap(order.Column, false), order.Direction))
 		}
 	}
 	return fmt.Sprintf("order by %s", strings.Join(clauses, ", "))
@@ -402,12 +402,12 @@ func (grammarSQL SQL) WhereBasic(query *dbal.Query, where dbal.Where, bindingOff
 
 	operator := strings.ReplaceAll(where.Operator, "?", "??")
 
-	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column), operator, value)
+	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.Column, false), operator, value)
 }
 
 // WhereColumn Compile a where clause comparing two columns.
 func (grammarSQL SQL) WhereColumn(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.First), where.Operator, grammarSQL.Wrap(where.Second))
+	return fmt.Sprintf("%s %s %s", grammarSQL.Wrap(where.First, false), where.Operator, grammarSQL.Wrap(where.Second, false))
 }
 
 // WhereDate Compile a "where date" clause.
@@ -445,7 +445,7 @@ func (grammarSQL SQL) WhereDateBased(typ string, query *dbal.Query, where dbal.W
 		value = where.Value.(dbal.Expression).GetValue()
 	}
 
-	return fmt.Sprintf("%s(%s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
+	return fmt.Sprintf("%s(%s)%s%s", typ, grammarSQL.Wrap(where.Column, false), where.Operator, value)
 }
 
 // WhereNested Compile a nested where clause.
@@ -467,7 +467,7 @@ func (grammarSQL SQL) WhereNested(query *dbal.Query, where dbal.Where, bindingOf
 // WhereSub Compile a where condition with a sub-select.
 func (grammarSQL SQL) WhereSub(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
 	selectSQL := grammarSQL.CompileSelectOffset(where.Query, bindingOffset)
-	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), where.Operator, selectSQL)
+	return fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column, false), where.Operator, selectSQL)
 }
 
 // WhereExists Compile a where (not) exists clause.
@@ -482,7 +482,7 @@ func (grammarSQL SQL) WhereExists(query *dbal.Query, where dbal.Where, bindingOf
 
 // WhereNull Compile a "where null" clause.
 func (grammarSQL SQL) WhereNull(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column))
+	return fmt.Sprintf("%s is null", grammarSQL.Wrap(where.Column, false))
 }
 
 // WhereRaw Compile a raw where clause.
@@ -492,7 +492,7 @@ func (grammarSQL SQL) WhereRaw(query *dbal.Query, where dbal.Where, bindingOffse
 
 // WhereNotnull Compile a "where not null" clause.
 func (grammarSQL SQL) WhereNotnull(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
-	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column))
+	return fmt.Sprintf("%s is not null", grammarSQL.Wrap(where.Column, false))
 }
 
 // WhereBetween Compile a "between" where clause.
@@ -504,7 +504,7 @@ func (grammarSQL SQL) WhereBetween(query *dbal.Query, where dbal.Where, bindingO
 	if where.Not {
 		between = "not between"
 	}
-	column := grammarSQL.Wrap(where.Column)
+	column := grammarSQL.Wrap(where.Column, false)
 	*bindingOffset = *bindingOffset + where.Offset
 	min := grammarSQL.Parameter(where.Values[0], *bindingOffset)
 	*bindingOffset = *bindingOffset + 1
@@ -534,11 +534,11 @@ func (grammarSQL SQL) WhereIn(query *dbal.Query, where dbal.Where, bindingOffset
 				values = append(values, reflectValues.Index(i).Interface())
 			}
 
-			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, grammarSQL.Parameterize(values, *bindingOffset))
+			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column, false), in, grammarSQL.Parameterize(values, *bindingOffset))
 			*bindingOffset = *bindingOffset + len(values)
 		} else if _, ok := where.ValuesIn.(dbal.Expression); ok {
 			*bindingOffset = *bindingOffset + where.Offset
-			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, where.ValuesIn.(dbal.Expression).GetValue())
+			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column, false), in, where.ValuesIn.(dbal.Expression).GetValue())
 		}
 	}
 

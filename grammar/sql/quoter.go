@@ -72,7 +72,7 @@ func (quoter *Quoter) VAL(value interface{}) string {
 }
 
 // Wrap a value in keyword identifiers.
-func (quoter *Quoter) Wrap(value interface{}) string {
+func (quoter *Quoter) Wrap(value interface{}, isUpdate bool) string {
 	switch value.(type) {
 	case dbal.Expression:
 		return value.(dbal.Expression).GetValue()
@@ -170,7 +170,7 @@ func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 func (quoter *Quoter) Columnize(columns []interface{}) string {
 	wrapColumns := []string{}
 	for _, col := range columns {
-		wrapColumns = append(wrapColumns, quoter.Wrap(col))
+		wrapColumns = append(wrapColumns, quoter.Wrap(col, false))
 	}
 	return strings.Join(wrapColumns, ", ")
 }
