@@ -29,7 +29,7 @@ type SQL struct {
 }
 
 // NewSQL create a new SQL instance
-func NewSQL(quoter dbal.Quoter) SQL {
+func NewSQL(quoter dbal.Quoter, opts ...Option) SQL {
 	sql := &SQL{
 		Driver: "sql",
 		Mode:   "production",
@@ -71,7 +71,20 @@ func NewSQL(quoter dbal.Quoter) SQL {
 			// "mediumInteger": "mediumInteger",
 		},
 	}
+	for _, opt := range opts {
+		opt(sql)
+	}
 	return *sql
+}
+
+// Option used to specify attributes
+type Option func(*SQL)
+
+// WithDriver specify the driver, used in hooks mode
+func WithDriver(driver string) Option {
+	return func(my *SQL) {
+		my.Driver = driver
+	}
 }
 
 // New Create a new mysql grammar inteface
