@@ -91,7 +91,7 @@ func New(opts ...sql.Option) dbal.Grammar {
 	pg := Postgres{
 		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
-	if pg.Driver == "" {
+	if pg.Driver == "" || pg.Driver == "sql" {
 		pg.Driver = "postgres"
 	}
 	pg.IndexTypes = map[string]string{

@@ -87,7 +87,7 @@ func New(opts ...sql.Option) dbal.Grammar {
 	sqlite := SQLite3{
 		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
-	if sqlite.Driver == "" {
+	if sqlite.Driver == "" || sqlite.Driver == "sql" {
 		sqlite.Driver = "sqlite3"
 	}
 	sqlite.IndexTypes = map[string]string{

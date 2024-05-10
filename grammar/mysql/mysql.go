@@ -92,7 +92,7 @@ func New(opts ...sql.Option) dbal.Grammar {
 	my := MySQL{
 		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
-	if my.Driver == "" {
+	if my.Driver == "" || my.Driver == "sql" {
 		my.Driver = "mysql"
 	}
 	// set fliptypes
