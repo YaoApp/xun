@@ -88,11 +88,13 @@ func (grammarSQL MySQL) OnConnected() error {
 }
 
 // New Create a new MySQL grammar inteface
-func New() dbal.Grammar {
+func New(opts ...sql.Option) dbal.Grammar {
 	my := MySQL{
-		SQL: sql.NewSQL(&Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
-	my.Driver = "mysql"
+	if my.Driver == "" || my.Driver == "sql" {
+		my.Driver = "mysql"
+	}
 	// set fliptypes
 	flipTypes, ok := utils.MapFilp(my.Types)
 	if ok {

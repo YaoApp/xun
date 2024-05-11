@@ -87,11 +87,13 @@ func (grammarSQL Postgres) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config,
 }
 
 // New Create a new mysql grammar inteface
-func New() dbal.Grammar {
+func New(opts ...sql.Option) dbal.Grammar {
 	pg := Postgres{
-		SQL: sql.NewSQL(&Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
-	pg.Driver = "postgres"
+	if pg.Driver == "" || pg.Driver == "sql" {
+		pg.Driver = "postgres"
+	}
 	pg.IndexTypes = map[string]string{
 		"unique": "UNIQUE INDEX",
 		"index":  "INDEX",
