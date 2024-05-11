@@ -12,15 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        matrix:
         go: [1.18.2]
         db: [MySQL8.0, MySQL5.7, MySQL5.6, Postgres9.6, Postgres14.0, SQLite3]
     steps:
       - name: "Download artifact"
-        uses: actions/github-script@v3.1.0
+        uses: actions/github-script@v6
         with:
           script: |
-            var artifacts = await github.actions.listWorkflowRunArtifacts({
+            var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
                repo: context.repo.repo,
                run_id: ${{github.event.workflow_run.id }},
@@ -28,7 +27,7 @@ jobs:
             var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
               return artifact.name == "pr"
             })[0];
-            var download = await github.actions.downloadArtifact({
+            var download = await github.rest.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
                artifact_id: matchArtifact.id,
@@ -46,14 +45,14 @@ jobs:
           echo NR=$(cat NR) >> $GITHUB_ENV
 
       - name: "Comment on PR"
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { NR } = process.env
             var fs = require('fs');
             var issue_number = NR;
-            await github.issues.createComment({
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue_number,
@@ -66,7 +65,7 @@ jobs:
           kind: "${{ matrix.db }}"
           db: "xun"
           user: "xun"
-          password: ${{ secrets.UNIT_PASS }}
+          password: "123456"
 
       - name: Setup Go ${{ matrix.go }}
         uses: actions/setup-go@v3
@@ -86,7 +85,7 @@ jobs:
 
       - name: Run Test
         env:
-          PASSWORD: ${{ secrets.UNIT_PASS }}
+          PASSWORD: "123456"
           # POSTGRES_DSN: ${{ secrets.UNIT_POSTGRES_DSN }}
         run: |
           make vet
@@ -107,16 +106,16 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
 
       - name: "Comment on PR"
-        uses: actions/github-script@v3
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { NR } = process.env
             var fs = require('fs');
             var issue_number = NR;
-            await github.issues.createComment({
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue_number,
-              body: '✨DONE✨ GO:${{ matrix.go }} DB:${{ matrix.db }}  passed.'
+              body: '✨DONE✨ GO:${{ matrix.go }} DB:${{ matrix.db }} passed.'
             });
