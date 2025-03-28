@@ -4,6 +4,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type CreateTableOption struct {
+	Temporary bool   `json:"temporary,omitempty"` // If true, the table will be created as a temporary table (in memory)
+	Engine    string `json:"engine,omitempty"`    // The engine of the temporary table
+}
+
 // Grammar the SQL Grammar inteface
 type Grammar interface {
 	NewWith(db *sqlx.DB, config *Config, option *Option) (Grammar, error)
@@ -24,7 +29,7 @@ type Grammar interface {
 
 	TableExists(name string) (bool, error)
 	GetTable(name string) (*Table, error)
-	CreateTable(table *Table) error
+	CreateTable(table *Table, options ...CreateTableOption) error
 	AlterTable(table *Table) error
 	DropTable(name string) error
 	DropTableIfExists(name string) error

@@ -16,3 +16,4 @@
 .DS_Store
 unit/*.db
 unit/*.log
+local.env.sh

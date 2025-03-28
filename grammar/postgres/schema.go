@@ -37,7 +37,7 @@ func (grammarSQL Postgres) GetVersion() (*dbal.Version, error) {
 		}, nil
 	}
 
-	defer log.With(log.F{"version": ver}).Trace(sql)
+	// defer log.With(log.F{"version": ver}).Trace(sql)
 	if strings.Contains(verArr[1], ".") {
 		ver, err = semver.Make(verArr[1] + ".0")
 	}
@@ -121,9 +121,16 @@ func (grammarSQL Postgres) CreateType(table *dbal.Table, types map[string][]stri
 }
 
 // CreateTable create a new table on the schema
-func (grammarSQL Postgres) CreateTable(table *dbal.Table) error {
+func (grammarSQL Postgres) CreateTable(table *dbal.Table, options ...dbal.CreateTableOption) error {
 	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
+	if len(options) > 0 {
+		option := options[0]
+		if option.Temporary {
+			sql = fmt.Sprintf("CREATE TEMPORARY TABLE %s (\n", name)
+		}
+	}
+
 	stmts := []string{}
 	commentStmts := []string{}
 
