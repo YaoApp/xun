@@ -44,12 +44,18 @@ func TestTableCreateTemporary(t *testing.T) {
 
 	has, err := builder.HasTable("table_test_table_temp")
 	assert.Nil(t, err, "the table should be created")
-	assert.True(t, has, "the table should be created")
 
-	// Driver is mysql
-	if unit.DriverIs("mysql") {
-		_, err := builder.GetTable("table_test_table_temp")
+	// Get the table on mysql or sqlite3, PostgreSQL not supported, currently
+	if unit.DriverIs("mysql") || unit.DriverIs("sqlite3") {
+		table, err := builder.GetTable("table_test_table_temp")
 		assert.Nil(t, err, "the table should be created")
+		assert.Equal(t, "table_test_table_temp", table.GetName(), "the table name should be table_test_table_temp")
+	}
+
+	// Driver is mysql or sqlite3, PostgreSQL will return false
+	// fully supported in the future
+	if unit.DriverIs("mysql") || unit.DriverIs("sqlite3") {
+		assert.True(t, has, "the table should be created")
 	}
 
 	// Use temporary table
