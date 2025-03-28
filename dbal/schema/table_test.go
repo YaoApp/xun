@@ -63,7 +63,9 @@ func TestTableCreateTemporary(t *testing.T) {
 	has, err = builder.HasTable("table_test_table_temp")
 	assert.Nil(t, err, "the table should be created")
 
-	// HasTable can not check temporary table
-	// It will return false, can be fixed in the future
-	assert.False(t, has, "the table should be created")
+	if unit.DriverIs("mysql") {
+		// HasTable can not check temporary table, driver mysql will return false
+		// It will be fixed in the future
+		assert.False(t, has, "the table should be created")
+	}
 }
