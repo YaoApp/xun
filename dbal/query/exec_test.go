@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/yaoapp/xun/unit"
 )
 
 func TestExec(t *testing.T) {
@@ -24,9 +25,17 @@ func TestExec(t *testing.T) {
 	}
 
 	// Exec
-	res, err := qb.Exec("update table_test_query set score = 100 where email like ?", "%@yao.run")
-	assert.Nil(t, err, "the error should be nil")
-	affected, err := res.RowsAffected()
-	assert.Nil(t, err, "the error should be nil")
-	assert.Equal(t, int64(4), affected, "the rows affected should be 4")
+	if unit.Is("postgres") {
+		res, err := qb.Exec("update table_test_query set score = 100 where email like $1", "%@yao.run")
+		assert.Nil(t, err, "the error should be nil")
+		affected, err := res.RowsAffected()
+		assert.Nil(t, err, "the error should be nil")
+		assert.Equal(t, int64(4), affected, "the rows affected should be 4")
+	} else {
+		res, err := qb.Exec("update table_test_query set score = 100 where email like ?", "%@yao.run")
+		assert.Nil(t, err, "the error should be nil")
+		affected, err := res.RowsAffected()
+		assert.Nil(t, err, "the error should be nil")
+		assert.Equal(t, int64(4), affected, "the rows affected should be 4")
+	}
 }
