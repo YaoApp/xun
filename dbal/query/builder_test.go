@@ -54,3 +54,12 @@ func TestBuilderNew(t *testing.T) {
 	dbReadonly := qb.DB(true)
 	assert.True(t, dbReadonly.Ping() == nil, "The read-only connection should be made")
 }
+
+func TestBuilderDriver(t *testing.T) {
+	defer unit.Catch()
+	unit.SetLogger()
+	qb := getTestBuilder()
+	driver, err := qb.Driver()
+	assert.Nil(t, err, "The error should be nil")
+	assert.Equal(t, unit.Driver(), driver, "The driver should be mysql")
+}

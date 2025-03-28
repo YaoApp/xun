@@ -33,6 +33,23 @@ func UseBuilder(conn *Connection) *Builder {
 	return useBuilder(conn)
 }
 
+// Driver Get the driver name
+func (builder *Builder) Driver() (string, error) {
+	if builder.Conn == nil {
+		return "", fmt.Errorf("the connection is nil")
+	}
+
+	if builder.Conn.WriteConfig != nil {
+		return builder.Conn.WriteConfig.Driver, nil
+	}
+
+	if builder.Conn.ReadConfig != nil {
+		return builder.Conn.ReadConfig.Driver, nil
+	}
+
+	return "", fmt.Errorf("the connection is nil")
+}
+
 // Clone create a new builder instance with current builder
 func (builder *Builder) Clone() Query {
 	return builder.clone()
