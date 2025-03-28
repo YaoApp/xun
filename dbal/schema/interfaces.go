@@ -17,7 +17,7 @@ type Schema interface {
 	GetTables() ([]string, error)
 
 	GetTable(name string) (Blueprint, error)
-	CreateTable(name string, createFunc func(table Blueprint)) error
+	CreateTable(name string, createFunc func(table Blueprint), options ...dbal.CreateTableOption) error
 	DropTable(name string) error
 	AlterTable(name string, alterFunc func(table Blueprint)) error
 	HasTable(name string) (bool, error)
@@ -31,7 +31,7 @@ type Schema interface {
 	MustGetTables() []string
 
 	MustGetTable(name string) Blueprint
-	MustCreateTable(name string, createFunc func(table Blueprint))
+	MustCreateTable(name string, createFunc func(table Blueprint), options ...dbal.CreateTableOption)
 	MustDropTable(name string)
 	MustAlterTable(name string, alterFunc func(table Blueprint))
 	MustHasTable(name string) bool
@@ -153,5 +153,4 @@ type Blueprint interface {
 	DropSoftDeletesTz()
 
 	//@todo: morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
-
 }

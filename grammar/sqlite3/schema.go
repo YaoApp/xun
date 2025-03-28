@@ -65,7 +65,7 @@ func (grammarSQL SQLite3) TableExists(name string) (bool, error) {
 }
 
 // CreateTable create a new table on the schema
-func (grammarSQL SQLite3) CreateTable(table *dbal.Table) error {
+func (grammarSQL SQLite3) CreateTable(table *dbal.Table, options ...dbal.CreateTableOption) error {
 
 	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)

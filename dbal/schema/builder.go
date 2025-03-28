@@ -238,10 +238,10 @@ func (builder *Builder) MustGetTable(name string) Blueprint {
 }
 
 // CreateTable create a new table on the schema.
-func (builder *Builder) CreateTable(name string, callback func(table Blueprint)) error {
+func (builder *Builder) CreateTable(name string, callback func(table Blueprint), options ...dbal.CreateTableOption) error {
 	table := builder.table(name)
 	callback(table)
-	err := builder.Grammar.CreateTable(table.Table)
+	err := builder.Grammar.CreateTable(table.Table, options...)
 	if err != nil {
 		return err
 	}
@@ -249,8 +249,8 @@ func (builder *Builder) CreateTable(name string, callback func(table Blueprint))
 }
 
 // MustCreateTable create a new table on the schema.
-func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint)) {
-	err := builder.CreateTable(name, callback)
+func (builder *Builder) MustCreateTable(name string, callback func(table Blueprint), options ...dbal.CreateTableOption) {
+	err := builder.CreateTable(name, callback, options...)
 	utils.PanicIF(err)
 }
 
@@ -303,7 +303,7 @@ func (builder *Builder) RenameTable(old string, new string) error {
 	return builder.Grammar.RenameTable(oldTab.GetFullName(), newTab.GetFullName())
 }
 
-//MustRenameTable rename a table on the schema.
+// MustRenameTable rename a table on the schema.
 func (builder *Builder) MustRenameTable(old string, new string) Blueprint {
 	err := builder.RenameTable(old, new)
 	utils.PanicIF(err)

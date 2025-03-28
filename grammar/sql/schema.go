@@ -42,7 +42,7 @@ func (grammarSQL SQL) GetVersion() (*dbal.Version, error) {
 			Driver:  grammarSQL.Driver,
 		}, nil
 	}
-	defer log.With(log.F{"version": ver}).Trace(sql)
+	// defer log.With(log.F{"version": ver}).Trace(sql)
 
 	if strings.Contains(rows[0], ".") {
 		ver, err = semver.Make(rows[0] + ".0")
@@ -102,7 +102,7 @@ func (grammarSQL SQL) GetTable(name string) (*dbal.Table, error) {
 
 	has, err := grammarSQL.TableExists(name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("the table exists check failed %s", err)
 	}
 
 	if !has {
@@ -110,14 +110,15 @@ func (grammarSQL SQL) GetTable(name string) (*dbal.Table, error) {
 	}
 
 	table := dbal.NewTable(name, grammarSQL.GetSchema(), grammarSQL.GetDatabase())
+
 	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.TableName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("the column listing failed %s", err)
 	}
 
 	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.TableName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("the index listing failed %s", err)
 	}
 
 	primaryKeyName := ""
@@ -302,11 +303,21 @@ func (grammarSQL SQL) GetColumnListing(dbName string, tableName string) ([]*dbal
 }
 
 // CreateTable create a new table on the schema
-func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
+func (grammarSQL SQL) CreateTable(table *dbal.Table, options ...dbal.CreateTableOption) error {
 	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
-	stmts := []string{}
 
+	// Support options
+	if len(options) > 0 {
+		option := options[0]
+
+		if option.Temporary && option.Engine == "" {
+			sql = fmt.Sprintf("CREATE TEMPORARY TABLE %s (\n", name)
+		}
+
+	}
+
+	stmts := []string{}
 	var primary *dbal.Primary = nil
 	columns := []*dbal.Column{}
 	indexes := []*dbal.Index{}
@@ -363,6 +374,11 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 	}
 
 	engine := utils.GetIF(table.Engine != "", "ENGINE "+table.Engine, "")
+	// Temporary table in specific engine
+	if len(options) > 0 && options[0].Temporary && options[0].Engine != "" {
+		engine = "ENGINE " + options[0].Engine
+	}
+
 	charset := utils.GetIF(table.Charset != "", "DEFAULT CHARSET "+table.Charset, "")
 	collation := utils.GetIF(table.Collation != "", "COLLATE="+table.Collation, "")
 
@@ -371,6 +387,7 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 		"\n) %s %s %s ROW_FORMAT=DYNAMIC",
 		engine, charset, collation,
 	)
+
 	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
 
@@ -378,7 +395,6 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 	for _, cmd := range cbCommands {
 		cmd.Callback(err)
 	}
-
 	return err
 }
 
