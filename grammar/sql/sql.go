@@ -127,6 +127,8 @@ func (grammarSQL SQL) NewWith(db *sqlx.DB, config *dbal.Config, option *dbal.Opt
 		return nil, err
 	}
 
+	// Create a new Quoter to avoid race conditions when used concurrently
+	grammarSQL.Quoter = &Quoter{}
 	grammarSQL.Quoter.Bind(db, option.Prefix)
 	return grammarSQL, nil
 }
@@ -140,6 +142,8 @@ func (grammarSQL SQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	// Create a new Quoter to avoid race conditions when used concurrently
+	grammarSQL.Quoter = &Quoter{}
 	grammarSQL.Quoter.Bind(write, option.Prefix, read)
 	return grammarSQL, nil
 }
