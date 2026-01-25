@@ -99,7 +99,7 @@ func (builder *Builder) joinPrepare(args ...interface{}) (string, interface{}) {
 	return operator, second
 }
 
-//JoinWhere Add a "join where" clause to the query.
+// JoinWhere Add a "join where" clause to the query.
 func (builder *Builder) JoinWhere() {
 }
 
@@ -111,7 +111,7 @@ func (builder *Builder) LeftJoinWhere() {
 func (builder *Builder) RightJoinWhere() {
 }
 
-//Join Add a join clause to the query.
+// Join Add a join clause to the query.
 func (builder *Builder) join(table interface{}, alias string, first interface{}, operator string, second interface{}, typ string, method string, offset int) Query {
 	if method == "on" {
 		qb := builder.forJoinClause()

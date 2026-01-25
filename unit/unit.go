@@ -26,12 +26,12 @@ func Not(name string) bool {
 	return !strings.Contains(os.Getenv("XUN_UNIT_NAME"), name)
 }
 
-//DriverIs the drvier should be the name given
+// DriverIs the drvier should be the name given
 func DriverIs(name string) bool {
 	return os.Getenv("XUN_UNIT_DRIVER") == name
 }
 
-//DriverNot the drvier should not be the name given
+// DriverNot the drvier should not be the name given
 func DriverNot(name string) bool {
 	return os.Getenv("XUN_UNIT_DRIVER") != name
 }

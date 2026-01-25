@@ -30,7 +30,7 @@ func (grammarSQL SQLite3) GetVersion() (*dbal.Version, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer log.With(log.F{"version": ver}).Trace(sql)
+	defer log.With(log.F{"version": ver}).Trace("%s", sql)
 	return &dbal.Version{
 		Version: ver,
 		Driver:  grammarSQL.Driver,
@@ -40,7 +40,7 @@ func (grammarSQL SQLite3) GetVersion() (*dbal.Version, error) {
 // GetTables Get all of the table names for the database.
 func (grammarSQL SQLite3) GetTables() ([]string, error) {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table'")
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	tables := []string{}
 	err := grammarSQL.DB.Select(&tables, sql)
 	if err != nil {
@@ -52,7 +52,7 @@ func (grammarSQL SQLite3) GetTables() ([]string, error) {
 // TableExists check if the table exists
 func (grammarSQL SQLite3) TableExists(name string) (bool, error) {
 	sql := fmt.Sprintf("SELECT `name` FROM `sqlite_master` WHERE type='table' AND name=%s", grammarSQL.VAL(name))
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
@@ -119,7 +119,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table, options ...dbal.CreateT
 	sql = sql + fmt.Sprintf("\n)")
 
 	// Create table
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table, options ...dbal.CreateT
 			grammarSQL.SQLAddIndex(index),
 		)
 	}
-	defer log.Debug(strings.Join(indexStmts, ";\n"))
+	defer log.Debug("%s", strings.Join(indexStmts, ";\n"))
 	_, err = grammarSQL.DB.Exec(strings.Join(indexStmts, ";\n"))
 
 	for _, cmd := range cbCommands {
@@ -149,7 +149,7 @@ func (grammarSQL SQLite3) CreateTable(table *dbal.Table, options ...dbal.CreateT
 // RenameTable rename a table on the schema.
 func (grammarSQL SQLite3) RenameTable(old string, new string) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old), grammarSQL.ID(new))
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -278,7 +278,7 @@ func (grammarSQL SQLite3) GetIndexListing(dbName string, tableName string) ([]*d
 		grammarSQL.VAL(tableName),
 		grammarSQL.VAL(tableName),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	indexes := []*dbal.Index{}
 	err := grammarSQL.DB.Select(&indexes, sql)
 	if err != nil {
@@ -331,7 +331,7 @@ func (grammarSQL SQLite3) GetColumnListing(schemaName string, tableName string) 
 		strings.Join(selectColumns, ","),
 		grammarSQL.VAL(tableName),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	columns := []*dbal.Column{}
 	err := grammarSQL.DB.Select(&columns, sql)
 	if err != nil {
@@ -437,7 +437,7 @@ func (grammarSQL SQLite3) AlterTable(table *dbal.Table) error {
 		}
 	}
 
-	defer log.Debug(strings.Join(stmts, "\n"))
+	defer log.Debug("%s", strings.Join(stmts, "\n"))
 	// Return Errors
 	if len(errs) > 0 {
 		message := ""

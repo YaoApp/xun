@@ -17,7 +17,7 @@ type Quoter struct {
 	Prefix     string
 }
 
-//Bind make a new Quoter inteface
+// Bind make a new Quoter inteface
 func (quoter *Quoter) Bind(db *sqlx.DB, prefix string, dbRead ...*sqlx.DB) dbal.Quoter {
 	quoter.DBPrimary = db
 	quoter.DB = db

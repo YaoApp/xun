@@ -70,7 +70,7 @@ func (grammarSQL Postgres) GetTables() ([]string, error) {
 		grammarSQL.VAL(grammarSQL.GetDatabase()),
 		grammarSQL.VAL(grammarSQL.GetSchema()),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	tables := []string{}
 	err := grammarSQL.DB.Select(&tables, sql)
 	if err != nil {
@@ -87,7 +87,7 @@ func (grammarSQL Postgres) TableExists(name string) (bool, error) {
 		grammarSQL.VAL(grammarSQL.GetSchema()),
 		grammarSQL.VAL(name),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	rows := []string{}
 	err := grammarSQL.DB.Select(&rows, sql)
 	if err != nil {
@@ -111,7 +111,7 @@ func (grammarSQL Postgres) CreateType(table *dbal.Table, types map[string][]stri
 		WHEN duplicate_object THEN null;
 	END $$;
 	`, table.SchemaName, name, typ)
-		defer log.Debug(typeSQL)
+		defer log.Debug("%s", typeSQL)
 		_, err := grammarSQL.DB.Exec(typeSQL)
 		if err != nil {
 			return err
@@ -177,7 +177,7 @@ func (grammarSQL Postgres) CreateTable(table *dbal.Table, options ...dbal.Create
 	sql = sql + fmt.Sprintf("\n)")
 
 	// Create table
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	_, err = grammarSQL.DB.Exec(sql)
 	if err != nil {
 		return err
@@ -241,7 +241,7 @@ func (grammarSQL Postgres) createTableCreateIndex(table *dbal.Table, indexes []*
 	}
 	if len(indexStmts) > 0 {
 		sql := strings.Join(indexStmts, ";\n")
-		defer log.Debug(sql)
+		defer log.Debug("%s", sql)
 		_, err := grammarSQL.DB.Exec(sql)
 		return err
 	}
@@ -251,7 +251,7 @@ func (grammarSQL Postgres) createTableCreateIndex(table *dbal.Table, indexes []*
 func (grammarSQL Postgres) createTableAddComment(table *dbal.Table, commentStmts []string) error {
 	if len(commentStmts) > 0 {
 		sql := strings.Join(commentStmts, ";\n")
-		defer log.Debug(sql)
+		defer log.Debug("%s", sql)
 		_, err := grammarSQL.DB.Exec(sql)
 		return err
 	}
@@ -261,7 +261,7 @@ func (grammarSQL Postgres) createTableAddComment(table *dbal.Table, commentStmts
 // RenameTable rename a table on the schema.
 func (grammarSQL Postgres) RenameTable(old string, new string) error {
 	sql := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", grammarSQL.ID(old), grammarSQL.ID(new))
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	_, err := grammarSQL.DB.Exec(sql)
 	return err
 }
@@ -383,7 +383,7 @@ func (grammarSQL Postgres) AlterTable(table *dbal.Table) error {
 		}
 	}
 
-	defer log.Debug(strings.Join(stmts, "\n"))
+	defer log.Debug("%s", strings.Join(stmts, "\n"))
 
 	// Return Errors
 	if len(errs) > 0 {
@@ -460,7 +460,7 @@ func (grammarSQL Postgres) alterTableRenameColumn(table *dbal.Table, command *db
 	new := command.Params[1].(string)
 	column, has := table.ColumnMap[old]
 	if !has {
-		*errs = append(*errs, fmt.Errorf("the column "+old+" not exists"))
+		*errs = append(*errs, fmt.Errorf("the column %s not exists", old))
 		return
 	}
 	column.Name = new
@@ -685,7 +685,7 @@ func (grammarSQL Postgres) GetIndexListing(dbName string, tableName string) ([]*
 		grammarSQL.VAL(dbName),
 		grammarSQL.VAL(tableName),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	indexes := []*dbal.Index{}
 	err := grammarSQL.DB.Select(&indexes, sql)
 	if err != nil {
@@ -750,7 +750,7 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 		grammarSQL.VAL(dbName),
 		grammarSQL.VAL(tableName),
 	)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	columns := []*dbal.Column{}
 	err := grammarSQL.DB.Select(&columns, sql)
 	if err != nil {
