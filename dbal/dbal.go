@@ -220,13 +220,14 @@ func (table *Table) GetIndex(name string) *Index {
 // AddCommand Add a new command to the table.
 //
 // The commands must be:
-//    AddColumn(column *Column)    for adding a column
-//    ModifyColumn(column *Column) for modifying a colu
-//    RenameColumn(old string,new string)  for renaming a column
-//    DropColumn(name string)  for dropping a column
-//    CreateIndex(index *Index) for creating a index
-//    DropIndex( name string) for  dropping a index
-//    RenameIndex(old string,new string)  for renaming a index
+//
+//	AddColumn(column *Column)    for adding a column
+//	ModifyColumn(column *Column) for modifying a colu
+//	RenameColumn(old string,new string)  for renaming a column
+//	DropColumn(name string)  for dropping a column
+//	CreateIndex(index *Index) for creating a index
+//	DropIndex( name string) for  dropping a index
+//	RenameIndex(old string,new string)  for renaming a index
 func (table *Table) AddCommand(name string, success func(), fail func(), params ...interface{}) {
 	table.Commands = append(table.Commands, &Command{
 		Name:    name,

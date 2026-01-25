@@ -219,7 +219,7 @@ func (grammarSQL SQL) CompileColumns(query *dbal.Query, columns []interface{}, b
 	return sql
 }
 
-//CompileFrom  Compile the "from" portion of the query.
+// CompileFrom  Compile the "from" portion of the query.
 func (grammarSQL SQL) CompileFrom(query *dbal.Query, from dbal.From, bindingOffset *int) string {
 	if from.Type == "" {
 		return ""
