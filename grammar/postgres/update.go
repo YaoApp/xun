@@ -25,7 +25,7 @@ func (grammarSQL Postgres) Upsert(query *dbal.Query, values []xun.R, uniqueBy []
 	}
 
 	sql, bindings := grammarSQL.CompileUpsert(query, columns, insertValues, uniqueBy, updateValues)
-	defer log.Debug(sql)
+	defer log.Debug("%s", sql)
 	return grammarSQL.DB.Exec(sql, bindings...)
 }
 

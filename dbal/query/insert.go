@@ -11,7 +11,7 @@ import (
 func (builder *Builder) Insert(v interface{}, columns ...interface{}) error {
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsert(builder.Query, columns, values)
-	defer log.With(log.F{"bindings": bindings}).Debug(sql)
+	defer log.With(log.F{"bindings": bindings}).Debug("%s", sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
@@ -33,7 +33,7 @@ func (builder *Builder) MustInsert(v interface{}, columns ...interface{}) {
 func (builder *Builder) InsertOrIgnore(v interface{}, columns ...interface{}) (int64, error) {
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertOrIgnore(builder.Query, columns, values)
-	defer log.With(log.F{"bindings": bindings}).Debug(sql)
+	defer log.With(log.F{"bindings": bindings}).Debug("%s", sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
@@ -68,7 +68,7 @@ func (builder *Builder) InsertGetID(v interface{}, args ...interface{}) (int64, 
 
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertGetID(builder.Query, columns, values, seq)
-	defer log.With(log.F{"bindings": bindings}).Debug(sql)
+	defer log.With(log.F{"bindings": bindings}).Debug("%s", sql)
 	return builder.Grammar.ProcessInsertGetID(sql, bindings, seq)
 }
 

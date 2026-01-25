@@ -14,7 +14,7 @@ func (builder *Builder) Update(v interface{}) (int64, error) {
 
 	values := xun.MakeR(v).ToMap()
 	sql, bindings := builder.Grammar.CompileUpdate(builder.Query, values)
-	defer log.With(log.F{"bindings": bindings}).Debug(sql)
+	defer log.With(log.F{"bindings": bindings}).Debug("%s", sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
@@ -80,7 +80,7 @@ func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update inter
 
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileUpsert(builder.Query, columns, values, utils.Flatten(uniqueBy), update)
-	defer log.With(log.F{"bindings": bindings}).Debug(sql)
+	defer log.With(log.F{"bindings": bindings}).Debug("%s", sql)
 
 	stmt, err := builder.UseWrite().DB().Prepare(sql)
 	if err != nil {
