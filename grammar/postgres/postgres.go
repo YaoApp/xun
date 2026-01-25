@@ -69,6 +69,8 @@ func (grammarSQL Postgres) NewWith(db *sqlx.DB, config *dbal.Config, option *dba
 	if err != nil {
 		return nil, err
 	}
+	// Create a new Quoter to avoid race conditions when used concurrently
+	grammarSQL.Quoter = &Quoter{}
 	grammarSQL.Quoter.Bind(db, option.Prefix)
 	return grammarSQL, nil
 }
@@ -82,6 +84,8 @@ func (grammarSQL Postgres) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config,
 
 	grammarSQL.Read = read
 	grammarSQL.ReadConfig = readConfig
+	// Create a new Quoter to avoid race conditions when used concurrently
+	grammarSQL.Quoter = &Quoter{}
 	grammarSQL.Quoter.Bind(write, option.Prefix, read)
 	return grammarSQL, nil
 }
