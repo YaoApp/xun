@@ -17,3 +17,4 @@
 unit/*.db
 unit/*.log
 local.env.sh
+tests/xun_test.db

@@ -21,7 +21,7 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, va
 	for _, value := range values {
 		parameters = append(parameters, fmt.Sprintf("(%s)", grammarSQL.Parameterize(value, offset)))
 		for _, v := range value {
-			if !dbal.IsExpression(v) {
+			if !dbal.IsExpression(v) && v != nil {
 				bindings = append(bindings, v)
 				offset++
 			}

@@ -112,14 +112,21 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 	if quoter.IsExpression(value) {
 		return value.(dbal.Expression).GetValue()
 	}
+	if value == nil {
+		return "NULL"
+	}
 	return fmt.Sprintf("$%d", num)
 }
 
 // Parameterize Create query parameter place-holders for an array.
 func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
-	for idx, value := range values {
-		params = append(params, quoter.Parameter(value, idx+1+offset))
+	bindingNum := offset
+	for _, value := range values {
+		if !quoter.IsExpression(value) && value != nil {
+			bindingNum++
+		}
+		params = append(params, quoter.Parameter(value, bindingNum))
 	}
 	return strings.Join(params, ",")
 }
