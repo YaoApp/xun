@@ -59,6 +59,11 @@ jobs:
               body: 'Thank you for the PR! The test workflow ( GO:${{ matrix.go }} DB:${{ matrix.db }} is running, the results of the run will be commented later.'
             });
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HEAD }}
+
       - name: Setup ${{ matrix.db }}
         uses: ./.github/actions/setup-db
         with:
