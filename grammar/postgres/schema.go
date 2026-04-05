@@ -439,10 +439,28 @@ func (grammarSQL Postgres) alterTableChangeColumn(table *dbal.Table, command *db
 			*errs = append(*errs, err)
 			return
 		}
+
+		nameQuoter := grammarSQL.Quoter.ID(column.Name)
+		dropDefault := sql + "ALTER COLUMN " + nameQuoter + " DROP DEFAULT"
+		err = grammarSQL.ExecSQL(table, dropDefault)
+		if err != nil {
+			*errs = append(*errs, err)
+			return
+		}
 	}
 	err := grammarSQL.ExecSQL(table, sql+stmt)
 	if err != nil {
 		*errs = append(*errs, err)
+		return
+	}
+	if column.Type == "enum" && column.Default != nil {
+		nameQuoter := grammarSQL.Quoter.ID(column.Name)
+		setDefault := sql + fmt.Sprintf("ALTER COLUMN %s SET DEFAULT %s",
+			nameQuoter, grammarSQL.Quoter.VAL(fmt.Sprintf("%v", column.Default)))
+		err = grammarSQL.ExecSQL(table, setDefault)
+		if err != nil {
+			*errs = append(*errs, err)
+		}
 	}
 
 	commentStmt := grammarSQL.SQLAddComment(column)
@@ -612,9 +630,16 @@ func (grammarSQL Postgres) SQLAlterColumnType(Column *dbal.Column) string {
 	// 	quoter.ID(Column.Name, db), typ)
 
 	nameQuoter := quoter.ID(Column.Name)
-	sql := fmt.Sprintf(
-		"%s TYPE %s USING (%s::%s) ",
-		nameQuoter, typ, nameQuoter, typ)
+	var sql string
+	if Column.Type == "enum" {
+		sql = fmt.Sprintf(
+			"%s TYPE %s USING (%s::text::%s) ",
+			nameQuoter, typ, nameQuoter, typ)
+	} else {
+		sql = fmt.Sprintf(
+			"%s TYPE %s USING (%s::%s) ",
+			nameQuoter, typ, nameQuoter, typ)
+	}
 
 	sql = strings.Trim(sql, " ")
 	return sql
@@ -789,11 +814,21 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 					enumOptions[column.TypeName] = strings.Split(optionStr, ",")
 				}
 				column.Option = enumOptions[column.TypeName]
+
+				if column.Default != nil {
+					defaultStr := fmt.Sprintf("%v", column.Default)
+					if idx := strings.Index(defaultStr, "::"); idx != -1 {
+						defaultStr = defaultStr[:idx]
+					}
+					defaultStr = strings.Trim(defaultStr, "'")
+					column.Default = defaultStr
+				}
 			}
 		}
 
 		if utils.StringVal(column.Extra) == "auto_increment" {
 			column.Extra = utils.StringPtr("AutoIncrement")
+			column.Default = nil
 		}
 	}
 	return columns, nil

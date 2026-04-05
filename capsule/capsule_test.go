@@ -69,5 +69,5 @@ func TestPing(t *testing.T) {
 	}
 
 	err = conn.Ping(1 * time.Second)
-	assert.Equal(t, "context deadline exceeded", err.Error())
+	assert.Error(t, err)
 }

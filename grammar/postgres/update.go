@@ -53,7 +53,7 @@ func (grammarSQL Postgres) CompileUpsert(query *dbal.Query, columns []interface{
 			column := fmt.Sprintf("%v", key)
 			value := update.MapIndex(key).Interface()
 			segments = append(segments, fmt.Sprintf("%s=%s", grammarSQL.Wrap(column), grammarSQL.Parameter(value, offset)))
-			if !dbal.IsExpression(value) {
+			if !dbal.IsExpression(value) && value != nil {
 				bindings = append(bindings, value)
 				offset++
 			}
