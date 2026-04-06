@@ -24,3 +24,33 @@ func TestSupportIsBoolean(t *testing.T) {
 	assert.True(t, builder.isBoolean("or"), "The return value should be true")
 	assert.False(t, builder.isBoolean("not"), "The return value should be false")
 }
+
+func TestFilterNilBindingsRemovesNil(t *testing.T) {
+	values := []interface{}{1, nil, "hello", nil, 3}
+	result := filterNilBindings(values)
+	assert.Equal(t, []interface{}{1, "hello", 3}, result)
+}
+
+func TestFilterNilBindingsTypedNil(t *testing.T) {
+	var p *string
+	values := []interface{}{"a", p, "b"}
+	result := filterNilBindings(values)
+	assert.Equal(t, []interface{}{"a", "b"}, result)
+}
+
+func TestFilterNilBindingsAllNil(t *testing.T) {
+	values := []interface{}{nil, nil, nil}
+	result := filterNilBindings(values)
+	assert.Empty(t, result)
+}
+
+func TestFilterNilBindingsNoNil(t *testing.T) {
+	values := []interface{}{1, "two", 3.0}
+	result := filterNilBindings(values)
+	assert.Equal(t, []interface{}{1, "two", 3.0}, result)
+}
+
+func TestFilterNilBindingsEmpty(t *testing.T) {
+	result := filterNilBindings([]interface{}{})
+	assert.Empty(t, result)
+}

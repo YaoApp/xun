@@ -154,7 +154,7 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 	if quoter.IsExpression(value) {
 		return value.(dbal.Expression).GetValue()
 	}
-	if value == nil {
+	if utils.IsNil(value) {
 		return "NULL"
 	}
 	return "?"

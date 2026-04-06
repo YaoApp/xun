@@ -432,7 +432,7 @@ func (builder *Builder) whereBetween(column interface{}, values interface{}, boo
 		Offset:  betweenOffset,
 	})
 
-	builder.Query.AddBinding("where", betweenValues)
+	builder.Query.AddBinding("where", filterNilBindings(betweenValues))
 	return builder
 }
 
@@ -486,7 +486,7 @@ func (builder *Builder) whereIn(column interface{}, values interface{}, boolean 
 	// Finally we'll add a binding for each values unless that value is an expression
 	// in which case we will just skip over it since it will be the query as a raw
 	// string and not as a parameterized place-holder to be replaced by the PDO.
-	builder.Query.AddBinding("where", builder.cleanBindings(values))
+	builder.Query.AddBinding("where", filterNilBindings(builder.cleanBindings(values)))
 
 	return builder
 }

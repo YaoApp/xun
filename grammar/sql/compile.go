@@ -7,6 +7,7 @@ import (
 
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // CompileSelect Compile a select query into SQL.
@@ -270,13 +271,17 @@ func (grammarSQL SQL) CompileHaving(query *dbal.Query, having dbal.Having, bindi
 		return fmt.Sprintf("%s %s", having.Boolean, having.SQL)
 	} else if having.Type == "between" {
 		return grammarSQL.HavingBetween(query, having, bindingOffset)
+	} else if having.Type == "null" {
+		return fmt.Sprintf("%s %s is null", having.Boolean, grammarSQL.Wrap(having.Column))
+	} else if having.Type == "notnull" {
+		return fmt.Sprintf("%s %s is not null", having.Boolean, grammarSQL.Wrap(having.Column))
 	}
 	return grammarSQL.HavingBasic(query, having, bindingOffset)
 }
 
 // HavingBasic  Compile a basic having clause.
 func (grammarSQL SQL) HavingBasic(query *dbal.Query, having dbal.Having, bindingOffset *int) string {
-	if !dbal.IsExpression(having.Value) {
+	if !dbal.IsExpression(having.Value) && !utils.IsNil(having.Value) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
 	column := grammarSQL.Wrap(having.Column)
@@ -295,12 +300,12 @@ func (grammarSQL SQL) HavingBetween(query *dbal.Query, having dbal.Having, bindi
 		between = "not between"
 	}
 	column := grammarSQL.Wrap(having.Column)
-	if !dbal.IsExpression(having.Values[0]) {
+	if !dbal.IsExpression(having.Values[0]) && !utils.IsNil(having.Values[0]) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
 	min := grammarSQL.Parameter(having.Values[0], *bindingOffset)
 
-	if !dbal.IsExpression(having.Values[1]) {
+	if !dbal.IsExpression(having.Values[1]) && !utils.IsNil(having.Values[1]) {
 		*bindingOffset = *bindingOffset + having.Offset
 	}
 	max := grammarSQL.Parameter(having.Values[1], *bindingOffset)
@@ -505,9 +510,13 @@ func (grammarSQL SQL) WhereBetween(query *dbal.Query, where dbal.Where, bindingO
 		between = "not between"
 	}
 	column := grammarSQL.Wrap(where.Column)
-	*bindingOffset = *bindingOffset + where.Offset
+	if !grammarSQL.IsExpression(where.Values[0]) && !utils.IsNil(where.Values[0]) {
+		*bindingOffset = *bindingOffset + where.Offset
+	}
 	min := grammarSQL.Parameter(where.Values[0], *bindingOffset)
-	*bindingOffset = *bindingOffset + 1
+	if !grammarSQL.IsExpression(where.Values[1]) && !utils.IsNil(where.Values[1]) {
+		*bindingOffset = *bindingOffset + 1
+	}
 	max := grammarSQL.Parameter(where.Values[1], *bindingOffset)
 	// `field` between 3 and 5
 	// `field` not between 3 and 5
@@ -535,7 +544,13 @@ func (grammarSQL SQL) WhereIn(query *dbal.Query, where dbal.Where, bindingOffset
 			}
 
 			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, grammarSQL.Parameterize(values, *bindingOffset))
-			*bindingOffset = *bindingOffset + len(values)
+			count := 0
+			for _, v := range values {
+				if !grammarSQL.IsExpression(v) && !utils.IsNil(v) {
+					count++
+				}
+			}
+			*bindingOffset = *bindingOffset + count
 		} else if _, ok := where.ValuesIn.(dbal.Expression); ok {
 			*bindingOffset = *bindingOffset + where.Offset
 			sql = fmt.Sprintf("%s %s (%s)", grammarSQL.Wrap(where.Column), in, where.ValuesIn.(dbal.Expression).GetValue())

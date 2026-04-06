@@ -804,13 +804,25 @@ func TestVALDefault(t *testing.T) {
 func TestVALEscapeQuotes(t *testing.T) {
 	q := &Quoter{}
 	result := q.VAL("it's")
-	assert.Equal(t, `'it\'s'`, result)
+	assert.Equal(t, `'it''s'`, result)
 }
 
 func TestVALStripNewlines(t *testing.T) {
 	q := &Quoter{}
 	result := q.VAL("line1\nline2\r")
 	assert.Equal(t, "'line1line2'", result)
+}
+
+func TestVALDollarSign(t *testing.T) {
+	q := &Quoter{}
+	result := q.VAL("price is $999 - $4999 /month")
+	assert.Equal(t, "'price is $999 - $4999 /month'", result)
+}
+
+func TestVALQuoteAndDollar(t *testing.T) {
+	q := &Quoter{}
+	result := q.VAL("Custom label (e.g., '$999 - $4999 /month')")
+	assert.Equal(t, "'Custom label (e.g., ''$999 - $4999 /month'')'", result)
 }
 
 // --- Quoter.Wrap ---
@@ -1014,6 +1026,190 @@ func TestIDStripsNewlines(t *testing.T) {
 	q := Quoter{}
 	result := q.ID("us\ners\r")
 	assert.Equal(t, `"users"`, result)
+}
+
+// ---------------------------------------------------------------------------
+// Parameter nil handling (PG quoter)
+// ---------------------------------------------------------------------------
+
+func TestParameterPlainNilPG(t *testing.T) {
+	q := &Quoter{}
+	result := q.Parameter(nil, 1)
+	assert.Equal(t, "NULL", result)
+}
+
+func TestParameterTypedNilPG(t *testing.T) {
+	q := &Quoter{}
+	var p *string
+	result := q.Parameter(p, 1)
+	assert.Equal(t, "NULL", result)
+}
+
+func TestParameterNonNilPG(t *testing.T) {
+	q := &Quoter{}
+	result := q.Parameter("hello", 3)
+	assert.Equal(t, "$3", result)
+}
+
+// ---------------------------------------------------------------------------
+// Parameterize nil handling (PG quoter)
+// ---------------------------------------------------------------------------
+
+func TestParameterizeWithNilPG(t *testing.T) {
+	q := &Quoter{}
+	values := []interface{}{"a", nil, "b"}
+	result := q.Parameterize(values, 0)
+	assert.Equal(t, "$1,NULL,$2", result)
+}
+
+func TestParameterizeWithTypedNilPG(t *testing.T) {
+	q := &Quoter{}
+	var p *string
+	values := []interface{}{"a", p, "b"}
+	result := q.Parameterize(values, 0)
+	assert.Equal(t, "$1,NULL,$2", result)
+}
+
+// ---------------------------------------------------------------------------
+// WhereIn offset with nil (PG)
+// ---------------------------------------------------------------------------
+
+func TestWhereInOffsetWithNilPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	where := dbal.Where{
+		Type:     "in",
+		Column:   "id",
+		ValuesIn: []interface{}{1, nil, 3},
+		Boolean:  "and",
+		Not:      false,
+		Offset:   0,
+	}
+	result := pg.WhereIn(&dbal.Query{}, where, &offset)
+	assert.Contains(t, result, "$1")
+	assert.Contains(t, result, "NULL")
+	assert.Contains(t, result, "$2")
+	assert.Equal(t, 2, offset, "nil should not count in offset")
+}
+
+// ---------------------------------------------------------------------------
+// WhereBetween offset with nil (PG)
+// ---------------------------------------------------------------------------
+
+func TestWhereBetweenMinNilPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	where := dbal.Where{
+		Type:    "between",
+		Column:  "age",
+		Values:  []interface{}{nil, 100},
+		Boolean: "and",
+		Not:     false,
+		Offset:  1,
+	}
+	result := pg.WhereBetween(&dbal.Query{}, where, &offset)
+	assert.Contains(t, result, "NULL")
+	assert.Contains(t, result, "$1")
+	assert.Equal(t, 1, offset)
+}
+
+func TestWhereBetweenBothNilPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	where := dbal.Where{
+		Type:    "between",
+		Column:  "age",
+		Values:  []interface{}{nil, nil},
+		Boolean: "and",
+		Not:     false,
+		Offset:  1,
+	}
+	result := pg.WhereBetween(&dbal.Query{}, where, &offset)
+	assert.Contains(t, result, "NULL and NULL")
+	assert.Equal(t, 0, offset)
+}
+
+func TestWhereBetweenNormalPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	where := dbal.Where{
+		Type:    "between",
+		Column:  "age",
+		Values:  []interface{}{10, 100},
+		Boolean: "and",
+		Not:     false,
+		Offset:  1,
+	}
+	result := pg.WhereBetween(&dbal.Query{}, where, &offset)
+	assert.Contains(t, result, "$1")
+	assert.Contains(t, result, "$2")
+	assert.Equal(t, 2, offset)
+}
+
+// ---------------------------------------------------------------------------
+// CompileUpsert Map with nil (PG)
+// ---------------------------------------------------------------------------
+
+func TestCompileUpsertMapWithTypedNilPG(t *testing.T) {
+	pg := newTestPostgres()
+	q := newFullQuery()
+	var p *string
+	cols := []interface{}{"name", "deleted_at"}
+	vals := [][]interface{}{{"alice", p}}
+	uniqueBy := []interface{}{"name"}
+	updateVals := map[string]interface{}{"deleted_at": p}
+	sql, bindings := pg.CompileUpsert(q, cols, vals, uniqueBy, updateVals)
+	assert.Contains(t, sql, "NULL")
+	assert.Len(t, bindings, 1, "typed nil excluded from bindings")
+}
+
+// ---------------------------------------------------------------------------
+// HavingBetween nil (PG)
+// ---------------------------------------------------------------------------
+
+func TestHavingBetweenMinNilPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	having := dbal.Having{
+		Type:    "between",
+		Column:  "total",
+		Values:  []interface{}{nil, 1000},
+		Boolean: "and",
+		Not:     false,
+		Offset:  1,
+	}
+	result := pg.HavingBetween(&dbal.Query{}, having, &offset)
+	assert.Contains(t, result, "NULL")
+	assert.Contains(t, result, "$1")
+	assert.Equal(t, 1, offset)
+}
+
+// ---------------------------------------------------------------------------
+// CompileHaving null/notnull (PG)
+// ---------------------------------------------------------------------------
+
+func TestCompileHavingNullPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	having := dbal.Having{
+		Type:    "null",
+		Column:  "total",
+		Boolean: "and",
+	}
+	result := pg.CompileHaving(&dbal.Query{}, having, &offset)
+	assert.Equal(t, `and "total" is null`, result)
+}
+
+func TestCompileHavingNotnullPG(t *testing.T) {
+	pg := newTestPostgres()
+	offset := 0
+	having := dbal.Having{
+		Type:    "notnull",
+		Column:  "total",
+		Boolean: "and",
+	}
+	result := pg.CompileHaving(&dbal.Query{}, having, &offset)
+	assert.Equal(t, `and "total" is not null`, result)
 }
 
 func TestGetOperatorsPG(t *testing.T) {

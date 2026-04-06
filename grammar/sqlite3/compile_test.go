@@ -737,6 +737,38 @@ func TestCompileSelectColumnsResetAfterCompile(t *testing.T) {
 	assert.Equal(t, originalColumns, query.Columns)
 }
 
+// ---------------------------------------------------------------------------
+// CompileUpsert Map with nil (SQLite3)
+// ---------------------------------------------------------------------------
+
+func TestCompileUpsertMapWithNilSQLite(t *testing.T) {
+	g := newTestSQLite3()
+	query := newBaseQuery("users")
+	columns := []interface{}{"name", "deleted_at"}
+	values := [][]interface{}{{"alice", nil}}
+	uniqueBy := []interface{}{"name"}
+	updateValues := map[string]interface{}{"deleted_at": nil}
+
+	sql, bindings := g.CompileUpsert(query, columns, values, uniqueBy, updateValues)
+	assert.Contains(t, sql, "NULL")
+	assert.Contains(t, sql, "on conflict")
+	assert.Len(t, bindings, 1, "nil excluded from bindings in both insert and upsert map")
+}
+
+func TestCompileUpsertMapWithTypedNilSQLite(t *testing.T) {
+	g := newTestSQLite3()
+	query := newBaseQuery("users")
+	var p *string
+	columns := []interface{}{"name", "deleted_at"}
+	values := [][]interface{}{{"bob", p}}
+	uniqueBy := []interface{}{"name"}
+	updateValues := map[string]interface{}{"deleted_at": p}
+
+	sql, bindings := g.CompileUpsert(query, columns, values, uniqueBy, updateValues)
+	assert.Contains(t, sql, "NULL")
+	assert.Len(t, bindings, 1, "typed nil excluded from bindings")
+}
+
 func TestGetOperatorsSQLite(t *testing.T) {
 	g := newTestSQLite3()
 	ops := g.GetOperators()
