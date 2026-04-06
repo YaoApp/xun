@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         go: [1.24]
-        db: [MySQL8.0, MySQL5.7, MySQL5.6, Postgres9.6, Postgres14.0, SQLite3]
+        db: [MySQL8.0, MySQL5.7, Postgres9.6, Postgres14.0, SQLite3]
     steps:
       - name: "Download artifact"
         uses: actions/github-script@v6

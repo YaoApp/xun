@@ -193,6 +193,31 @@ func (grammarSQL Postgres) WhereDateBased(typ string, query *dbal.Query, where d
 	return fmt.Sprintf("extract(%s from %s)%s%s", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
 }
 
+// WhereNested Compile a nested where clause using PostgreSQL grammar.
+func (grammarSQL Postgres) WhereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	offset := 6
+	if query.IsJoinClause {
+		offset = 3
+	}
+	sql := grammarSQL.CompileWheres(where.Query, where.Query.Wheres, bindingOffset)
+	end := len(sql)
+	if end > offset {
+		sql = sql[offset:end]
+	}
+	return fmt.Sprintf("(%s)", sql)
+}
+
+// WhereJsoncontains Compile a "where JSON contains" clause. PostgreSQL uses native @> on jsonb.
+func (grammarSQL Postgres) WhereJsoncontains(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	not := ""
+	if where.Not {
+		not = "not "
+	}
+	*bindingOffset = *bindingOffset + where.Offset
+	value := grammarSQL.Parameter(where.Value, *bindingOffset)
+	return fmt.Sprintf("%s%s::jsonb @> %s", not, grammarSQL.Wrap(where.Column), value)
+}
+
 // CompileLock the lock into SQL.
 func (grammarSQL Postgres) CompileLock(query *dbal.Query, lock interface{}) string {
 	lockType, ok := lock.(string)

@@ -124,6 +124,10 @@ type Query interface {
 	OrWhereDay(column interface{}, args ...interface{}) Query
 	When(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query
 	Unless(value bool, callback func(qb Query, value bool), defaults ...func(qb Query, value bool)) Query
+	WhereJSONContains(column interface{}, value interface{}) Query
+	OrWhereJSONContains(column interface{}, value interface{}) Query
+	WhereJSONDoesntContain(column interface{}, value interface{}) Query
+	OrWhereJSONDoesntContain(column interface{}, value interface{}) Query
 
 	// defined in the group.go file
 	GroupBy(groups ...interface{}) Query

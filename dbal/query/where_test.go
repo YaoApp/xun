@@ -1609,3 +1609,242 @@ func checkNone(t *testing.T, qb Query) {
 		assert.Equal(t, int64(1), rows[3]["id"].(int64), "the id of the 4ht row should be 1")
 	}
 }
+
+// ==================== WhereJSONContains Tests ====================
+
+func NewTableForJSONContainsTest() {
+	defer unit.Catch()
+	builder := getTestSchemaBuilder()
+	builder.DropTableIfExists("table_test_json_contains")
+	builder.MustCreateTable("table_test_json_contains", func(table schema.Blueprint) {
+		table.ID("id")
+		table.String("name")
+		table.JSON("tags")
+		table.JSON("locales")
+	})
+
+	qb := getTestBuilder()
+	qb.Table("table_test_json_contains").Insert([]xun.R{
+		{"name": "Alice", "tags": `["test","admin"]`, "locales": `["en","zh"]`},
+		{"name": "Bob", "tags": `["test","user"]`, "locales": `["en"]`},
+		{"name": "Charlie", "tags": `["admin"]`, "locales": `["zh","ja"]`},
+		{"name": "Dave", "tags": `["user"]`, "locales": `["en","fr"]`},
+	})
+}
+
+func TestWhereJSONContains(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var value interface{}
+	if unit.DriverIs("sqlite3") {
+		value = "%admin%"
+	} else {
+		value = `"admin"`
+	}
+
+	qb.Table("table_test_json_contains").
+		WhereJSONContains("tags", value).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where "tags"::jsonb @> $1 order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where `tags` like ? order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where JSON_CONTAINS(`tags`, ?) order by `id` asc", sql)
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 1, len(bindings))
+
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "should find Alice and Charlie")
+	if len(rows) == 2 {
+		assert.Equal(t, "Alice", rows[0]["name"].(string))
+		assert.Equal(t, "Charlie", rows[1]["name"].(string))
+	}
+}
+
+func TestOrWhereJSONContains(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var tagVal, localeVal interface{}
+	if unit.DriverIs("sqlite3") {
+		tagVal = "%admin%"
+		localeVal = "%fr%"
+	} else {
+		tagVal = `"admin"`
+		localeVal = `"fr"`
+	}
+
+	qb.Table("table_test_json_contains").
+		WhereJSONContains("tags", tagVal).
+		OrWhereJSONContains("locales", localeVal).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where "tags"::jsonb @> $1 or "locales"::jsonb @> $2 order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where `tags` like ? or `locales` like ? order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where JSON_CONTAINS(`tags`, ?) or JSON_CONTAINS(`locales`, ?) order by `id` asc", sql)
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 2, len(bindings))
+
+	rows := qb.MustGet()
+	assert.Equal(t, 3, len(rows), "should find Alice, Charlie, Dave")
+	if len(rows) == 3 {
+		assert.Equal(t, "Alice", rows[0]["name"].(string))
+		assert.Equal(t, "Charlie", rows[1]["name"].(string))
+		assert.Equal(t, "Dave", rows[2]["name"].(string))
+	}
+}
+
+func TestWhereJSONDoesntContain(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var value interface{}
+	if unit.DriverIs("sqlite3") {
+		value = "%admin%"
+	} else {
+		value = `"admin"`
+	}
+
+	qb.Table("table_test_json_contains").
+		WhereJSONDoesntContain("tags", value).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where not "tags"::jsonb @> $1 order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where not `tags` like ? order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where not JSON_CONTAINS(`tags`, ?) order by `id` asc", sql)
+	}
+
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "should find Bob and Dave")
+	if len(rows) == 2 {
+		assert.Equal(t, "Bob", rows[0]["name"].(string))
+		assert.Equal(t, "Dave", rows[1]["name"].(string))
+	}
+}
+
+func TestOrWhereJSONDoesntContain(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var tagNotVal, localeNotVal interface{}
+	if unit.DriverIs("sqlite3") {
+		tagNotVal = "%admin%"
+		localeNotVal = "%en%"
+	} else {
+		tagNotVal = `"admin"`
+		localeNotVal = `"en"`
+	}
+
+	qb.Table("table_test_json_contains").
+		WhereJSONDoesntContain("tags", tagNotVal).
+		OrWhereJSONDoesntContain("locales", localeNotVal).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where not "tags"::jsonb @> $1 or not "locales"::jsonb @> $2 order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where not `tags` like ? or not `locales` like ? order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where not JSON_CONTAINS(`tags`, ?) or not JSON_CONTAINS(`locales`, ?) order by `id` asc", sql)
+	}
+
+	// Bob: no admin(T) OR has en(F) → T; Dave: no admin(T) OR has en(F) → T;
+	// Charlie: has admin(F) OR no en(T) → T; Alice: has admin(F) OR has en(F) → F
+	rows := qb.MustGet()
+	assert.Equal(t, 3, len(rows), "Bob, Charlie, Dave match; Alice has admin AND en")
+}
+
+func TestWhereJSONContainsNested(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var tagVal, localeVal interface{}
+	if unit.DriverIs("sqlite3") {
+		tagVal = "%test%"
+		localeVal = "%en%"
+	} else {
+		tagVal = `"test"`
+		localeVal = `"en"`
+	}
+
+	qb.Table("table_test_json_contains").
+		Where("name", "<>", "Dave").
+		Where(func(qb Query) {
+			qb.WhereJSONContains("tags", tagVal).
+				OrWhereJSONContains("locales", localeVal)
+		}).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where "name" <> $1 and ("tags"::jsonb @> $2 or "locales"::jsonb @> $3) order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where `name` <> ? and (`tags` like ? or `locales` like ?) order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where `name` <> ? and (JSON_CONTAINS(`tags`, ?) or JSON_CONTAINS(`locales`, ?)) order by `id` asc", sql)
+	}
+
+	bindings := qb.GetBindings()
+	assert.Equal(t, 3, len(bindings))
+
+	rows := qb.MustGet()
+	assert.Equal(t, 2, len(rows), "Alice has test tag, Bob has test tag; Charlie has no test but no en locale either")
+	if len(rows) == 2 {
+		assert.Equal(t, "Alice", rows[0]["name"].(string))
+		assert.Equal(t, "Bob", rows[1]["name"].(string))
+	}
+}
+
+func TestWhereJSONContainsWithOtherWheres(t *testing.T) {
+	NewTableForJSONContainsTest()
+	qb := getTestBuilder()
+
+	var value interface{}
+	if unit.DriverIs("sqlite3") {
+		value = "%test%"
+	} else {
+		value = `"test"`
+	}
+
+	qb.Table("table_test_json_contains").
+		Where("name", "like", "%o%").
+		WhereJSONContains("tags", value).
+		OrderBy("id")
+
+	sql := qb.ToSQL()
+	if unit.DriverIs("postgres") {
+		assert.Equal(t, `select * from "table_test_json_contains" where "name" like $1 and "tags"::jsonb @> $2 order by "id" asc`, sql)
+	} else if unit.DriverIs("sqlite3") {
+		assert.Equal(t, "select * from `table_test_json_contains` where `name` like ? and `tags` like ? order by `id` asc", sql)
+	} else {
+		assert.Equal(t, "select * from `table_test_json_contains` where `name` like ? and JSON_CONTAINS(`tags`, ?) order by `id` asc", sql)
+	}
+
+	rows := qb.MustGet()
+	assert.Equal(t, 1, len(rows), "only Bob matches name like %o% and tags contains test")
+	if len(rows) == 1 {
+		assert.Equal(t, "Bob", rows[0]["name"].(string))
+	}
+}
+
+func TestWhereJSONContainsClean(t *testing.T) {
+	builder := getTestSchemaBuilder()
+	builder.DropTableIfExists("table_test_json_contains")
+}

@@ -547,6 +547,17 @@ func (grammarSQL SQL) WhereIn(query *dbal.Query, where dbal.Where, bindingOffset
 
 // Utils for compiling
 
+// WhereJsoncontains Compile a "where JSON contains" clause. MySQL uses JSON_CONTAINS.
+func (grammarSQL SQL) WhereJsoncontains(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	not := ""
+	if where.Not {
+		not = "not "
+	}
+	*bindingOffset = *bindingOffset + where.Offset
+	value := grammarSQL.Parameter(where.Value, *bindingOffset)
+	return fmt.Sprintf("%sJSON_CONTAINS(%s, %s)", not, grammarSQL.Wrap(where.Column), value)
+}
+
 // RemoveLeadingBoolean Remove the leading boolean from a statement.
 func (grammarSQL SQL) RemoveLeadingBoolean(value string) string {
 	value = strings.TrimPrefix(value, "and ")

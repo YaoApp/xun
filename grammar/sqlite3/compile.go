@@ -151,6 +151,31 @@ func (grammarSQL SQLite3) WhereDateBased(typ string, query *dbal.Query, where db
 	return fmt.Sprintf("strftime('%s',%s) %s cast(%s as text)", typ, grammarSQL.Wrap(where.Column), where.Operator, value)
 }
 
+// WhereNested Compile a nested where clause using SQLite3 grammar.
+func (grammarSQL SQLite3) WhereNested(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	offset := 6
+	if query.IsJoinClause {
+		offset = 3
+	}
+	sql := grammarSQL.CompileWheres(where.Query, where.Query.Wheres, bindingOffset)
+	end := len(sql)
+	if end > offset {
+		sql = sql[offset:end]
+	}
+	return fmt.Sprintf("(%s)", sql)
+}
+
+// WhereJsoncontains Compile a "where JSON contains" clause. SQLite falls back to LIKE.
+func (grammarSQL SQLite3) WhereJsoncontains(query *dbal.Query, where dbal.Where, bindingOffset *int) string {
+	not := ""
+	if where.Not {
+		not = "not "
+	}
+	*bindingOffset = *bindingOffset + where.Offset
+	value := grammarSQL.Parameter(where.Value, *bindingOffset)
+	return fmt.Sprintf("%s%s like %s", not, grammarSQL.Wrap(where.Column), value)
+}
+
 // CompileLock the lock into SQL.
 func (grammarSQL SQLite3) CompileLock(query *dbal.Query, lock interface{}) string {
 	return ""

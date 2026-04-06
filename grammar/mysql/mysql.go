@@ -3,7 +3,6 @@ package mysql
 import (
 	"fmt"
 
-	"github.com/blang/semver/v4"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql" //Load mysql driver
 	"github.com/jmoiron/sqlx"
@@ -72,21 +71,6 @@ func (grammarSQL MySQL) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, re
 
 // OnConnected the event will be triggered when db server was connected
 func (grammarSQL MySQL) OnConnected() error {
-	version, err := grammarSQL.GetVersion()
-	if err != nil {
-		return err
-	}
-	ver577, err := semver.Make("5.7.7")
-	if err != nil {
-		return err
-	}
-	if version.LE(ver577) {
-		grammarSQL.DB.Exec("SET GLOBAL innodb_file_format=`BARRACUDA`")
-		grammarSQL.DB.Exec("SET GLOBAL innodb_file_per_table=`ON`;")
-		grammarSQL.DB.Exec("SET GLOBAL innodb_large_prefix=`ON`;")
-	}
-
-	// Auto set sql mode
 	grammarSQL.DB.Exec("SET GLOBAL sql_mode=`STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION`;")
 	return nil
 }
