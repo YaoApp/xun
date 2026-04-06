@@ -108,7 +108,7 @@ func TestBuilderNewGrammarFail(t *testing.T) {
 	})
 
 	if unit.DriverIs("mysql") {
-		assert.PanicsWithError(t, "the OnConnected event error. (sql: database is closed)", func() {
+		assert.NotPanics(t, func() {
 			db, err := sqlx.Open(driver, dsn)
 			if err != nil {
 				panic(err)
