@@ -645,19 +645,39 @@ func (builder *Builder) Unless(value bool, callback func(qb Query, value bool), 
 }
 
 // WhereJSONContains Add a "where JSON contains" clause to the query.
-func (builder *Builder) WhereJSONContains() {
+// PostgreSQL: col::jsonb @> value, MySQL: JSON_CONTAINS(col, value), SQLite: col LIKE value
+func (builder *Builder) WhereJSONContains(column interface{}, value interface{}) Query {
+	return builder.whereJSONContains(column, value, "and", false)
 }
 
 // OrWhereJSONContains Add an "or where JSON contains" clause to the query.
-func (builder *Builder) OrWhereJSONContains() {
+func (builder *Builder) OrWhereJSONContains(column interface{}, value interface{}) Query {
+	return builder.whereJSONContains(column, value, "or", false)
 }
 
 // WhereJSONDoesntContain Add a "where JSON not contains" clause to the query.
-func (builder *Builder) WhereJSONDoesntContain() {
+func (builder *Builder) WhereJSONDoesntContain(column interface{}, value interface{}) Query {
+	return builder.whereJSONContains(column, value, "and", true)
 }
 
 // OrWhereJSONDoesntContain Add an "or where JSON not contains" clause to the query.
-func (builder *Builder) OrWhereJSONDoesntContain() {
+func (builder *Builder) OrWhereJSONDoesntContain(column interface{}, value interface{}) Query {
+	return builder.whereJSONContains(column, value, "or", true)
+}
+
+func (builder *Builder) whereJSONContains(column interface{}, value interface{}, boolean string, not bool) Query {
+	builder.Query.Wheres = append(builder.Query.Wheres, dbal.Where{
+		Type:    "jsoncontains",
+		Column:  column,
+		Value:   value,
+		Boolean: boolean,
+		Not:     not,
+		Offset:  1,
+	})
+	if !builder.isExpression(value) {
+		builder.Query.AddBinding("where", builder.flattenValue(value))
+	}
+	return builder
 }
 
 // WhereJSONLength Add a "where JSON length" clause to the query.
