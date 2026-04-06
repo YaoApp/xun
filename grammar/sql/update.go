@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // CompileUpsert Compile an "upsert" statement into SQL.
@@ -41,7 +42,7 @@ func (grammarSQL SQL) CompileUpdateColumns(query *dbal.Query, values map[string]
 	bindings := []interface{}{}
 	for key, value := range values {
 		columns = append(columns, fmt.Sprintf("%s=%s", grammarSQL.Wrap(key), grammarSQL.Parameter(value, *offset+1)))
-		if !dbal.IsExpression(value) && value != nil {
+		if !dbal.IsExpression(value) && !utils.IsNil(value) {
 			bindings = append(bindings, value)
 			*offset++
 		}

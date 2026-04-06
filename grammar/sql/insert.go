@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // CompileInsert Compile an insert statement into SQL.
@@ -21,7 +22,7 @@ func (grammarSQL SQL) CompileInsert(query *dbal.Query, columns []interface{}, va
 	for _, value := range values {
 		parameters = append(parameters, fmt.Sprintf("(%s)", grammarSQL.Parameterize(value, offset)))
 		for _, v := range value {
-			if !dbal.IsExpression(v) && v != nil {
+			if !dbal.IsExpression(v) && !utils.IsNil(v) {
 				bindings = append(bindings, v)
 				offset++
 			}

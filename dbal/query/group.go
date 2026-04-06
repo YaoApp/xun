@@ -1,6 +1,9 @@
 package query
 
-import "github.com/yaoapp/xun/dbal"
+import (
+	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
+)
 
 // GroupBy Add a "group by" clause to the query.
 func (builder *Builder) GroupBy(groups ...interface{}) Query {
@@ -27,6 +30,19 @@ func (builder *Builder) Having(column interface{}, args ...interface{}) Query {
 	// passed to the method, we will assume that the operator is an equals sign
 	// and keep going. Otherwise, we'll require the operator to be passed in.
 	operator, value, boolean, offset := builder.prepareWhereArgs(args...)
+
+	if utils.IsNil(value) {
+		havingType := "null"
+		if operator != "=" {
+			havingType = "notnull"
+		}
+		builder.Query.Havings = append(builder.Query.Havings, dbal.Having{
+			Type:    havingType,
+			Column:  column,
+			Boolean: boolean,
+		})
+		return builder
+	}
 
 	builder.Query.Havings = append(builder.Query.Havings, dbal.Having{
 		Type:     typ,
@@ -88,7 +104,7 @@ func (builder *Builder) HavingBetween(column interface{}, values interface{}, ar
 		Offset:  offset,
 	})
 
-	builder.Query.AddBinding("having", havingValues)
+	builder.Query.AddBinding("having", filterNilBindings(havingValues))
 	return builder
 }
 

@@ -38,7 +38,7 @@ func (quoter Quoter) VAL(v interface{}) string {
 	default:
 		input = fmt.Sprintf("%v", v)
 	}
-	input = strings.ReplaceAll(input, "'", "\\'")
+	input = strings.ReplaceAll(input, "'", "''")
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\r", "")
 	return "'" + input + "'"
@@ -112,7 +112,7 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 	if quoter.IsExpression(value) {
 		return value.(dbal.Expression).GetValue()
 	}
-	if value == nil {
+	if utils.IsNil(value) {
 		return "NULL"
 	}
 	return fmt.Sprintf("$%d", num)
@@ -123,7 +123,7 @@ func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
 	bindingNum := offset
 	for _, value := range values {
-		if !quoter.IsExpression(value) && value != nil {
+		if !quoter.IsExpression(value) && !utils.IsNil(value) {
 			bindingNum++
 		}
 		params = append(params, quoter.Parameter(value, bindingNum))

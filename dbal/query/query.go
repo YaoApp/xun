@@ -20,9 +20,10 @@ func (builder *Builder) Table(name string) Query {
 // Get Execute the query as a "select" statement.
 func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
-	stmt, err := db.Prepare(builder.ToSQL())
+	sql := builder.ToSQL()
+	stmt, err := db.Prepare(sql)
 	if err != nil {
-		defer log.With(log.F{"bindings": builder.GetBindings()}).Error("%s", builder.ToSQL())
+		defer log.With(log.F{"bindings": builder.GetBindings()}).Error("%s", sql)
 		return nil, err
 	}
 

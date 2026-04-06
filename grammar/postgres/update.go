@@ -9,6 +9,7 @@ import (
 	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun"
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // Upsert Upsert new records or update the existing ones.
@@ -53,7 +54,7 @@ func (grammarSQL Postgres) CompileUpsert(query *dbal.Query, columns []interface{
 			column := fmt.Sprintf("%v", key)
 			value := update.MapIndex(key).Interface()
 			segments = append(segments, fmt.Sprintf("%s=%s", grammarSQL.Wrap(column), grammarSQL.Parameter(value, offset)))
-			if !dbal.IsExpression(value) && value != nil {
+			if !dbal.IsExpression(value) && !utils.IsNil(value) {
 				bindings = append(bindings, value)
 				offset++
 			}

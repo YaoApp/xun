@@ -194,6 +194,16 @@ func (builder *Builder) invalidOperator(operator string) bool {
 // 		utils.StringHave([]string{"=", "<>", "!="}, operator)
 // }
 
+func filterNilBindings(values []interface{}) []interface{} {
+	filtered := make([]interface{}, 0, len(values))
+	for _, v := range values {
+		if !utils.IsNil(v) {
+			filtered = append(filtered, v)
+		}
+	}
+	return filtered
+}
+
 // Remove all of the expressions from a list of bindings.
 func (builder *Builder) cleanBindings(bindings interface{}) []interface{} {
 	values := []interface{}{}
