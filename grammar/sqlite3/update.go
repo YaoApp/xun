@@ -46,7 +46,14 @@ func (grammarSQL SQLite3) CompileUpsert(query *dbal.Query, columns []interface{}
 func (grammarSQL SQLite3) CompileUpdate(query *dbal.Query, values map[string]interface{}) (string, []interface{}) {
 
 	if len(query.Joins) == 0 && query.Limit < 0 {
-		return grammarSQL.SQL.CompileUpdate(query, values)
+		offset := 0
+		bindings := []interface{}{}
+		table := grammarSQL.WrapTable(query.From)
+		columns, columnsBindings := grammarSQL.CompileUpdateColumns(query, values, &offset)
+		bindings = append(bindings, columnsBindings...)
+		wheres := grammarSQL.CompileWheres(query, query.Wheres, &offset)
+		bindings = append(bindings, query.GetBindings("where")...)
+		return fmt.Sprintf("update %s set %s %s", table, columns, wheres), bindings
 	}
 
 	offset := 0
