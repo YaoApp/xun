@@ -10,7 +10,12 @@ import (
 func (grammarSQL Postgres) CompileDelete(query *dbal.Query) (string, []interface{}) {
 
 	if len(query.Joins) == 0 && query.Limit < 0 {
-		return grammarSQL.SQL.CompileDelete(query)
+		offset := 0
+		bindings := []interface{}{}
+		table := grammarSQL.WrapTable(query.From)
+		wheres := grammarSQL.CompileWheres(query, query.Wheres, &offset)
+		bindings = append(bindings, query.GetBindings("where")...)
+		return fmt.Sprintf("delete from %s %s", table, wheres), bindings
 	}
 
 	offset := 0
